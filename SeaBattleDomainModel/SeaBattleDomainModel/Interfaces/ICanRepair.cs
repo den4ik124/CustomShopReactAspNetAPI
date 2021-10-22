@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace SeaBattleDomainModel.Interfaces
 {
-    internal interface ICanRepair
+    public interface ICanRepair
     {
+        void Repair();
     }
 }
