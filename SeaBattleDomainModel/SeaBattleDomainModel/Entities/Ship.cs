@@ -16,23 +16,17 @@ namespace SeaBattleDomainModel.Entities
 
         public static bool operator ==(Ship ship1, Ship ship2)
         {
-            //TODO: реализовать перегрузку оператора сравнения
-            return ship1.Velocity == ship2.Velocity;
+            return ship1.Velocity == ship2.Velocity
+                && ship1.GetType() == ship2.GetType()
+                && ship1.Size == ship2.Size;
         }
 
         public static bool operator !=(Ship ship1, Ship ship2)
         {
-            //TODO: реализовать перегрузку оператора сравнения
-            return ship1.Velocity != ship2.Velocity;
+            return ship1.Velocity != ship2.Velocity
+                && ship1.GetType() != ship2.GetType()
+                && ship1.Size != ship2.Size;
         }
-
-        //public void FillShipPoints(Point head, Point tail)
-        //{
-        //    if (head.Equals(tail))
-        //    {
-        //        Points = new Point[1] { head }; //имеем корабль-точку
-        //    }
-        //}
 
         public abstract void Move();
 
@@ -56,8 +50,7 @@ namespace SeaBattleDomainModel.Entities
 
         public override string ToString()
         {
-            //TODO: реализовать переопределние для вывода состояния в строку
-            return base.ToString();
+            return $"Velocity: {this.Velocity}\nRange: {this.Range}\nSize: {this.Size}";
         }
     }
 }
