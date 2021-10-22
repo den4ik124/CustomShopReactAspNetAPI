@@ -21,10 +21,17 @@ namespace SeaBattleDomainModel.Entities
         /// <summary>
         /// Переопределение конструктора по умолчанию
         /// </summary>
-        //public Point(int x, int y)
-        //{
-        //    //TODO: проиниализировать все поля
-        //}
+        public Point(int x, int y, Quadrant quadrant = Quadrant.I, int xQuad = 0, int yQuad = 0)
+        {
+            //TODO: проиниализировать все поля
+            this.x = x;
+            this.y = y;
+            this.quadrantId = quadrant;
+            this.xQuad = xQuad;
+            this.yQuad = yQuad;
+            this.quadrantId = GetQuadrant(x, y);
+            RecalculateQuadrantCoordinates();
+        }
 
         public int X
         {
@@ -38,8 +45,17 @@ namespace SeaBattleDomainModel.Entities
             set { y = value; }
         }
 
-        public int XQuad { get; set; }
-        public int YQuad { get; set; }
+        public int XQuad
+        {
+            get { return this.xQuad; }
+            set { this.xQuad = value; }
+        }
+
+        public int YQuad
+        {
+            get { return this.yQuad; }
+            set { this.yQuad = value; }
+        }
 
         public Quadrant Quadrant
         {
@@ -89,7 +105,20 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         private Quadrant GetQuadrant(int x, int y)
         {
-            return default;
+            if (x < 0 && y > 0)
+            {
+                return Quadrant.II;
+            }
+            else if (x < 0 && y < 0)
+            {
+                return Quadrant.III;
+            }
+            else if (x > 0 && y < 0)
+            {
+                return Quadrant.IV;
+            }
+            else
+                return Quadrant.I;
         }
 
         /// <summary>
@@ -97,7 +126,28 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         private void RecalculateQuadrantCoordinates()
         {
-            throw new System.NotImplementedException();
+            switch (this.quadrantId)
+            {
+                case Quadrant.II:
+                    this.xQuad = Math.Abs(this.x);
+                    this.yQuad = this.y;
+                    break;
+
+                case Quadrant.III:
+                    this.xQuad = Math.Abs(this.x);
+                    this.yQuad = Math.Abs(this.y);
+                    break;
+
+                case Quadrant.IV:
+                    this.xQuad = this.x;
+                    this.yQuad = Math.Abs(this.y);
+                    break;
+
+                default:
+                    this.xQuad = this.x;
+                    this.yQuad = this.y;
+                    break;
+            }
         }
     }
 }
