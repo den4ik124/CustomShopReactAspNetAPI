@@ -40,8 +40,10 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>Корабль по переданным параметрам</returns>
         private Ship GetShipByCoordinates(Quadrant quadrant, int x, int y)
         {
-            //TODO: реализовать логику возврата корабля
-            return null;
+            return cells.First(cell => cell.Point.Quadrant == quadrant  //проверка ячейки по квадранту
+                            && cell.Point.XQuad == x                    //проверка ячейки по координате Х квадранта
+                            && cell.Point.YQuad == y)                   //проверка ячейки по координате Y квадранта
+                            .Ship;                                      //возврат корабля из ячейки
         }
 
         public void AddShip(Ship ship, Point head, Point tail)

@@ -23,7 +23,7 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         public Point(int x, int y, Quadrant quadrant = Quadrant.I, int xQuad = 0, int yQuad = 0)
         {
-            //TODO: проиниализировать все поля
+            //TODO: уточнить за такую реализацию
             this.x = x;
             this.y = y;
             this.quadrantId = quadrant;
