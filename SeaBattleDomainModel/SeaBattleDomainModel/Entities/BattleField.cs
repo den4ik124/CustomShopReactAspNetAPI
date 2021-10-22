@@ -58,6 +58,12 @@ namespace SeaBattleDomainModel.Entities
             this.ships.Add(ship);
         }
 
+        /// <summary>
+        /// Определение размера корабля по координатам "носа" и кормы
+        /// </summary>
+        /// <param name="head">Точка "носа" корабля</param>
+        /// <param name="tail">Точка кормы корабля</param>
+        /// <returns>Размер корабля</returns>
         private int GetShipSize(Point head, Point tail)
         {
             return (int)Math.Sqrt(Math.Pow(head.X - tail.X, 2) + Math.Pow(head.Y - tail.Y, 2));
@@ -83,10 +89,8 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>true - если линия вертикальная/горизонтальная. false - если линия под углом.</returns>
         private bool CheckOrientation(Point head, Point tail)
         {
-            if (head.X != tail.X && head.Y == tail.Y //горизонтальная линия
-                || head.Y != tail.Y && head.X == tail.Y)
-                return true;
-            return false;
+            return head.X != tail.X && head.Y == tail.Y        //горизонтальная линия
+                || head.Y != tail.Y && head.X == tail.X;       //вериткальная линия
         }
 
         /// <summary>
@@ -109,8 +113,10 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>true - если все точки в пределах карты, false - хотя бы одна точка за пределами карты</returns>
         private bool CheckOutOfBoundaries(Point head, Point tail)
         {
-            //TODO: реализовать проверку выхода за карту
-            return true;
+            return head.X <= size / 2 && head.X >= -size / 2
+                && head.Y <= size / 2 && head.Y >= -size / 2
+                && tail.X <= size / 2 && tail.X >= -size / 2
+                && tail.Y <= size / 2 && tail.Y >= -size / 2;
         }
 
         private bool CheckNeighborhoods(Point head, Point tail)
