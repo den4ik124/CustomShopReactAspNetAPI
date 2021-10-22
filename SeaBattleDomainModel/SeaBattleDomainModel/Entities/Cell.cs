@@ -6,7 +6,16 @@ using System.Threading.Tasks;
 
 namespace SeaBattleDomainModel.Entities
 {
-    class Cell
+    public class Cell
     {
+        public Cell(Ship ship, Point point)
+        {
+            Ship = ship;
+            Point = point;
+        }
+
+        public Ship Ship { get; set; }
+
+        public Point Point { get; set; }
     }
 }
