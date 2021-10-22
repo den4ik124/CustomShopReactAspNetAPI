@@ -21,14 +21,14 @@ namespace SeaBattleDomainModel.Entities
         /// <summary>
         /// Переопределение конструктора по умолчанию
         /// </summary>
-        public Point(int x, int y, Quadrant quadrant = Quadrant.I, int xQuad = 0, int yQuad = 0)
+        public Point(int x, int y)
         {
             //TODO: уточнить за такую реализацию
             this.x = x;
             this.y = y;
-            this.quadrantId = quadrant;
-            this.xQuad = xQuad;
-            this.yQuad = yQuad;
+            this.quadrantId = default;
+            this.xQuad = default;
+            this.yQuad = default;
             this.quadrantId = GetQuadrant(x, y);
             RecalculateQuadrantCoordinates();
         }
@@ -59,10 +59,7 @@ namespace SeaBattleDomainModel.Entities
 
         public Quadrant Quadrant
         {
-            get => default;
-            set
-            {
-            }
+            get => quadrantId;
         }
 
         public override bool Equals(object obj)
@@ -106,7 +103,12 @@ namespace SeaBattleDomainModel.Entities
         private Quadrant GetQuadrant(int x, int y)
         {
             //TODO: реализовать определение для точкек: (0,0) - начало координат,(x,0) - на оси OX,(0,y) - на оси OY,
-            if (x < 0 && y > 0)
+
+            if (x > 0 && y > 0)
+            {
+                return Quadrant.I;
+            }
+            else if (x < 0 && y > 0)
             {
                 return Quadrant.II;
             }
@@ -118,8 +120,24 @@ namespace SeaBattleDomainModel.Entities
             {
                 return Quadrant.IV;
             }
+            else if (x == 0 && y > 0)
+            {
+                return Quadrant.I | Quadrant.II;
+            }
+            else if (x == 0 && y < 0)
+            {
+                return Quadrant.III | Quadrant.IV;
+            }
+            else if (x > 0 && y == 0)
+            {
+                return Quadrant.I | Quadrant.IV;
+            }
+            else if (x < 0 && y == 0)
+            {
+                return Quadrant.III | Quadrant.IV;
+            }
             else
-                return Quadrant.I;
+                return ((Quadrant.I | Quadrant.II) | Quadrant.III) | Quadrant.IV;
         }
 
         /// <summary>
