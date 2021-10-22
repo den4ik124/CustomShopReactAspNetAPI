@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace SeaBattleDomainModel.Entities
 {
-    internal enum Quadrant
+    public enum Quadrant
     {
+        I = 1,
+        II = 2,
+        III = 3,
+        IV = 4
     }
 }
