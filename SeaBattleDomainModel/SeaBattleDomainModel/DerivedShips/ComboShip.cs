@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SeaBattleDomainModel.Entities;
+using SeaBattleDomainModel.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,12 +10,11 @@ namespace SeaBattleDomainModel.DerivedShips
 {
     internal class ComboShip : Ship, ICanShot, ICanRepair
     {
-        public override Point[] Points { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public override int Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public override int Range { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
         public override int Size { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-        public void MakeShot(Point target)
+        public void MakeShot()
         {
             throw new NotImplementedException();
         }
@@ -23,7 +24,7 @@ namespace SeaBattleDomainModel.DerivedShips
             throw new NotImplementedException();
         }
 
-        public void Repair(Ship target)
+        public void Repair()
         {
             throw new NotImplementedException();
         }
