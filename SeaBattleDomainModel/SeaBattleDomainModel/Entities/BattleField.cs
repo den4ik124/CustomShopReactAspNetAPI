@@ -48,12 +48,19 @@ namespace SeaBattleDomainModel.Entities
 
         public void AddShip(Ship ship, Point head, Point tail)
         {
-            if (IsLocationValid(head, tail) == false)
+            if (IsLocationValid(head, tail) == false) //TODO: уточнить: оставить явную проверку на false (мне так больше нравится, т.к. читабельнее) или просто оставить метод без ==false?
             {
                 return;
             }
+            ship.Size = GetShipSize(head, tail);
+            cells.Select(cell => cell.Point);
             //TODO: реализовать инициализацию и заполнение массива точек ссылками на корабль
             this.ships.Add(ship);
+        }
+
+        private int GetShipSize(Point head, Point tail)
+        {
+            return (int)Math.Sqrt(Math.Pow(head.X - tail.X, 2) + Math.Pow(head.Y - tail.Y, 2));
         }
 
         /// <summary>

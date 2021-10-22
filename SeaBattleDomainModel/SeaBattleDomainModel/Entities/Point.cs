@@ -105,6 +105,7 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         private Quadrant GetQuadrant(int x, int y)
         {
+            //TODO: реализовать определение для точкек: (0,0) - начало координат,(x,0) - на оси OX,(0,y) - на оси OY,
             if (x < 0 && y > 0)
             {
                 return Quadrant.II;

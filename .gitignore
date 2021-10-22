@@ -370,3 +370,5 @@ FodyWeavers.xsd
 /SeaBattleDomainModel/SeaBattleDomainModel/obj
 /SeaBattleDomainModel/SeaBattleDomainModel/bin/Debug/net5.0/ref
 /SeaBattleDomainModel/SeaBattleDomainModel/bin/Debug/net5.0
+/SeaBattleDomainModel/testCodeHere/testCodeHere.csproj
+/SeaBattleDomainModel/testCodeHere
