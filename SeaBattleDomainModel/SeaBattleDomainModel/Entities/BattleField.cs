@@ -90,7 +90,7 @@ namespace SeaBattleDomainModel.Entities
         private bool CheckOrientation(Point head, Point tail)
         {
             return head.X != tail.X && head.Y == tail.Y        //горизонтальная линия
-                || head.Y != tail.Y && head.X == tail.X;       //вериткальная линия
+                || head.Y != tail.Y && head.X == tail.X;       //вертикальная линия
         }
 
         /// <summary>
@@ -101,8 +101,17 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>true - если пересечения нет, false - если пересечение есть</returns>
         private bool CheckCollision(Point head, Point tail)
         {
-            //TODO: реализовать проверку пересечения
-            return true;
+            bool isNoCollision = true;
+            var points = GetPointsBetween(head, tail);
+            foreach (var point in points)
+            {
+                if (Array.Find(cells, (cell) => cell.Point.Equals(point)).Ship != null)
+                {
+                    isNoCollision = false;
+                    break;
+                }
+            }
+            return isNoCollision;
         }
 
         /// <summary>
@@ -121,8 +130,97 @@ namespace SeaBattleDomainModel.Entities
 
         private bool CheckNeighborhoods(Point head, Point tail)
         {
-            //TODO: реализовать проверку на расположение кораблей с интервалом
-            return true;
+            bool neighborFlag = false;
+            var points = GetPointsBetween(head, tail);
+            foreach (var point in points)
+            {
+                if (CheckPointOnNeighbor(point) == true)
+                {
+                    neighborFlag = false;
+                    break;
+                }
+            }
+            return neighborFlag;
+        }
+
+        private bool CheckPointOnNeighbor(Point point)
+        {
+            bool isNeighborAbsent = true; //переменная, показывающая найден ли сосед вокруг указанной точки
+            Cell cellCurrent = GetCellByPoint(point);
+            Cell[] cellsForCheck = new Cell[4] {
+                Array.Find(cells, (cell) => cell.Point.Y == point.Y + 1), //ячейка, содержащая точку выше point
+                Array.Find(cells, (cell) => cell.Point.Y == point.Y - 1), //ячейка, содержащая точку ниже point
+                Array.Find(cells, (cell) => cell.Point.X == point.X - 1), //ячейка, содержащая точку левее point
+                Array.Find(cells, (cell) => cell.Point.X == point.X + 1) //ячейка, содержащая точку правее point
+            };
+
+            foreach (var cell in cellsForCheck)
+            {
+                if (cell == null)
+                {
+                    continue;
+                }
+                if (cell.Ship != null)
+                {
+                    isNeighborAbsent = false;
+                    break;
+                }
+            }
+            return isNeighborAbsent;
+        }
+
+        private Cell GetCellByPoint(Point point)
+        {
+            return Array.Find(cells, (cell) => cell.Point.Equals(point)); //ячейка, содержащая точку point
+        }
+
+        /// <summary>
+        /// Создание точек между носом и кормой
+        /// </summary>
+        /// <param name="head">Точка носа</param>
+        /// <param name="tail">Точка кормы</param>
+        /// <returns>Коллекцию точек между носом и кормой</returns>
+        private List<Point> GetPointsBetween(Point head, Point tail)
+        {
+            var points = new List<Point>();
+
+            if (head.X != tail.X && head.Y == tail.Y) //горизонтальная линия
+            {
+                if (head.X > tail.X) //если голова "правее" хвоста в системе координат
+                {
+                    for (int x = tail.X; x != head.X; x++)
+                    {
+                        points.Add(new Point(x, head.Y));
+                    }
+                }
+                else //если голова "левее" хвоста в системе координат
+                {
+                    for (int x = head.X; x != tail.X; x++)
+                    {
+                        points.Add(new Point(x, head.Y));
+                    }
+                }
+            }
+            else if (head.Y != tail.Y && head.X == tail.X)//вертикальная линия
+            {
+                if (head.Y > tail.Y) //если голова "выше" хвоста в системе координат
+                {
+                    for (int y = tail.Y; y != head.Y; y++)
+                    {
+                        points.Add(new Point(head.X, y));
+                    }
+                }
+                else //если голова "ниже" хвоста в системе координат
+                {
+                    for (int y = head.Y; y != tail.Y; y++)
+                    {
+                        points.Add(new Point(head.X, y));
+                    }
+                }
+            }
+            else //точка
+                return new List<Point>() { head };
+            return points;
         }
 
         public override string ToString()
