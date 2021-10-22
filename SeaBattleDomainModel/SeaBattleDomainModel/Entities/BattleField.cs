@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SeaBattleDomainModel.Entities
 {
-    internal class BattleField
+    public class BattleField
     {
         private List<Ship> ships;
 
