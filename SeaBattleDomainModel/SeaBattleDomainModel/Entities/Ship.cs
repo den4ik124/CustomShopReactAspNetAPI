@@ -16,16 +16,19 @@ namespace SeaBattleDomainModel.Entities
 
         public static bool operator ==(Ship ship1, Ship ship2)
         {
-            return ship1.Velocity == ship2.Velocity
-                && ship1.GetType() == ship2.GetType()
-                && ship1.Size == ship2.Size;
+            //TODO : Possible nullReferenceException. https://gitlab.nixdev.co/net-projects/education/dboryhin/-/merge_requests/1#note_404485
+            return ship1 != null && ship2 != null
+                    && ship1.Velocity == ship2.Velocity
+                    && ship1.GetType() == ship2.GetType()
+                    && ship1.Size == ship2.Size;
         }
 
         public static bool operator !=(Ship ship1, Ship ship2)
         {
-            return ship1.Velocity != ship2.Velocity
-                && ship1.GetType() != ship2.GetType()
-                && ship1.Size != ship2.Size;
+            return ship1 != null && ship2 != null
+                    && ship1.Velocity != ship2.Velocity
+                    && ship1.GetType() != ship2.GetType()
+                    && ship1.Size != ship2.Size;
         }
 
         public abstract void Move();
@@ -37,10 +40,11 @@ namespace SeaBattleDomainModel.Entities
 
         public bool Equals(Ship other)
         {
+            // TODO: Please check the most recent coding guideline whether we should use this.Velocity ... ? https://gitlab.nixdev.co/net-projects/education/dboryhin/-/merge_requests/1#note_404491
             return other != null &&
-                   Velocity == other.Velocity &&
-                   Range == other.Range &&
-                   Size == other.Size;
+                   this.Velocity == other.Velocity &&
+                   this.Range == other.Range &&
+                   this.Size == other.Size;
         }
 
         public override int GetHashCode()
