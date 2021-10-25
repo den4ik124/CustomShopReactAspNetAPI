@@ -15,7 +15,7 @@ namespace SeaBattleDomainModel.Entities
 
         private readonly int battleFieldSideLength;
 
-        private Cell[] cells;
+        //private Cell[] cells;
         private Dictionary<Point, Cell> cellsDict;
 
         #endregion Fields
@@ -26,8 +26,8 @@ namespace SeaBattleDomainModel.Entities
         {
             this.battleFieldSideLength = halfSideLength * 2 + 1;
             this.ships = new List<Ship>();
-            this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
             this.cellsDict = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
+            //this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
             FillCells();
         }
 
@@ -54,7 +54,7 @@ namespace SeaBattleDomainModel.Entities
                 for (int x = -bfHalfSide; x <= bfHalfSide; x++)
                 {
                     cellsDict.Add(new Point(x, y), null);
-                    cells[counter] = new Cell(new Point(x, y));
+                    //cells[counter] = new Cell(new Point(x, y));
                     counter++;
                 }
             }
@@ -74,10 +74,12 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>Ship from list</returns>
         private Ship GetShipByCoordinates(Quadrant quadrant, int x, int y)
         {
-            return cells.First(cell => cell.Point.Quadrant == quadrant  //cell checking by quadrant
-                            && cell.Point.XQuad == x                    //cell checking by quadrant X coordinate
-                            && cell.Point.YQuad == y)                   //cell checking by quadrant Y coordinate
-                            .Ship;                                      //Select ship from cell
+            return cellsDict[new Point(x, y)].Ship;
+
+            //return cells.First(cell => cell.Point.Quadrant == quadrant  //cell checking by quadrant
+            //                && cell.Point.XQuad == x                    //cell checking by quadrant X coordinate
+            //                && cell.Point.YQuad == y)                   //cell checking by quadrant Y coordinate
+            //                .Ship;                                      //Select ship from cell
         }
 
         public void AddShip(Ship ship, Point head, Point tail)
@@ -157,7 +159,7 @@ namespace SeaBattleDomainModel.Entities
                 Cell cell;
                 if (cellsDict.TryGetValue(point, out cell))
                 {
-                    if (cellsDict[point].Ship != null)
+                    if (cellsDict[point].Ship != null) //TODO: check nullReference exception
                     {
                         isNoCollision = false;
                         break;
@@ -205,13 +207,24 @@ namespace SeaBattleDomainModel.Entities
         private bool CheckPointOnNeighbor(Point point)
         {
             bool isNeighborAbsent = true;
-            Cell cellCurrent = GetCellByPoint(point);
+            //Cell cellCurrent = GetCellByPoint(point);
             Cell[] cellsForCheck = new Cell[4] {
-                Array.Find(cells, (cell) => cell.Point.Y == point.Y + 1), //cell above specified point
-                Array.Find(cells, (cell) => cell.Point.Y == point.Y - 1), //cell below specified point
-                Array.Find(cells, (cell) => cell.Point.X == point.X - 1), //cell to the left of the specified point
-                Array.Find(cells, (cell) => cell.Point.X == point.X + 1) //cell to the right of the specified point
+                cellsDict[new Point(point.X,point.Y + 1)],
+                cellsDict[new Point(point.X,point.Y - 1)],
+                cellsDict[new Point(point.X-1,point.Y)],
+                cellsDict[new Point(point.X+1,point.Y)]
             };
+            //    Array.Find(cells, (cell) => cell.Point.Y == point.Y + 1), //cell above specified point
+            //    Array.Find(cells, (cell) => cell.Point.Y == point.Y - 1), //cell below specified point
+            //    Array.Find(cells, (cell) => cell.Point.X == point.X - 1), //cell to the left of the specified point
+            //    Array.Find(cells, (cell) => cell.Point.X == point.X + 1) //cell to the right of the specified point
+            //};
+            //Cell[] cellsForCheck = new Cell[4] {
+            //    Array.Find(cells, (cell) => cell.Point.Y == point.Y + 1), //cell above specified point
+            //    Array.Find(cells, (cell) => cell.Point.Y == point.Y - 1), //cell below specified point
+            //    Array.Find(cells, (cell) => cell.Point.X == point.X - 1), //cell to the left of the specified point
+            //    Array.Find(cells, (cell) => cell.Point.X == point.X + 1) //cell to the right of the specified point
+            //};
 
             foreach (var cell in cellsForCheck)
             {
@@ -290,7 +303,14 @@ namespace SeaBattleDomainModel.Entities
         {
             //TODO : Implement ship collection sorting
             List<Ship> sortedShips = new List<Ship>(ships.Count);
-            cells = cells.OrderBy(cell => cell.DistanceToOrigin).Where(cell => cell.Ship != null).ToArray();
+
+            sortedShips = cellsDict.ToList()
+                                    .Select(cell => cell.Value.Ship)
+                                    .ToList();
+
+            //cellsDict.OrderBy((cell, point)=>point);
+
+            //cells = cells.OrderBy(cell => cell.DistanceToOrigin).Where(cell => cell.Ship != null).ToArray();
 
             //foreach (var cell in cells)
             //{
@@ -299,14 +319,14 @@ namespace SeaBattleDomainModel.Entities
 
             #region v1
 
-            var cellGroups = ships.GroupBy(ship => cells.Where(item => item.Ship == ship)); //получили группы ячеек по кораблям
-            var test = cellGroups.OrderBy(group => group.Key);
-            cellGroups = cellGroups.OrderBy(group => group.Key.OrderBy(cell => cell.DistanceToOrigin));
-            foreach (var group in cellGroups)
-            {
-                group.Key.OrderBy(cell => cell.DistanceToOrigin); //в каждой группе отсортировли ячейки по DistanceToOrigin
-                sortedShips.Add(group.Key.First().Ship);
-            }
+            //var cellGroups = ships.GroupBy(ship => cells.Where(item => item.Ship == ship)); //получили группы ячеек по кораблям
+            //var test = cellGroups.OrderBy(group => group.Key);
+            //cellGroups = cellGroups.OrderBy(group => group.Key.OrderBy(cell => cell.DistanceToOrigin));
+            //foreach (var group in cellGroups)
+            //{
+            //    group.Key.OrderBy(cell => cell.DistanceToOrigin); //в каждой группе отсортировли ячейки по DistanceToOrigin
+            //    sortedShips.Add(group.Key.First().Ship);
+            //}
 
             #endregion v1
 
@@ -316,7 +336,7 @@ namespace SeaBattleDomainModel.Entities
         public override string ToString()
         {
             StringBuilder battleFieldState = new StringBuilder();
-            foreach (var cell in cells)
+            foreach (var cell in cellsDict)
             {
                 battleFieldState.Append(cell.ToString());
             }
