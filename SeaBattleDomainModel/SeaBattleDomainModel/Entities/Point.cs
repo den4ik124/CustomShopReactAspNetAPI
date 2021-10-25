@@ -102,42 +102,35 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         private Quadrant GetQuadrant(int x, int y)
         {
-            //TODO: реализовать определение для точкек: (0,0) - начало координат,(x,0) - на оси OX,(0,y) - на оси OY,
+            switch ((x, y))
+            {
+                case ( > 0, > 0):
+                    return Quadrant.First;
 
-            if (x > 0 && y > 0)
-            {
-                return Quadrant.First;
+                case ( < 0, > 0):
+                    return Quadrant.Second;
+
+                case ( < 0, < 0):
+                    return Quadrant.Third;
+
+                case ( > 0, < 0):
+                    return Quadrant.Fourth;
+
+                case (0, > 0):
+                    return Quadrant.First | Quadrant.Second;
+
+                case (0, < 0):
+                    return Quadrant.Third | Quadrant.Fourth;
+
+                case ( > 0, 0):
+                    return Quadrant.First | Quadrant.Fourth;
+
+                case ( < 0, 0):
+                    return Quadrant.Second | Quadrant.Third;
+
+                default:
+                    return Quadrant.First | Quadrant.Second | Quadrant.Third | Quadrant.Fourth;
             }
-            else if (x < 0 && y > 0)
-            {
-                return Quadrant.Second;
-            }
-            else if (x < 0 && y < 0)
-            {
-                return Quadrant.Third;
-            }
-            else if (x > 0 && y < 0)
-            {
-                return Quadrant.Fourth;
-            }
-            else if (x == 0 && y > 0)
-            {
-                return Quadrant.First | Quadrant.Second;
-            }
-            else if (x == 0 && y < 0)
-            {
-                return Quadrant.Third | Quadrant.Fourth;
-            }
-            else if (x > 0 && y == 0)
-            {
-                return Quadrant.First | Quadrant.Fourth;
-            }
-            else if (x < 0 && y == 0)
-            {
-                return Quadrant.Third | Quadrant.Fourth;
-            }
-            else
-                return ((Quadrant.First | Quadrant.Second) | Quadrant.Third) | Quadrant.Fourth;
         }
 
         /// <summary>
