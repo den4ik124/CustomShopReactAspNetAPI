@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace SeaBattleDomainModel.Entities
 
         public BattleField(int halfSideLength)
         {
-            this.battleFieldSideLength = halfSideLength * 2;
+            this.battleFieldSideLength = halfSideLength * 2 + 1;
             this.ships = new List<Ship>();
             this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
             FillCells();
@@ -150,7 +151,7 @@ namespace SeaBattleDomainModel.Entities
             var points = GetPointsBetween(head, tail);
             foreach (var point in points)
             {
-                if (Array.Find(cells, (cell) => cell.Point.Equals(point)).Ship != null)
+                if (Array.Find(cells, (cell) => cell.Point.Equals(point)).Ship != null) //TODO: подумать, какие структуры данных использовать здесь
                 {
                     isNoCollision = false;
                     break;
@@ -177,17 +178,17 @@ namespace SeaBattleDomainModel.Entities
 
         private bool CheckNeighborhoods(Point head, Point tail)
         {
-            bool neighborFlag = false;
+            bool isNeighborFounded = false;
             var points = GetPointsBetween(head, tail);
             foreach (var point in points)
             {
-                if (CheckPointOnNeighbor(point) == true)
+                if (!CheckPointOnNeighbor(point))
                 {
-                    neighborFlag = false;
+                    isNeighborFounded = true;
                     break;
                 }
             }
-            return neighborFlag;
+            return !isNeighborFounded;
         }
 
         private bool CheckPointOnNeighbor(Point point)
@@ -235,14 +236,14 @@ namespace SeaBattleDomainModel.Entities
             {
                 if (head.X > tail.X) //если голова "правее" хвоста в системе координат
                 {
-                    for (int x = tail.X; x != head.X; x++)
+                    for (int x = tail.X; x <= head.X; x++)
                     {
                         points.Add(new Point(x, head.Y));
                     }
                 }
                 else //если голова "левее" хвоста в системе координат
                 {
-                    for (int x = head.X; x != tail.X; x++)
+                    for (int x = head.X; x <= tail.X; x++)
                     {
                         points.Add(new Point(x, head.Y));
                     }
@@ -252,14 +253,14 @@ namespace SeaBattleDomainModel.Entities
             {
                 if (head.Y > tail.Y) //если голова "выше" хвоста в системе координат
                 {
-                    for (int y = tail.Y; y != head.Y; y++)
+                    for (int y = tail.Y; y <= head.Y; y++)
                     {
                         points.Add(new Point(head.X, y));
                     }
                 }
                 else //если голова "ниже" хвоста в системе координат
                 {
-                    for (int y = head.Y; y != tail.Y; y++)
+                    for (int y = head.Y; y <= tail.Y; y++)
                     {
                         points.Add(new Point(head.X, y));
                     }
@@ -273,17 +274,22 @@ namespace SeaBattleDomainModel.Entities
         /// <summary>
         /// Sorting of ships collection by distance to origin point
         /// </summary>
-        private void SortShips()
+        public void SortShips()
         {
             //TODO : Implement ship collection sorting
+            List<Ship> sortedShips = new List<Ship>(ships.Count);
+            cells = cells.OrderBy(cell => cell.DistanceToOrigin).Where(cell => cell.Ship != null).ToArray();
+
+            //foreach (var cell in cells)
+            //{
+            //    sortedShips.Add(cell.Ship);
+            //}
 
             #region v1
 
-            List<Ship> sortedShips = new List<Ship>(ships.Count);
             var cellGroups = ships.GroupBy(ship => cells.Where(item => item.Ship == ship)); //получили группы ячеек по кораблям
-
-            cellGroups.OrderBy(group => group.Key);
-            cellGroups.OrderBy(group => group.Key.OrderBy(cell => cell.DistanceToOrigin));
+            var test = cellGroups.OrderBy(group => group.Key);
+            cellGroups = cellGroups.OrderBy(group => group.Key.OrderBy(cell => cell.DistanceToOrigin));
             foreach (var group in cellGroups)
             {
                 group.Key.OrderBy(cell => cell.DistanceToOrigin); //в каждой группе отсортировли ячейки по DistanceToOrigin

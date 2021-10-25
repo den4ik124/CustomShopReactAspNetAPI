@@ -10,17 +10,23 @@ namespace SeaBattleDomainModel.Entities
     {
         #region Fields
 
-        //fields
+        private readonly int id;
+        private static int nextId = 1;
 
         #endregion Fields
 
         #region Constructors
 
-        //ctors
+        public Ship()
+        {
+            id = Ship.nextId++;
+        }
 
         #endregion Constructors
 
         #region Properties
+
+        public int Id { get { return this.id; } }
 
         public abstract int Velocity { get; set; }
 
@@ -43,10 +49,10 @@ namespace SeaBattleDomainModel.Entities
         public static bool operator ==(Ship ship1, Ship ship2)
         {
             //TODO (DONE) : Possible nullReferenceException. https://gitlab.nixdev.co/net-projects/education/dboryhin/-/merge_requests/1#note_404485
-            return ship1 != null && ship2 != null
-                    && ship1.Velocity == ship2.Velocity
-                    && ship1.GetType() == ship2.GetType()
-                    && ship1.Size == ship2.Size;
+
+            return ship1?.Velocity == ship2?.Velocity
+                    && ship1?.GetType() == ship2?.GetType()
+                    && ship1?.Size == ship2?.Size;
         }
 
         public static bool operator !=(Ship ship1, Ship ship2)
@@ -79,12 +85,12 @@ namespace SeaBattleDomainModel.Entities
         public override int GetHashCode()
         {
             //TODO : Определить какие параметры указать для хэша. Должны быть readonly
-            return HashCode.Combine(this.Velocity, this.Range, this.Size);
+            return HashCode.Combine(this.id);
         }
 
         public override string ToString()
         {
-            return $"Velocity: {this.Velocity}\nRange: {this.Range}\nSize: {this.Size}";
+            return $"Id: {this.id}\nVelocity: {this.Velocity}\nRange: {this.Range}\nSize: {this.Size}";
         }
 
         #endregion Methods.public
