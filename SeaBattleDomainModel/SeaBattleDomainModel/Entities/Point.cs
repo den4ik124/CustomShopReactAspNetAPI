@@ -29,12 +29,8 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         public Point(int x, int y) : this()
         {
-            //TODO: уточнить за такую реализацию
             this.x = x;
             this.y = y;
-            //this.quadrantId = default;
-            //this.xQuad = default;
-            //this.yQuad = default;
             this.quadrantId = GetQuadrant(x, y);
             RecalculateQuadrantCoordinates();
         }
@@ -180,7 +176,6 @@ namespace SeaBattleDomainModel.Entities
 
         public override int GetHashCode()
         {
-            //TODO (DONE): Please simplify hashcode. What makes point unique?
             HashCode hash = new HashCode();
             hash.Add(this.x);
             hash.Add(this.y);

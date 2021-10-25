@@ -9,8 +9,6 @@ namespace SeaBattleDomainModel.Entities
     [Flags]
     public enum Quadrant
     {
-        //TODO (DONE): Let's rename, i.e. First, Second ...
-
         First = 1,
         Second = 2,
         Third = 4,

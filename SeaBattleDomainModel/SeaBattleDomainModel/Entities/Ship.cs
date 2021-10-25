@@ -48,8 +48,6 @@ namespace SeaBattleDomainModel.Entities
 
         public static bool operator ==(Ship ship1, Ship ship2)
         {
-            //TODO (DONE) : Possible nullReferenceException. https://gitlab.nixdev.co/net-projects/education/dboryhin/-/merge_requests/1#note_404485
-
             return ship1?.Velocity == ship2?.Velocity
                     && ship1?.GetType() == ship2?.GetType()
                     && ship1?.Size == ship2?.Size;
@@ -57,7 +55,6 @@ namespace SeaBattleDomainModel.Entities
 
         public static bool operator !=(Ship ship1, Ship ship2)
         {
-            //TODO (DONE) : simplify logic (use what already exist)
             return !(ship1 == ship2);
         }
 
@@ -65,7 +62,6 @@ namespace SeaBattleDomainModel.Entities
 
         public override bool Equals(object obj)
         {
-            //TODO (DONE) : please handle case when obj is not a Ship
             if (obj is not Ship)
             {
                 return false;
@@ -75,7 +71,6 @@ namespace SeaBattleDomainModel.Entities
 
         public bool Equals(Ship other)
         {
-            // TODO (DONE): Please check the most recent coding guideline whether we should use this.Velocity ... ? https://gitlab.nixdev.co/net-projects/education/dboryhin/-/merge_requests/1#note_404491
             return other != null &&
                    this.Velocity == other.Velocity &&
                    this.Range == other.Range &&
@@ -84,7 +79,6 @@ namespace SeaBattleDomainModel.Entities
 
         public override int GetHashCode()
         {
-            //TODO : Определить какие параметры указать для хэша. Должны быть readonly
             return HashCode.Combine(this.id);
         }
 

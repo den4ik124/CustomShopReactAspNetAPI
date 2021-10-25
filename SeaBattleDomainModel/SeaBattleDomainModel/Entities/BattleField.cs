@@ -168,7 +168,6 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>true - all points are within the map, false - at least one point is outside the map</returns>
         private bool CheckOutOfBoundaries(Point head, Point tail)
         {
-            //TODO: Check the result of this method
             int bfHalfLength = this.battleFieldSideLength / 2;
             return head.X <= bfHalfLength && head.X >= -bfHalfLength
                 && head.Y <= bfHalfLength && head.Y >= -bfHalfLength
@@ -193,13 +192,13 @@ namespace SeaBattleDomainModel.Entities
 
         private bool CheckPointOnNeighbor(Point point)
         {
-            bool isNeighborAbsent = true; //переменная, показывающая найден ли сосед вокруг указанной точки
+            bool isNeighborAbsent = true;
             Cell cellCurrent = GetCellByPoint(point);
             Cell[] cellsForCheck = new Cell[4] {
-                Array.Find(cells, (cell) => cell.Point.Y == point.Y + 1), //ячейка, содержащая точку выше point
-                Array.Find(cells, (cell) => cell.Point.Y == point.Y - 1), //ячейка, содержащая точку ниже point
-                Array.Find(cells, (cell) => cell.Point.X == point.X - 1), //ячейка, содержащая точку левее point
-                Array.Find(cells, (cell) => cell.Point.X == point.X + 1) //ячейка, содержащая точку правее point
+                Array.Find(cells, (cell) => cell.Point.Y == point.Y + 1), //cell above specified point
+                Array.Find(cells, (cell) => cell.Point.Y == point.Y - 1), //cell below specified point
+                Array.Find(cells, (cell) => cell.Point.X == point.X - 1), //cell to the left of the specified point
+                Array.Find(cells, (cell) => cell.Point.X == point.X + 1) //cell to the right of the specified point
             };
 
             foreach (var cell in cellsForCheck)
@@ -234,14 +233,14 @@ namespace SeaBattleDomainModel.Entities
 
             if (IsHorizontalLine(head, tail))
             {
-                if (head.X > tail.X) //если голова "правее" хвоста в системе координат
+                if (head.X > tail.X) // head point to the right of the tail
                 {
                     for (int x = tail.X; x <= head.X; x++)
                     {
                         points.Add(new Point(x, head.Y));
                     }
                 }
-                else //если голова "левее" хвоста в системе координат
+                else // head point to the left of the tail
                 {
                     for (int x = head.X; x <= tail.X; x++)
                     {
@@ -251,14 +250,14 @@ namespace SeaBattleDomainModel.Entities
             }
             else if (IsVerticalLine(head, tail))
             {
-                if (head.Y > tail.Y) //если голова "выше" хвоста в системе координат
+                if (head.Y > tail.Y) // head point above of the tail
                 {
                     for (int y = tail.Y; y <= head.Y; y++)
                     {
                         points.Add(new Point(head.X, y));
                     }
                 }
-                else //если голова "ниже" хвоста в системе координат
+                else //head point below of the tail
                 {
                     for (int y = head.Y; y <= tail.Y; y++)
                     {
