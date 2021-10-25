@@ -27,14 +27,14 @@ namespace SeaBattleDomainModel.Entities
         /// <summary>
         /// Overriding the default constructor
         /// </summary>
-        public Point(int x, int y)
+        public Point(int x, int y) : this()
         {
             //TODO: уточнить за такую реализацию
             this.x = x;
             this.y = y;
-            this.quadrantId = default;
-            this.xQuad = default;
-            this.yQuad = default;
+            //this.quadrantId = default;
+            //this.xQuad = default;
+            //this.yQuad = default;
             this.quadrantId = GetQuadrant(x, y);
             RecalculateQuadrantCoordinates();
         }

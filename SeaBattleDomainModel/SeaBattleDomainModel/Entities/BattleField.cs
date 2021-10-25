@@ -44,12 +44,14 @@ namespace SeaBattleDomainModel.Entities
         /// <param name="halfSideLength">The side of separate quadrant</param>
         private void FillCells()
         {
+            int counter = 0;
             int bfHalfSide = battleFieldSideLength / 2;
             for (int y = bfHalfSide; y >= -bfHalfSide; y--)
             {
                 for (int x = -bfHalfSide; x <= bfHalfSide; x++)
                 {
-                    cells.Append(new Cell(new Point(x, y)));
+                    cells[counter] = new Cell(new Point(x, y));
+                    counter++;
                 }
             }
         }
@@ -277,11 +279,16 @@ namespace SeaBattleDomainModel.Entities
 
             #region v1
 
-            //var cellGroups = ships.GroupBy(ship => cells.Where(item => item.Ship == ship)); //получили группы ячеек по кораблям
-            //foreach (var group in cellGroups)
-            //{
-            //    group.Key.OrderBy(cell => cell.DistanceToOrigin); //в каждой группе отсортировли ячейки по DistanceToOrigin
-            //}
+            List<Ship> sortedShips = new List<Ship>(ships.Count);
+            var cellGroups = ships.GroupBy(ship => cells.Where(item => item.Ship == ship)); //получили группы ячеек по кораблям
+
+            cellGroups.OrderBy(group => group.Key);
+            cellGroups.OrderBy(group => group.Key.OrderBy(cell => cell.DistanceToOrigin));
+            foreach (var group in cellGroups)
+            {
+                group.Key.OrderBy(cell => cell.DistanceToOrigin); //в каждой группе отсортировли ячейки по DistanceToOrigin
+                sortedShips.Add(group.Key.First().Ship);
+            }
 
             #endregion v1
 
