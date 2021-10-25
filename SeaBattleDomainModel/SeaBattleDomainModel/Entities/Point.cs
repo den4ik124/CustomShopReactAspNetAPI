@@ -70,15 +70,7 @@ namespace SeaBattleDomainModel.Entities
         public bool Equals(Point other)
         {
             return this.x == other.x &&
-                   this.y == other.y &&
-                   this.quadrantId == other.quadrantId &&
-                   this.xQuad == other.xQuad &&
-                   this.yQuad == other.yQuad &&
-                   this.X == other.X &&
-                   this.Y == other.Y &&
-                   this.XQuad == other.XQuad &&
-                   this.YQuad == other.YQuad &&
-                   this.Quadrant == other.Quadrant;
+                   this.y == other.y;
         }
 
         public override int GetHashCode()
