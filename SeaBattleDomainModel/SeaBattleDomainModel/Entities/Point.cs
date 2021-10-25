@@ -32,7 +32,8 @@ namespace SeaBattleDomainModel.Entities
             this.x = x;
             this.y = y;
             this.quadrantId = GetQuadrant(x, y);
-            RecalculateQuadrantCoordinates();
+            this.xQuad = Math.Abs(x);
+            this.yQuad = Math.Abs(y);
         }
 
         #endregion Constructors
@@ -107,55 +108,6 @@ namespace SeaBattleDomainModel.Entities
 
                 default:
                     return Quadrant.First | Quadrant.Second | Quadrant.Third | Quadrant.Fourth;
-            }
-        }
-
-        /// <summary>
-        /// By quadrant determines the coordinates of points relative to the quadrant
-        /// </summary>
-        private void RecalculateQuadrantCoordinates()
-        {
-            switch (this.quadrantId)
-            {
-                case Quadrant.Second:
-                    this.xQuad = Math.Abs(this.x);
-                    this.yQuad = this.y;
-                    break;
-
-                case Quadrant.Third:
-                    this.xQuad = Math.Abs(this.x);
-                    this.yQuad = Math.Abs(this.y);
-                    break;
-
-                case Quadrant.Fourth:
-                    this.xQuad = this.x;
-                    this.yQuad = Math.Abs(this.y);
-                    break;
-
-                case Quadrant.First | Quadrant.Second:
-                    this.xQuad = Math.Abs(this.x);
-                    this.yQuad = this.y;
-                    break;
-
-                case Quadrant.Second | Quadrant.Third:
-                    this.xQuad = Math.Abs(this.x);
-                    this.yQuad = Math.Abs(this.y);
-                    break;
-
-                case Quadrant.Third | Quadrant.Fourth:
-                    this.xQuad = Math.Abs(this.x);
-                    this.yQuad = Math.Abs(this.y);
-                    break;
-
-                case Quadrant.First | Quadrant.Fourth:
-                    this.xQuad = Math.Abs(this.x);
-                    this.yQuad = this.y;
-                    break;
-
-                default:
-                    this.xQuad = this.x;
-                    this.yQuad = this.y;
-                    break;
             }
         }
 
