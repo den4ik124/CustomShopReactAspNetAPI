@@ -10,15 +10,19 @@ namespace SeaBattleDomainModel.Entities
     {
         private readonly List<Ship> ships;
 
-        private readonly int size;
+        private readonly int battleFieldSideLength;
 
         private Cell[] cells;
 
-        public BattleField(int size)
+        /// <summary>
+        /// Initialize new battle field
+        /// </summary>
+        /// <param name="halfSideLength">The side of separate quadrant</param>
+        public BattleField(int halfSideLength)
         {
-            this.size = size;
+            this.battleFieldSideLength = halfSideLength * 2;
             this.ships = new List<Ship>();
-            this.cells = FillCells(size);
+            this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
         }
 
         public Ship this[Quadrant quadrant, int x, int y]
@@ -133,10 +137,12 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>true - all points are within the map, false - at least one point is outside the map</returns>
         private bool CheckOutOfBoundaries(Point head, Point tail)
         {
-            return head.X <= size / 2 && head.X >= -size / 2
-                && head.Y <= size / 2 && head.Y >= -size / 2
-                && tail.X <= size / 2 && tail.X >= -size / 2
-                && tail.Y <= size / 2 && tail.Y >= -size / 2;
+            //TODO: Check the result of this method
+            int bfHalfLength = this.battleFieldSideLength / 2;
+            return head.X <= bfHalfLength && head.X >= -bfHalfLength
+                && head.Y <= bfHalfLength && head.Y >= -bfHalfLength
+                && tail.X <= bfHalfLength && tail.X >= -bfHalfLength
+                && tail.Y <= bfHalfLength && tail.Y >= -bfHalfLength;
         }
 
         private bool CheckNeighborhoods(Point head, Point tail)
