@@ -8,6 +8,14 @@ namespace SeaBattleDomainModel.Entities
 {
     public class Cell
     {
+        #region Fields
+
+        //fields
+
+        #endregion Fields
+
+        #region Constructors
+
         public Cell(Point point)
         {
             Point = point;
@@ -19,10 +27,20 @@ namespace SeaBattleDomainModel.Entities
             Ship = ship;
         }
 
+        #endregion Constructors
+
+        #region Properties
+
         public Ship Ship { get; set; }
 
         public Point Point { get; set; }
         public double DistanceToOrigin { get; set; }
+
+        #endregion Properties
+
+        #region Methods
+
+        #region Methods.Private
 
         /// <summary>
         /// Calculates distance from point to origin
@@ -34,10 +52,18 @@ namespace SeaBattleDomainModel.Entities
             return Math.Sqrt(point.X * point.X + point.Y * point.Y);
         }
 
+        #endregion Methods.Private
+
+        #region Methods.public
+
         public override string ToString()
         {
             return $"\tShip:\n{Ship}\n" +
                    $"\tPoint:\n{Point}";
         }
+
+        #endregion Methods.public
+
+        #endregion Methods
     }
 }

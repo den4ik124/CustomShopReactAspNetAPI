@@ -8,6 +8,8 @@ namespace SeaBattleDomainModel.Entities
 {
     public struct Point : IEquatable<Point>
     {
+        #region Fields
+
         private int x;
 
         private int y;
@@ -17,6 +19,10 @@ namespace SeaBattleDomainModel.Entities
         private int xQuad;
 
         private int yQuad;
+
+        #endregion Fields
+
+        #region Constructors
 
         /// <summary>
         /// Overriding the default constructor
@@ -32,6 +38,10 @@ namespace SeaBattleDomainModel.Entities
             this.quadrantId = GetQuadrant(x, y);
             RecalculateQuadrantCoordinates();
         }
+
+        #endregion Constructors
+
+        #region Properties
 
         public int X
         {
@@ -62,25 +72,11 @@ namespace SeaBattleDomainModel.Entities
             get => this.quadrantId;
         }
 
-        public override bool Equals(object obj)
-        {
-            return obj is Point point && Equals(point);
-        }
+        #endregion Properties
 
-        public bool Equals(Point other)
-        {
-            return this.x == other.x &&
-                   this.y == other.y;
-        }
+        #region Methods
 
-        public override int GetHashCode()
-        {
-            //TODO (DONE): Please simplify hashcode. What makes point unique?
-            HashCode hash = new HashCode();
-            hash.Add(this.x);
-            hash.Add(this.y);
-            return hash.ToHashCode();
-        }
+        #region Methods.Private
 
         /// <summary>
         /// Gets the coordinates of the point. Defines a quadrant
@@ -166,5 +162,33 @@ namespace SeaBattleDomainModel.Entities
                     break;
             }
         }
+
+        #endregion Methods.Private
+
+        #region Methods.public
+
+        public override bool Equals(object obj)
+        {
+            return obj is Point point && Equals(point);
+        }
+
+        public bool Equals(Point other)
+        {
+            return this.x == other.x &&
+                   this.y == other.y;
+        }
+
+        public override int GetHashCode()
+        {
+            //TODO (DONE): Please simplify hashcode. What makes point unique?
+            HashCode hash = new HashCode();
+            hash.Add(this.x);
+            hash.Add(this.y);
+            return hash.ToHashCode();
+        }
+
+        #endregion Methods.public
+
+        #endregion Methods
     }
 }

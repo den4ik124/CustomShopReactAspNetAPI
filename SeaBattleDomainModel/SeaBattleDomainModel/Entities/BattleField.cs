@@ -8,21 +8,50 @@ namespace SeaBattleDomainModel.Entities
 {
     public class BattleField
     {
+        #region Fields
+
         private readonly List<Ship> ships;
 
         private readonly int battleFieldSideLength;
 
         private Cell[] cells;
 
-        /// <summary>
-        /// Initialize new battle field
-        /// </summary>
-        /// <param name="halfSideLength">The side of separate quadrant</param>
+        #endregion Fields
+
+        #region Constructors
+
         public BattleField(int halfSideLength)
         {
             this.battleFieldSideLength = halfSideLength * 2;
             this.ships = new List<Ship>();
             this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
+            FillCells();
+        }
+
+        #endregion Constructors
+
+        #region Properties
+
+        //props
+
+        #endregion Properties
+
+        #region Methods
+
+        /// <summary>
+        /// Initialize new battle field
+        /// </summary>
+        /// <param name="halfSideLength">The side of separate quadrant</param>
+        private void FillCells()
+        {
+            int bfHalfSide = battleFieldSideLength / 2;
+            for (int y = bfHalfSide; y >= -bfHalfSide; y--)
+            {
+                for (int x = -bfHalfSide; x <= bfHalfSide; x++)
+                {
+                    cells.Append(new Cell(new Point(x, y)));
+                }
+            }
         }
 
         public Ship this[Quadrant quadrant, int x, int y]
@@ -31,13 +60,6 @@ namespace SeaBattleDomainModel.Entities
             {
                 return GetShipByCoordinates(quadrant, x, y);
             }
-        }
-
-        private Cell[] FillCells(int size)
-        {
-            //TODO : реализовать метод заполнения ячеек
-            //return new Cell[1];
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -59,8 +81,14 @@ namespace SeaBattleDomainModel.Entities
                 return;
             }
             ship.Size = GetShipSize(head, tail);
-            cells.Select(cell => cell.Point);
-            //TODO: реализовать инициализацию и заполнение массива точек ссылками на корабль
+
+            var pointsBetween = GetPointsBetween(head, tail); //get points between head and tail
+
+            foreach (var point in pointsBetween)
+            {
+                var cell = GetCellByPoint(point); //get a cell for each point between head and tail
+                cell.Ship = ship; //in the resulting cell we transfer the ship, which will be located between the head and tail
+            }
             this.ships.Add(ship);
         }
 
@@ -188,7 +216,7 @@ namespace SeaBattleDomainModel.Entities
 
         private Cell GetCellByPoint(Point point)
         {
-            return Array.Find(cells, (cell) => cell.Point.Equals(point)); //ячейка, содержащая точку point
+            return Array.Find(cells, (cell) => cell.Point.Equals(point)); //Cell that include point inside
         }
 
         /// <summary>
@@ -240,9 +268,28 @@ namespace SeaBattleDomainModel.Entities
             return points;
         }
 
+        /// <summary>
+        /// Sorting of ships collection by distance to origin point
+        /// </summary>
+        private void SortShips()
+        {
+            //TODO : Implement ship collection sorting
+
+            #region v1
+
+            //var cellGroups = ships.GroupBy(ship => cells.Where(item => item.Ship == ship)); //получили группы ячеек по кораблям
+            //foreach (var group in cellGroups)
+            //{
+            //    group.Key.OrderBy(cell => cell.DistanceToOrigin); //в каждой группе отсортировли ячейки по DistanceToOrigin
+            //}
+
+            #endregion v1
+
+            throw new NotImplementedException();
+        }
+
         public override string ToString()
         {
-            //TODO: реализовать переопределение
             StringBuilder battleFieldState = new StringBuilder();
             foreach (var cell in cells)
             {
@@ -250,5 +297,7 @@ namespace SeaBattleDomainModel.Entities
             }
             return battleFieldState.ToString();
         }
+
+        #endregion Methods
     }
 }

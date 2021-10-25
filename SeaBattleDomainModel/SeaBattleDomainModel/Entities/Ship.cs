@@ -8,11 +8,37 @@ namespace SeaBattleDomainModel.Entities
 {
     public abstract class Ship : IEquatable<Ship>
     {
+        #region Fields
+
+        //fields
+
+        #endregion Fields
+
+        #region Constructors
+
+        //ctors
+
+        #endregion Constructors
+
+        #region Properties
+
         public abstract int Velocity { get; set; }
 
         public abstract int Range { get; set; }
 
         public abstract int Size { get; set; }
+
+        #endregion Properties
+
+        #region Methods
+
+        #region Methods.Private
+
+        //private
+
+        #endregion Methods.Private
+
+        #region Methods.public
 
         public static bool operator ==(Ship ship1, Ship ship2)
         {
@@ -33,6 +59,11 @@ namespace SeaBattleDomainModel.Entities
 
         public override bool Equals(object obj)
         {
+            //TODO (DONE) : please handle case when obj is not a Ship
+            if (obj is not Ship)
+            {
+                return false;
+            }
             return Equals(obj as Ship);
         }
 
@@ -55,5 +86,9 @@ namespace SeaBattleDomainModel.Entities
         {
             return $"Velocity: {this.Velocity}\nRange: {this.Range}\nSize: {this.Size}";
         }
+
+        #endregion Methods.public
+
+        #endregion Methods
     }
 }
