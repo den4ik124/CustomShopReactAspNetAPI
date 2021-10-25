@@ -35,14 +35,14 @@ namespace SeaBattleDomainModel.Entities
 
         public int X
         {
-            get { return x; }
-            set { x = value; }
+            get { return this.x; }
+            set { this.x = value; }
         }
 
         public int Y
         {
-            get { return y; }
-            set { y = value; }
+            get { return this.y; }
+            set { this.y = value; }
         }
 
         public int XQuad
@@ -59,7 +59,7 @@ namespace SeaBattleDomainModel.Entities
 
         public Quadrant Quadrant
         {
-            get => quadrantId;
+            get => this.quadrantId;
         }
 
         public override bool Equals(object obj)
@@ -69,31 +69,31 @@ namespace SeaBattleDomainModel.Entities
 
         public bool Equals(Point other)
         {
-            return x == other.x &&
-                   y == other.y &&
-                   quadrantId == other.quadrantId &&
-                   xQuad == other.xQuad &&
-                   yQuad == other.yQuad &&
-                   X == other.X &&
-                   Y == other.Y &&
-                   XQuad == other.XQuad &&
-                   YQuad == other.YQuad &&
-                   Quadrant == other.Quadrant;
+            return this.x == other.x &&
+                   this.y == other.y &&
+                   this.quadrantId == other.quadrantId &&
+                   this.xQuad == other.xQuad &&
+                   this.yQuad == other.yQuad &&
+                   this.X == other.X &&
+                   this.Y == other.Y &&
+                   this.XQuad == other.XQuad &&
+                   this.YQuad == other.YQuad &&
+                   this.Quadrant == other.Quadrant;
         }
 
         public override int GetHashCode()
         {
             HashCode hash = new HashCode();
-            hash.Add(x);
-            hash.Add(y);
-            hash.Add(quadrantId);
-            hash.Add(xQuad);
-            hash.Add(yQuad);
-            hash.Add(X);
-            hash.Add(Y);
-            hash.Add(XQuad);
-            hash.Add(YQuad);
-            hash.Add(Quadrant);
+            hash.Add(this.x);
+            hash.Add(this.y);
+            hash.Add(this.quadrantId);
+            hash.Add(this.xQuad);
+            hash.Add(this.yQuad);
+            hash.Add(this.X);
+            hash.Add(this.Y);
+            hash.Add(this.XQuad);
+            hash.Add(this.YQuad);
+            hash.Add(this.Quadrant);
             return hash.ToHashCode();
         }
 
