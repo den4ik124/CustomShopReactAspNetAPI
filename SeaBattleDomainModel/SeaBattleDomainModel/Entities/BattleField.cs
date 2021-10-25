@@ -16,6 +16,7 @@ namespace SeaBattleDomainModel.Entities
         private readonly int battleFieldSideLength;
 
         private Cell[] cells;
+        private Dictionary<Point, Cell> cellsDict;
 
         #endregion Fields
 
@@ -26,6 +27,7 @@ namespace SeaBattleDomainModel.Entities
             this.battleFieldSideLength = halfSideLength * 2 + 1;
             this.ships = new List<Ship>();
             this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
+            this.cellsDict = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
         }
 
@@ -51,6 +53,7 @@ namespace SeaBattleDomainModel.Entities
             {
                 for (int x = -bfHalfSide; x <= bfHalfSide; x++)
                 {
+                    cellsDict.Add(new Point(x, y), null);
                     cells[counter] = new Cell(new Point(x, y));
                     counter++;
                 }
@@ -151,11 +154,20 @@ namespace SeaBattleDomainModel.Entities
             var points = GetPointsBetween(head, tail);
             foreach (var point in points)
             {
-                if (Array.Find(cells, (cell) => cell.Point.Equals(point)).Ship != null) //TODO: подумать, какие структуры данных использовать здесь
+                Cell cell;
+                if (cellsDict.TryGetValue(point, out cell))
                 {
-                    isNoCollision = false;
-                    break;
+                    if (cellsDict[point].Ship != null)
+                    {
+                        isNoCollision = false;
+                        break;
+                    }
                 }
+                //if (Array.Find(cells, (cell) => cell.Point.Equals(point)).Ship != null) //TODO: подумать, какие структуры данных использовать здесь
+                //{
+                //    isNoCollision = false;
+                //    break;
+                //}
             }
             return isNoCollision;
         }
@@ -218,7 +230,8 @@ namespace SeaBattleDomainModel.Entities
 
         private Cell GetCellByPoint(Point point)
         {
-            return Array.Find(cells, (cell) => cell.Point.Equals(point)); //Cell that include point inside
+            return cellsDict[point];//Cell that include point inside
+            //return Array.Find(cells, (cell) => cell.Point.Equals(point));
         }
 
         /// <summary>
