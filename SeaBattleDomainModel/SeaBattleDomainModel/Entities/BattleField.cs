@@ -11,11 +11,13 @@ namespace SeaBattleDomainModel.Entities
     {
         #region Fields
 
-        private readonly List<Ship> ships;
+        //private readonly List<Ship> ships;
+        private readonly Dictionary<Cell,Ship> ships;
 
         private readonly int battleFieldSideLength;
 
-        private Cell[] cells;
+        //private Cell[] cells;
+        private Dictionary<Point, Cell> cells;
 
         #endregion Fields
 
@@ -24,8 +26,11 @@ namespace SeaBattleDomainModel.Entities
         public BattleField(int halfSideLength)
         {
             this.battleFieldSideLength = halfSideLength * 2 + 1;
-            this.ships = new List<Ship>();
-            this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
+            //this.ships = new List<Ship>();
+            this.ships = new Dictionary<Cell, Ship>();
+
+              //this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
+              this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
         }
 
@@ -45,14 +50,13 @@ namespace SeaBattleDomainModel.Entities
         /// <param name="halfSideLength">The side of separate quadrant</param>
         private void FillCells()
         {
-            int counter = 0;
             int bfHalfSide = battleFieldSideLength / 2;
             for (int y = bfHalfSide; y >= -bfHalfSide; y--)
             {
                 for (int x = -bfHalfSide; x <= bfHalfSide; x++)
                 {
-                    cells[counter] = new Cell(new Point(x, y));
-                    counter++;
+                    var point = new Point(x, y);
+                    cells.Add(point, new Cell(point));
                 }
             }
         }
@@ -71,10 +75,11 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>Ship from list</returns>
         private Ship GetShipByCoordinates(Quadrant quadrant, int x, int y)
         {
-            return cells.First(cell => cell.Point.Quadrant == quadrant  //cell checking by quadrant
-                            && cell.Point.XQuad == x                    //cell checking by quadrant X coordinate
-                            && cell.Point.YQuad == y)                   //cell checking by quadrant Y coordinate
-                            .Ship;                                      //Select ship from cell
+            return cells[new Point(x, y)].Ship;
+            //return cells.First(cell => cell.Point.Quadrant == quadrant  //cell checking by quadrant
+            //                && cell.Point.XQuad == x                    //cell checking by quadrant X coordinate
+            //                && cell.Point.YQuad == y)                   //cell checking by quadrant Y coordinate
+            //                .Ship;                                      //Select ship from cell
         }
 
         public void AddShip(Ship ship, Point head, Point tail)
@@ -91,8 +96,10 @@ namespace SeaBattleDomainModel.Entities
             {
                 var cell = GetCellByPoint(point); //get a cell for each point between head and tail
                 cell.Ship = ship; //in the resulting cell we transfer the ship, which will be located between the head and tail
+                this.ships.Add(cell, ship);
             }
-            this.ships.Add(ship);
+
+            //this.ships.Add(ship);
         }
 
         /// <summary>
@@ -126,7 +133,7 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>true - if the line is vertical / horizontal. false - if the line is at an angle.</returns>
         private bool CheckDirection(Point head, Point tail)
         {
-            return IsHorizontalLine(head, tail) || IsVerticalLine(head, tail);
+            return (head.Equals(tail)) || IsHorizontalLine(head, tail) || IsVerticalLine(head, tail);
         }
 
         private static bool IsHorizontalLine(Point head, Point tail)
@@ -151,8 +158,8 @@ namespace SeaBattleDomainModel.Entities
             var points = GetPointsBetween(head, tail);
             foreach (var point in points)
             {
-                if (Array.Find(cells, (cell) => cell.Point.Equals(point)).Ship != null) //TODO: подумать, какие структуры данных использовать здесь
-                {
+                if (cells[point].Ship != null) //TODO : проверить что не так с != null
+                { 
                     isNoCollision = false;
                     break;
                 }
@@ -194,12 +201,12 @@ namespace SeaBattleDomainModel.Entities
         {
             bool isNeighborAbsent = true;
             Cell cellCurrent = GetCellByPoint(point);
+            //TODO : проверить, если корабль стоит впритык к границе
             Cell[] cellsForCheck = new Cell[4] {
-                Array.Find(cells, (cell) => cell.Point.Y == point.Y + 1), //cell above specified point
-                Array.Find(cells, (cell) => cell.Point.Y == point.Y - 1), //cell below specified point
-                Array.Find(cells, (cell) => cell.Point.X == point.X - 1), //cell to the left of the specified point
-                Array.Find(cells, (cell) => cell.Point.X == point.X + 1) //cell to the right of the specified point
-            };
+                cells[new Point(point.X,point.Y + 1)],  //cell above specified point
+                cells[new Point(point.X,point.Y - 1)],  //cell below specified point
+                cells[new Point(point.X-1,point.Y)],    //cell to the left of the specified point
+                cells[new Point(point.X+1,point.Y)] };  //cell to the right of the specified point
 
             foreach (var cell in cellsForCheck)
             {
@@ -218,7 +225,8 @@ namespace SeaBattleDomainModel.Entities
 
         private Cell GetCellByPoint(Point point)
         {
-            return Array.Find(cells, (cell) => cell.Point.Equals(point)); //Cell that include point inside
+            return cells[point];
+            //return Array.Find(cells, (cell) => cell.Point.Equals(point)); //Cell that include point inside
         }
 
         /// <summary>
@@ -276,28 +284,24 @@ namespace SeaBattleDomainModel.Entities
         public void SortShips()
         {
             //TODO : Implement ship collection sorting
+
             List<Ship> sortedShips = new List<Ship>(ships.Count);
-            cells = cells.OrderBy(cell => cell.DistanceToOrigin).Where(cell => cell.Ship != null).ToArray();
+            var groupOfCellsWithShip = cells.Where(cell => cell.Value.Ship != null)
+                                    .OrderBy(item => item.Value.DistanceToOrigin)
+                                    .GroupBy((point) => point.Value.Ship);
 
-            //foreach (var cell in cells)
-            //{
-            //    sortedShips.Add(cell.Ship);
-            //}
-
-            #region v1
-
-            var cellGroups = ships.GroupBy(ship => cells.Where(item => item.Ship == ship)); //получили группы ячеек по кораблям
-            var test = cellGroups.OrderBy(group => group.Key);
-            cellGroups = cellGroups.OrderBy(group => group.Key.OrderBy(cell => cell.DistanceToOrigin));
-            foreach (var group in cellGroups)
+            foreach (var group in groupOfCellsWithShip)
             {
-                group.Key.OrderBy(cell => cell.DistanceToOrigin); //в каждой группе отсортировли ячейки по DistanceToOrigin
-                sortedShips.Add(group.Key.First().Ship);
+                sortedShips.Add(ships[group.First().Value]);
+                //Console.WriteLine("ID:\t" + ships[group.First().Value].Id);
+                //foreach (var cell in group)
+                //{
+                //    Console.WriteLine(cell.Value.DistanceToOrigin);
+                //}
+                //Console.WriteLine("=======");
             }
-
-            #endregion v1
-
-            throw new NotImplementedException();
+            
+            Console.ReadLine();
         }
 
         public override string ToString()
