@@ -95,18 +95,35 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         private Quadrant GetQuadrant(int x, int y)
         {
-            return (x, y) switch
+            switch ((x, y))
             {
-                ( > 0, > 0) => Quadrant.First,
-                ( < 0, > 0) => Quadrant.Second,
-                ( < 0, < 0) => Quadrant.Third,
-                ( > 0, < 0) => Quadrant.Fourth,
-                (0, > 0) => Quadrant.First | Quadrant.Second,
-                (0, < 0) => Quadrant.Third | Quadrant.Fourth,
-                ( > 0, 0) => Quadrant.First | Quadrant.Fourth,
-                ( < 0, 0) => Quadrant.Second | Quadrant.Third,
-                _ => Quadrant.First | Quadrant.Second | Quadrant.Third | Quadrant.Fourth,
-            };
+                case ( > 0, > 0):
+                    return Quadrant.First;
+
+                case ( < 0, > 0):
+                    return Quadrant.Second;
+
+                case ( < 0, < 0):
+                    return Quadrant.Third;
+
+                case ( > 0, < 0):
+                    return Quadrant.Fourth;
+
+                case (0, > 0):
+                    return Quadrant.First | Quadrant.Second;
+
+                case (0, < 0):
+                    return Quadrant.Third | Quadrant.Fourth;
+
+                case ( > 0, 0):
+                    return Quadrant.First | Quadrant.Fourth;
+
+                case ( < 0, 0):
+                    return Quadrant.Second | Quadrant.Third;
+
+                default:
+                    return Quadrant.First | Quadrant.Second | Quadrant.Third | Quadrant.Fourth;
+            }
         }
 
         /// <summary>
