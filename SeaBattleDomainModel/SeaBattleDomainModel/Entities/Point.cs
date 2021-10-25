@@ -83,17 +83,10 @@ namespace SeaBattleDomainModel.Entities
 
         public override int GetHashCode()
         {
+            //TODO (DONE): Please simplify hashcode. What makes point unique?
             HashCode hash = new HashCode();
             hash.Add(this.x);
             hash.Add(this.y);
-            hash.Add(this.quadrantId);
-            hash.Add(this.xQuad);
-            hash.Add(this.yQuad);
-            hash.Add(this.X);
-            hash.Add(this.Y);
-            hash.Add(this.XQuad);
-            hash.Add(this.YQuad);
-            hash.Add(this.Quadrant);
             return hash.ToHashCode();
         }
 
@@ -102,35 +95,18 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         private Quadrant GetQuadrant(int x, int y)
         {
-            switch ((x, y))
+            return (x, y) switch
             {
-                case ( > 0, > 0):
-                    return Quadrant.First;
-
-                case ( < 0, > 0):
-                    return Quadrant.Second;
-
-                case ( < 0, < 0):
-                    return Quadrant.Third;
-
-                case ( > 0, < 0):
-                    return Quadrant.Fourth;
-
-                case (0, > 0):
-                    return Quadrant.First | Quadrant.Second;
-
-                case (0, < 0):
-                    return Quadrant.Third | Quadrant.Fourth;
-
-                case ( > 0, 0):
-                    return Quadrant.First | Quadrant.Fourth;
-
-                case ( < 0, 0):
-                    return Quadrant.Second | Quadrant.Third;
-
-                default:
-                    return Quadrant.First | Quadrant.Second | Quadrant.Third | Quadrant.Fourth;
-            }
+                ( > 0, > 0) => Quadrant.First,
+                ( < 0, > 0) => Quadrant.Second,
+                ( < 0, < 0) => Quadrant.Third,
+                ( > 0, < 0) => Quadrant.Fourth,
+                (0, > 0) => Quadrant.First | Quadrant.Second,
+                (0, < 0) => Quadrant.Third | Quadrant.Fourth,
+                ( > 0, 0) => Quadrant.First | Quadrant.Fourth,
+                ( < 0, 0) => Quadrant.Second | Quadrant.Third,
+                _ => Quadrant.First | Quadrant.Second | Quadrant.Third | Quadrant.Fourth,
+            };
         }
 
         /// <summary>

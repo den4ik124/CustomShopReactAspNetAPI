@@ -48,7 +48,7 @@ namespace SeaBattleDomainModel.Entities
 
         public void AddShip(Ship ship, Point head, Point tail)
         {
-            if (IsLocationValid(head, tail) == false) //TODO: уточнить: оставить явную проверку на false (мне так больше нравится, т.к. читабельнее) или просто оставить метод без ==false?
+            if (!IsLocationValid(head, tail))
             {
                 return;
             }
