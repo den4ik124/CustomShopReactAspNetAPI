@@ -19,7 +19,7 @@ namespace SeaBattleDomainModel.Entities
         private int yQuad;
 
         /// <summary>
-        /// Переопределение конструктора по умолчанию
+        /// Overriding the default constructor
         /// </summary>
         public Point(int x, int y)
         {
@@ -98,7 +98,7 @@ namespace SeaBattleDomainModel.Entities
         }
 
         /// <summary>
-        /// Получает координаты точки. Определяет квадрант
+        /// Gets the coordinates of the point. Defines a quadrant
         /// </summary>
         private Quadrant GetQuadrant(int x, int y)
         {
@@ -134,7 +134,7 @@ namespace SeaBattleDomainModel.Entities
         }
 
         /// <summary>
-        /// По квадранту определяет координаты точек относительно квадранта
+        /// By quadrant determines the coordinates of points relative to the quadrant
         /// </summary>
         private void RecalculateQuadrantCoordinates()
         {
@@ -153,6 +153,26 @@ namespace SeaBattleDomainModel.Entities
                 case Quadrant.Fourth:
                     this.xQuad = this.x;
                     this.yQuad = Math.Abs(this.y);
+                    break;
+
+                case Quadrant.First | Quadrant.Second:
+                    this.xQuad = Math.Abs(this.x);
+                    this.yQuad = this.y;
+                    break;
+
+                case Quadrant.Second | Quadrant.Third:
+                    this.xQuad = Math.Abs(this.x);
+                    this.yQuad = Math.Abs(this.y);
+                    break;
+
+                case Quadrant.Third | Quadrant.Fourth:
+                    this.xQuad = Math.Abs(this.x);
+                    this.yQuad = Math.Abs(this.y);
+                    break;
+
+                case Quadrant.First | Quadrant.Fourth:
+                    this.xQuad = Math.Abs(this.x);
+                    this.yQuad = this.y;
                     break;
 
                 default:
