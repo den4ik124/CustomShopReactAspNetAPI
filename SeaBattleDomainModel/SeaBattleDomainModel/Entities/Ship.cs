@@ -47,7 +47,8 @@ namespace SeaBattleDomainModel.Entities
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(this.Velocity, this.Range);
+            //TODO : Определить какие параметры указать для хэша. Должны быть readonly
+            return HashCode.Combine(this.Velocity, this.Range, this.Size);
         }
 
         public override string ToString()

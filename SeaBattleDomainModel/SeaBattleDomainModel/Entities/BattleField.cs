@@ -8,9 +8,9 @@ namespace SeaBattleDomainModel.Entities
 {
     public class BattleField
     {
-        private List<Ship> ships;
+        private readonly List<Ship> ships;
 
-        private int size;
+        private readonly int size;
 
         private Cell[] cells;
 
@@ -31,19 +31,21 @@ namespace SeaBattleDomainModel.Entities
 
         private Cell[] FillCells(int size)
         {
-            return new Cell[1];
+            //TODO : реализовать метод заполнения ячеек
+            //return new Cell[1];
+            throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Находит корабль в списке кораблей
+        /// Finds a ship in the list of ships
         /// </summary>
-        /// <returns>Корабль по переданным параметрам</returns>
+        /// <returns>Ship from list</returns>
         private Ship GetShipByCoordinates(Quadrant quadrant, int x, int y)
         {
-            return cells.First(cell => cell.Point.Quadrant == quadrant  //проверка ячейки по квадранту
-                            && cell.Point.XQuad == x                    //проверка ячейки по координате Х квадранта
-                            && cell.Point.YQuad == y)                   //проверка ячейки по координате Y квадранта
-                            .Ship;                                      //возврат корабля из ячейки
+            return cells.First(cell => cell.Point.Quadrant == quadrant  //cell checking by quadrant
+                            && cell.Point.XQuad == x                    //cell checking by quadrant X coordinate
+                            && cell.Point.YQuad == y)                   //cell checking by quadrant Y coordinate
+                            .Ship;                                      //Select ship from cell
         }
 
         public void AddShip(Ship ship, Point head, Point tail)
@@ -59,22 +61,22 @@ namespace SeaBattleDomainModel.Entities
         }
 
         /// <summary>
-        /// Определение размера корабля по координатам "носа" и кормы
+        /// Determining the size of the ship by the coordinates of the "bow's" and aft
         /// </summary>
-        /// <param name="head">Точка "носа" корабля</param>
-        /// <param name="tail">Точка кормы корабля</param>
-        /// <returns>Размер корабля</returns>
+        /// <param name="head">"Bow's" point</param>
+        /// <param name="tail">Aft's point</param>
+        /// <returns>Ship size</returns>
         private int GetShipSize(Point head, Point tail)
         {
             return (int)Math.Sqrt(Math.Pow(head.X - tail.X, 2) + Math.Pow(head.Y - tail.Y, 2));
         }
 
         /// <summary>
-        /// Определяет можно ли расположить корабль по указанным координатам
+        /// Determines if the ship can be positioned at the specified coordinates
         /// </summary>
         /// <returns>
-        /// true - корабль можно расположить по указанным координатам
-        /// false - корабль нельзя расположить по указанным координатам
+        /// "true" - the ship can be positioned at the specified coordinates
+        /// "false" - the ship cannot be positioned at the specified coordinates
         /// </returns>
         private bool IsLocationValid(Point head, Point tail)
         {
@@ -82,23 +84,32 @@ namespace SeaBattleDomainModel.Entities
         }
 
         /// <summary>
-        /// Определяет вертикальный или горизонтальный отрезок
+        /// Defines a vertical or horizontal line
         /// </summary>
-        /// <param name="head">Точка "носа" корабля</param>
-        /// <param name="tail">Точка кормы корабля</param>
-        /// <returns>true - если линия вертикальная/горизонтальная. false - если линия под углом.</returns>
+        /// <param name="head">"Bow's" point</param>
+        /// <param name="tail">Aft's point</param>
+        /// <returns>true - if the line is vertical / horizontal. false - if the line is at an angle.</returns>
         private bool CheckOrientation(Point head, Point tail)
         {
-            return head.X != tail.X && head.Y == tail.Y        //горизонтальная линия
-                || head.Y != tail.Y && head.X == tail.X;       //вертикальная линия
+            return IsHorizontalLine(head, tail) || IsVerticalLine(head, tail);
+        }
+
+        private static bool IsHorizontalLine(Point head, Point tail)
+        {
+            return head.X != tail.X && head.Y == tail.Y;
+        }
+
+        private static bool IsVerticalLine(Point head, Point tail)
+        {
+            return head.Y != tail.Y && head.X == tail.X;
         }
 
         /// <summary>
-        /// Метод проверяет нет ли между указанными точками других кораблей (других точек)
+        /// The method checks if there are any other ships (other points) between the specified points
         /// </summary>
-        /// <param name="head">Координаты "носа" корабля</param>
-        /// <param name="tail">Координаты кормы корабля</param>
-        /// <returns>true - если пересечения нет, false - если пересечение есть</returns>
+        /// <param name="head">"Bow's" point</param>
+        /// <param name="tail">Aft's point</param>
+        /// <returns>true - there is no collision, false - there is an collision</returns>
         private bool CheckCollision(Point head, Point tail)
         {
             bool isNoCollision = true;
@@ -115,11 +126,11 @@ namespace SeaBattleDomainModel.Entities
         }
 
         /// <summary>
-        /// Проверка не находится ли хотя бы одна из точек за пределами карты
+        /// Checking if at least one of the points is outside the map
         /// </summary>
-        /// <param name="head">Координаты "носа" корабля</param>
-        /// <param name="tail">Координаты кормы корабля</param>
-        /// <returns>true - если все точки в пределах карты, false - хотя бы одна точка за пределами карты</returns>
+        /// <param name="head">"Bow's" point</param>
+        /// <param name="tail">Aft's point</param>
+        /// <returns>true - all points are within the map, false - at least one point is outside the map</returns>
         private bool CheckOutOfBoundaries(Point head, Point tail)
         {
             return head.X <= size / 2 && head.X >= -size / 2
@@ -175,16 +186,16 @@ namespace SeaBattleDomainModel.Entities
         }
 
         /// <summary>
-        /// Создание точек между носом и кормой
+        /// Creating points between head and tail
         /// </summary>
-        /// <param name="head">Точка носа</param>
-        /// <param name="tail">Точка кормы</param>
-        /// <returns>Коллекцию точек между носом и кормой</returns>
+        /// <param name="head">"Bow's" point</param>
+        /// <param name="tail">Aft's point</param>
+        /// <returns>Collection of points between head and tail</returns>
         private List<Point> GetPointsBetween(Point head, Point tail)
         {
             var points = new List<Point>();
 
-            if (head.X != tail.X && head.Y == tail.Y) //горизонтальная линия
+            if (IsHorizontalLine(head, tail))
             {
                 if (head.X > tail.X) //если голова "правее" хвоста в системе координат
                 {
@@ -201,7 +212,7 @@ namespace SeaBattleDomainModel.Entities
                     }
                 }
             }
-            else if (head.Y != tail.Y && head.X == tail.X)//вертикальная линия
+            else if (IsVerticalLine(head, tail))
             {
                 if (head.Y > tail.Y) //если голова "выше" хвоста в системе координат
                 {
@@ -218,7 +229,7 @@ namespace SeaBattleDomainModel.Entities
                     }
                 }
             }
-            else //точка
+            else //ship-point
                 return new List<Point>() { head };
             return points;
         }
@@ -226,7 +237,12 @@ namespace SeaBattleDomainModel.Entities
         public override string ToString()
         {
             //TODO: реализовать переопределение
-            return base.ToString();
+            StringBuilder battleFieldState = new StringBuilder();
+            foreach (var cell in cells)
+            {
+                battleFieldState.Append(cell.ToString());
+            }
+            return battleFieldState.ToString();
         }
     }
 }
