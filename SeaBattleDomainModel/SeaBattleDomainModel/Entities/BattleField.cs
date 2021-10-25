@@ -80,7 +80,7 @@ namespace SeaBattleDomainModel.Entities
         /// </returns>
         private bool IsLocationValid(Point head, Point tail)
         {
-            return CheckOutOfBoundaries(head, tail) && CheckOrientation(head, tail) && CheckCollision(head, tail) && CheckNeighborhoods(head, tail);
+            return CheckOutOfBoundaries(head, tail) && CheckDirection(head, tail) && CheckCollision(head, tail) && CheckNeighborhoods(head, tail);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace SeaBattleDomainModel.Entities
         /// <param name="head">"Bow's" point</param>
         /// <param name="tail">Aft's point</param>
         /// <returns>true - if the line is vertical / horizontal. false - if the line is at an angle.</returns>
-        private bool CheckOrientation(Point head, Point tail)
+        private bool CheckDirection(Point head, Point tail)
         {
             return IsHorizontalLine(head, tail) || IsVerticalLine(head, tail);
         }
