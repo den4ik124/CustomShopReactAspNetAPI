@@ -9,9 +9,9 @@ namespace SeaBattleDomainModel.Entities
     [Flags]
     public enum Quadrant
     {
-        I = 1,
-        II = 2,
-        III = 4,
-        IV = 8
+        First = 1,
+        Second = 2,
+        Third = 4,
+        Fourth = 8
     }
 }

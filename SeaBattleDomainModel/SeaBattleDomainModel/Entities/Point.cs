@@ -106,38 +106,38 @@ namespace SeaBattleDomainModel.Entities
 
             if (x > 0 && y > 0)
             {
-                return Quadrant.I;
+                return Quadrant.First;
             }
             else if (x < 0 && y > 0)
             {
-                return Quadrant.II;
+                return Quadrant.Second;
             }
             else if (x < 0 && y < 0)
             {
-                return Quadrant.III;
+                return Quadrant.Third;
             }
             else if (x > 0 && y < 0)
             {
-                return Quadrant.IV;
+                return Quadrant.Fourth;
             }
             else if (x == 0 && y > 0)
             {
-                return Quadrant.I | Quadrant.II;
+                return Quadrant.First | Quadrant.Second;
             }
             else if (x == 0 && y < 0)
             {
-                return Quadrant.III | Quadrant.IV;
+                return Quadrant.Third | Quadrant.Fourth;
             }
             else if (x > 0 && y == 0)
             {
-                return Quadrant.I | Quadrant.IV;
+                return Quadrant.First | Quadrant.Fourth;
             }
             else if (x < 0 && y == 0)
             {
-                return Quadrant.III | Quadrant.IV;
+                return Quadrant.Third | Quadrant.Fourth;
             }
             else
-                return ((Quadrant.I | Quadrant.II) | Quadrant.III) | Quadrant.IV;
+                return ((Quadrant.First | Quadrant.Second) | Quadrant.Third) | Quadrant.Fourth;
         }
 
         /// <summary>
@@ -147,17 +147,17 @@ namespace SeaBattleDomainModel.Entities
         {
             switch (this.quadrantId)
             {
-                case Quadrant.II:
+                case Quadrant.Second:
                     this.xQuad = Math.Abs(this.x);
                     this.yQuad = this.y;
                     break;
 
-                case Quadrant.III:
+                case Quadrant.Third:
                     this.xQuad = Math.Abs(this.x);
                     this.yQuad = Math.Abs(this.y);
                     break;
 
-                case Quadrant.IV:
+                case Quadrant.Fourth:
                     this.xQuad = this.x;
                     this.yQuad = Math.Abs(this.y);
                     break;
