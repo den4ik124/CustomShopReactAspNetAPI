@@ -51,7 +51,9 @@ namespace SeaBattleDomainModel.Entities
             return !(ship1 == ship2);
         }
 
-        public abstract void Move();
+        public virtual void Move()
+        {
+        }
 
         public override bool Equals(object obj)
         {
