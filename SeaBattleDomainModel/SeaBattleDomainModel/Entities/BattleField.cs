@@ -124,7 +124,6 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>true - if the line is vertical / horizontal. false - if the line is at an angle.</returns>
         private bool CheckDirection(Point head, Point tail)
         {
-            //return (head.Equals(tail)) || IsHorizontalLine(head, tail) || IsVerticalLine(head, tail);
             return (head.Equals(tail)) || IsHorizontalLine(head, tail) || IsVerticalLine(head, tail);
         }
 
@@ -152,17 +151,9 @@ namespace SeaBattleDomainModel.Entities
             {
                 if (cells[point].Ship != null) //TODO : проверить что не так с != null
                 {
-                    if (cellsDict[point].Ship != null) //TODO: check nullReference exception
-                    {
-                        isNoCollision = false;
-                        break;
-                    }
+                    isNoCollision = false;
+                    break;
                 }
-                //if (Array.Find(cells, (cell) => cell.Point.Equals(point)).Ship != null) //TODO: подумать, какие структуры данных использовать здесь
-                //{
-                //    isNoCollision = false;
-                //    break;
-                //}
             }
             return isNoCollision;
         }
@@ -239,7 +230,6 @@ namespace SeaBattleDomainModel.Entities
         private Cell GetCellByPoint(Point point)
         {
             return cells[point];
-            //return Array.Find(cells, (cell) => cell.Point.Equals(point)); //Cell that include point inside
         }
 
         /// <summary>
@@ -312,7 +302,7 @@ namespace SeaBattleDomainModel.Entities
         public override string ToString()
         {
             StringBuilder battleFieldState = new StringBuilder();
-            foreach (var cell in cellsDict)
+            foreach (var cell in cells)
             {
                 battleFieldState.Append(cell.ToString());
             }
