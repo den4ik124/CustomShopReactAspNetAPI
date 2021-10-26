@@ -372,3 +372,5 @@ FodyWeavers.xsd
 /SeaBattleDomainModel/SeaBattleDomainModel/bin/Debug/net5.0
 /SeaBattleDomainModel/testCodeHere/testCodeHere.csproj
 /SeaBattleDomainModel/testCodeHere
+/SeaBattleDomainModel/testCodeHereTests/ProgramTests.cs
+/SeaBattleDomainModel/testCodeHereTests/testCodeHereTests.csproj

@@ -10,15 +10,15 @@ namespace SeaBattleDomainModel.Entities
     {
         #region Fields
 
-        private int x;
+        private readonly int x;
 
-        private int y;
+        private readonly int y;
 
-        private Quadrant quadrantId;
+        private readonly Quadrant quadrantId;
 
-        private int xQuad;
+        private readonly int xAbsolute;
 
-        private int yQuad;
+        private readonly int yAbsolute;
 
         #endregion Fields
 
@@ -32,8 +32,8 @@ namespace SeaBattleDomainModel.Entities
             this.x = x;
             this.y = y;
             this.quadrantId = GetQuadrant(x, y);
-            this.xQuad = Math.Abs(x);
-            this.yQuad = Math.Abs(y);
+            this.xAbsolute = Math.Abs(x);
+            this.yAbsolute = Math.Abs(y);
         }
 
         #endregion Constructors
@@ -43,30 +43,26 @@ namespace SeaBattleDomainModel.Entities
         public int X
         {
             get { return this.x; }
-            set { this.x = value; }
         }
 
         public int Y
         {
             get { return this.y; }
-            set { this.y = value; }
         }
 
-        public int XQuad
+        public int XAbsolute
         {
-            get { return this.xQuad; }
-            set { this.xQuad = value; }
+            get { return this.xAbsolute; }
         }
 
-        public int YQuad
+        public int YAbsolute
         {
-            get { return this.yQuad; }
-            set { this.yQuad = value; }
+            get { return this.yAbsolute; }
         }
 
         public Quadrant Quadrant
         {
-            get => this.quadrantId;
+            get { return this.quadrantId; }
         }
 
         #endregion Properties
