@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SeaBattleDomainModel.Entities
 {
@@ -15,7 +13,7 @@ namespace SeaBattleDomainModel.Entities
         private const int expressionPower = 2;
         private const int battleFieldPointsIncreaser = 1;
 
-        private readonly Dictionary<Cell, Ship> ships;
+        private readonly List<Ship> ships;
 
         private readonly int battleFieldSideLength;
 
@@ -28,7 +26,7 @@ namespace SeaBattleDomainModel.Entities
         public BattleField(int fieldSideLength)
         {
             this.battleFieldSideLength = fieldSideLength + battleFieldPointsIncreaser;
-            this.ships = new Dictionary<Cell, Ship>();
+            this.ships = new List<Ship>();
             this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
         }
@@ -88,8 +86,8 @@ namespace SeaBattleDomainModel.Entities
             {
                 var cell = GetCellByPoint(point); //get a cell for each point between head and tail
                 cell.Ship = ship; //in the resulting cell we transfer the ship, which will be located between the head and tail
-                this.ships.Add(cell, ship);
             }
+            this.ships.Add(ship);
         }
 
         /// <summary>
@@ -264,17 +262,12 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         public void SortShips()
         {
-            //TODO : Implement ship collection sorting
-
-            List<Ship> sortedShips = new List<Ship>(ships.Count);
-            var groupOfCellsWithShip = cells.Where(cell => cell.Value.Ship != null)
+            var sortedShips = cells.Where(item => item.Value.Ship != null)
                                     .OrderBy(item => item.Value.DistanceToOrigin)
-                                    .GroupBy((point) => point.Value.Ship);
-
-            foreach (var group in groupOfCellsWithShip)
-            {
-                sortedShips.Add(ships[group.First().Value]);
-            }
+                                    .Select(item => item.Value.Ship)
+                                    .Distinct();
+            ships.Clear();
+            ships.AddRange(sortedShips);
         }
 
         public override string ToString()
