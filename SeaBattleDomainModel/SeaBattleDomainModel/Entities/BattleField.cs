@@ -66,10 +66,9 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>Ship from list</returns>
         private Ship GetShipByCoordinates(Quadrant quadrant, int x, int y)
         {
-            return cells.Where(point => point.Key.XAbsolute == x
-                                     && point.Key.YAbsolute == y
-                                     && point.Key.Quadrant == quadrant)
-                        .FirstOrDefault().Value.Ship; ;
+            return cells.FirstOrDefault(item => item.Key.XAbsolute == x
+                                            && item.Key.YAbsolute == y
+                                            && item.Key.Quadrant == quadrant).Value?.Ship;
         }
 
         public void AddShip(Ship ship, Point head, Point tail)
