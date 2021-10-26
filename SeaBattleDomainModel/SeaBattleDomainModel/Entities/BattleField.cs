@@ -12,35 +12,27 @@ namespace SeaBattleDomainModel.Entities
         #region Fields
 
         //private readonly List<Ship> ships;
-        private readonly Dictionary<Cell,Ship> ships;
+        private readonly Dictionary<Cell, Ship> ships;
 
         private readonly int battleFieldSideLength;
 
-        //private Cell[] cells;
         private Dictionary<Point, Cell> cells;
 
         #endregion Fields
 
         #region Constructors
 
-        public BattleField(int halfSideLength)
+        public BattleField(int fieldSideLength)
         {
-            this.battleFieldSideLength = halfSideLength * 2 + 1;
+            this.battleFieldSideLength = fieldSideLength + 1;
             //this.ships = new List<Ship>();
             this.ships = new Dictionary<Cell, Ship>();
 
-              //this.cells = new Cell[this.battleFieldSideLength * this.battleFieldSideLength];
-              this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
+            this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
         }
 
         #endregion Constructors
-
-        #region Properties
-
-        //props
-
-        #endregion Properties
 
         #region Methods
 
@@ -50,10 +42,10 @@ namespace SeaBattleDomainModel.Entities
         /// <param name="halfSideLength">The side of separate quadrant</param>
         private void FillCells()
         {
-            int bfHalfSide = battleFieldSideLength / 2;
-            for (int y = bfHalfSide; y >= -bfHalfSide; y--)
+            int battleFieldHalfSide = battleFieldSideLength / 2;
+            for (int y = battleFieldHalfSide; y >= -battleFieldHalfSide; y--)
             {
-                for (int x = -bfHalfSide; x <= bfHalfSide; x++)
+                for (int x = -battleFieldHalfSide; x <= battleFieldHalfSide; x++)
                 {
                     var point = new Point(x, y);
                     cells.Add(point, new Cell(point));
@@ -75,11 +67,10 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>Ship from list</returns>
         private Ship GetShipByCoordinates(Quadrant quadrant, int x, int y)
         {
-            return cells[new Point(x, y)].Ship;
-            //return cells.First(cell => cell.Point.Quadrant == quadrant  //cell checking by quadrant
-            //                && cell.Point.XQuad == x                    //cell checking by quadrant X coordinate
-            //                && cell.Point.YQuad == y)                   //cell checking by quadrant Y coordinate
-            //                .Ship;                                      //Select ship from cell
+            return cells.Where(point => point.Key.XAbsolute == x
+                                     && point.Key.YAbsolute == y
+                                     && point.Key.Quadrant == quadrant)
+                        .FirstOrDefault().Value.Ship; ;
         }
 
         public void AddShip(Ship ship, Point head, Point tail)
@@ -122,7 +113,7 @@ namespace SeaBattleDomainModel.Entities
         /// </returns>
         private bool IsLocationValid(Point head, Point tail)
         {
-            return CheckOutOfBoundaries(head, tail) && CheckDirection(head, tail) && CheckCollision(head, tail) && CheckNeighborhoods(head, tail);
+            return CheckOutOfBoundaries(head, tail) && CheckDirection(head, tail) /*&& CheckCollision(head, tail)*/ && CheckNeighborhoods(head, tail);
         }
 
         /// <summary>
@@ -133,17 +124,18 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>true - if the line is vertical / horizontal. false - if the line is at an angle.</returns>
         private bool CheckDirection(Point head, Point tail)
         {
+            //return (head.Equals(tail)) || IsHorizontalLine(head, tail) || IsVerticalLine(head, tail);
             return (head.Equals(tail)) || IsHorizontalLine(head, tail) || IsVerticalLine(head, tail);
         }
 
         private static bool IsHorizontalLine(Point head, Point tail)
         {
-            return head.X != tail.X && head.Y == tail.Y;
+            return head.Y == tail.Y;
         }
 
         private static bool IsVerticalLine(Point head, Point tail)
         {
-            return head.Y != tail.Y && head.X == tail.X;
+            return head.X == tail.X;
         }
 
         /// <summary>
@@ -159,7 +151,7 @@ namespace SeaBattleDomainModel.Entities
             foreach (var point in points)
             {
                 if (cells[point].Ship != null) //TODO : проверить что не так с != null
-                { 
+                {
                     isNoCollision = false;
                     break;
                 }
@@ -176,16 +168,30 @@ namespace SeaBattleDomainModel.Entities
         private bool CheckOutOfBoundaries(Point head, Point tail)
         {
             int bfHalfLength = this.battleFieldSideLength / 2;
-            return head.X <= bfHalfLength && head.X >= -bfHalfLength
-                && head.Y <= bfHalfLength && head.Y >= -bfHalfLength
-                && tail.X <= bfHalfLength && tail.X >= -bfHalfLength
-                && tail.Y <= bfHalfLength && tail.Y >= -bfHalfLength;
+            return head.XAbsolute < bfHalfLength || head.YAbsolute < bfHalfLength
+                && tail.XAbsolute < bfHalfLength || tail.YAbsolute < bfHalfLength;
         }
 
         private bool CheckNeighborhoods(Point head, Point tail)
         {
-            bool isNeighborFounded = false;
+            var isNeighborFounded = false;
             var points = GetPointsBetween(head, tail);
+            var additionalPoints = new List<Point>();
+            foreach (var point in points)
+            {
+                additionalPoints.Add(new Point(point.X, point.Y + 1));
+                additionalPoints.Add(new Point(point.X, point.Y - 1));
+                additionalPoints.Add(new Point(point.X - 1, point.Y));
+                additionalPoints.Add(new Point(point.X + 1, point.Y));
+            }
+            foreach (var point in additionalPoints)
+            {
+                if (!points.Contains(point))
+                {
+                    points.Add(point);
+                }
+            }
+
             foreach (var point in points)
             {
                 if (!CheckPointOnNeighbor(point))
@@ -200,7 +206,6 @@ namespace SeaBattleDomainModel.Entities
         private bool CheckPointOnNeighbor(Point point)
         {
             bool isNeighborAbsent = true;
-            Cell cellCurrent = GetCellByPoint(point);
             //TODO : проверить, если корабль стоит впритык к границе
             Cell[] cellsForCheck = new Cell[4] {
                 cells[new Point(point.X,point.Y + 1)],  //cell above specified point
@@ -293,15 +298,7 @@ namespace SeaBattleDomainModel.Entities
             foreach (var group in groupOfCellsWithShip)
             {
                 sortedShips.Add(ships[group.First().Value]);
-                //Console.WriteLine("ID:\t" + ships[group.First().Value].Id);
-                //foreach (var cell in group)
-                //{
-                //    Console.WriteLine(cell.Value.DistanceToOrigin);
-                //}
-                //Console.WriteLine("=======");
             }
-            
-            Console.ReadLine();
         }
 
         public override string ToString()

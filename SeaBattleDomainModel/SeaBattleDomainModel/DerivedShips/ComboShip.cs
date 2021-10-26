@@ -10,33 +10,7 @@ namespace SeaBattleDomainModel.DerivedShips
 {
     internal class ComboShip : Ship, ICanShot, ICanRepair
     {
-        #region Fields
-
-        //fields
-
-        #endregion Fields
-
-        #region Constructors
-
-        //ctors
-
-        #endregion Constructors
-
-        #region Properties
-
-        public override int Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public override int Range { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public override int Size { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        #endregion Properties
-
         #region Methods
-
-        #region Methods.Private
-
-        //private
-
-        #endregion Methods.Private
 
         #region Methods.Public
 

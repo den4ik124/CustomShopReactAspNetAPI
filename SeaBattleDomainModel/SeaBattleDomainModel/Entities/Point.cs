@@ -50,12 +50,12 @@ namespace SeaBattleDomainModel.Entities
             get { return this.y; }
         }
 
-        public int XQuad
+        public int XAbsolute
         {
             get { return this.xAbsolute; }
         }
 
-        public int YQuad
+        public int YAbsolute
         {
             get { return this.yAbsolute; }
         }
