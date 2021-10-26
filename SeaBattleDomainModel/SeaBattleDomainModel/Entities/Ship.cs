@@ -37,12 +37,6 @@ namespace SeaBattleDomainModel.Entities
 
         #region Methods
 
-        #region Methods.Private
-
-        //private
-
-        #endregion Methods.Private
-
         #region Methods.public
 
         public static bool operator ==(Ship ship1, Ship ship2)

@@ -8,12 +8,6 @@ namespace SeaBattleDomainModel.Entities
 {
     public class Cell
     {
-        #region Fields
-
-        //fields
-
-        #endregion Fields
-
         #region Constructors
 
         public Cell(Point point)

@@ -11,7 +11,6 @@ namespace SeaBattleDomainModel.Entities
     {
         #region Fields
 
-        //private readonly List<Ship> ships;
         private readonly Dictionary<Cell, Ship> ships;
 
         private readonly int battleFieldSideLength;
@@ -25,9 +24,7 @@ namespace SeaBattleDomainModel.Entities
         public BattleField(int fieldSideLength)
         {
             this.battleFieldSideLength = fieldSideLength + 1;
-            //this.ships = new List<Ship>();
             this.ships = new Dictionary<Cell, Ship>();
-
             this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
         }
@@ -89,8 +86,6 @@ namespace SeaBattleDomainModel.Entities
                 cell.Ship = ship; //in the resulting cell we transfer the ship, which will be located between the head and tail
                 this.ships.Add(cell, ship);
             }
-
-            //this.ships.Add(ship);
         }
 
         /// <summary>
