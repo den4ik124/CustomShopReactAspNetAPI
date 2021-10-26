@@ -10,7 +10,6 @@ namespace SeaBattleDomainModel.Entities
     {
         #region Fields
 
-        private readonly int id;
         private static int nextId = 1;
 
         #endregion Fields
@@ -19,20 +18,20 @@ namespace SeaBattleDomainModel.Entities
 
         public Ship()
         {
-            id = Ship.nextId++;
+            Id = Ship.nextId++;
         }
 
         #endregion Constructors
 
         #region Properties
 
-        public int Id { get { return this.id; } }
+        public int Id { get; }
 
-        public abstract int Velocity { get; set; }
+        public int Velocity { get; set; }
 
-        public abstract int Range { get; set; }
+        public int Range { get; set; }
 
-        public abstract int Size { get; set; }
+        public int Size { get; set; }
 
         #endregion Properties
 
@@ -79,12 +78,12 @@ namespace SeaBattleDomainModel.Entities
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(this.id);
+            return HashCode.Combine(this.Id);
         }
 
         public override string ToString()
         {
-            return $"Id: {this.id}\nVelocity: {this.Velocity}\nRange: {this.Range}\nSize: {this.Size}";
+            return $"Id: {this.Id}\nVelocity: {this.Velocity}\nRange: {this.Range}\nSize: {this.Size}";
         }
 
         #endregion Methods.public
