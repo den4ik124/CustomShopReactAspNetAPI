@@ -11,6 +11,10 @@ namespace SeaBattleDomainModel.Entities
     {
         #region Fields
 
+        private const int coefficient = 2;
+        private const int expressionPower = 2;
+        private const int battleFieldPointsIncreaser = 1;
+
         private readonly Dictionary<Cell, Ship> ships;
 
         private readonly int battleFieldSideLength;
@@ -23,7 +27,7 @@ namespace SeaBattleDomainModel.Entities
 
         public BattleField(int fieldSideLength)
         {
-            this.battleFieldSideLength = fieldSideLength + 1;
+            this.battleFieldSideLength = fieldSideLength + battleFieldPointsIncreaser;
             this.ships = new Dictionary<Cell, Ship>();
             this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
@@ -39,7 +43,7 @@ namespace SeaBattleDomainModel.Entities
         /// <param name="halfSideLength">The side of separate quadrant</param>
         private void FillCells()
         {
-            int battleFieldHalfSide = battleFieldSideLength / 2;
+            int battleFieldHalfSide = battleFieldSideLength / coefficient;
             for (int y = battleFieldHalfSide; y >= -battleFieldHalfSide; y--)
             {
                 for (int x = -battleFieldHalfSide; x <= battleFieldHalfSide; x++)
@@ -96,7 +100,7 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>Ship size</returns>
         private int GetShipSize(Point head, Point tail)
         {
-            return (int)Math.Sqrt(Math.Pow(head.X - tail.X, 2) + Math.Pow(head.Y - tail.Y, 2));
+            return (int)Math.Sqrt(Math.Pow(head.X - tail.X, expressionPower) + Math.Pow(head.Y - tail.Y, expressionPower));
         }
 
         /// <summary>
@@ -108,7 +112,10 @@ namespace SeaBattleDomainModel.Entities
         /// </returns>
         private bool IsLocationValid(Point head, Point tail)
         {
-            return CheckOutOfBoundaries(head, tail) && CheckDirection(head, tail) /*&& CheckCollision(head, tail)*/ && CheckNeighborhoods(head, tail);
+            return IsPointInsideField(head)
+                && IsPointInsideField(tail)
+                && CheckDirection(head, tail)
+                && IsNeighborhoodsAbsent(head, tail);
         }
 
         /// <summary>
@@ -133,59 +140,21 @@ namespace SeaBattleDomainModel.Entities
         }
 
         /// <summary>
-        /// The method checks if there are any other ships (other points) between the specified points
-        /// </summary>
-        /// <param name="head">"Bow's" point</param>
-        /// <param name="tail">Aft's point</param>
-        /// <returns>true - there is no collision, false - there is an collision</returns>
-        private bool CheckCollision(Point head, Point tail)
-        {
-            bool isNoCollision = true;
-            var points = GetPointsBetween(head, tail);
-            foreach (var point in points)
-            {
-                if (cells[point].Ship != null) //TODO : проверить что не так с != null
-                {
-                    isNoCollision = false;
-                    break;
-                }
-            }
-            return isNoCollision;
-        }
-
-        /// <summary>
         /// Checking if at least one of the points is outside the map
         /// </summary>
         /// <param name="head">"Bow's" point</param>
         /// <param name="tail">Aft's point</param>
         /// <returns>true - all points are within the map, false - at least one point is outside the map</returns>
-        private bool CheckOutOfBoundaries(Point head, Point tail)
+        private bool IsPointInsideField(Point point)
         {
-            int bfHalfLength = this.battleFieldSideLength / 2;
-            return head.XAbsolute < bfHalfLength || head.YAbsolute < bfHalfLength
-                && tail.XAbsolute < bfHalfLength || tail.YAbsolute < bfHalfLength;
+            var battleFieldHalfSide = this.battleFieldSideLength / coefficient;
+            return point.XAbsolute < battleFieldHalfSide && point.YAbsolute < battleFieldHalfSide;
         }
 
-        private bool CheckNeighborhoods(Point head, Point tail)
+        private bool IsNeighborhoodsAbsent(Point head, Point tail)
         {
             var isNeighborFounded = false;
-            var points = GetPointsBetween(head, tail);
-            var additionalPoints = new List<Point>();
-            foreach (var point in points)
-            {
-                additionalPoints.Add(new Point(point.X, point.Y + 1));
-                additionalPoints.Add(new Point(point.X, point.Y - 1));
-                additionalPoints.Add(new Point(point.X - 1, point.Y));
-                additionalPoints.Add(new Point(point.X + 1, point.Y));
-            }
-            foreach (var point in additionalPoints)
-            {
-                if (!points.Contains(point))
-                {
-                    points.Add(point);
-                }
-            }
-
+            var points = GetAllPointsForShip(head, tail);
             foreach (var point in points)
             {
                 if (!CheckPointOnNeighbor(point))
@@ -199,27 +168,11 @@ namespace SeaBattleDomainModel.Entities
 
         private bool CheckPointOnNeighbor(Point point)
         {
-            bool isNeighborAbsent = true;
-            //TODO : проверить, если корабль стоит впритык к границе
-            Cell[] cellsForCheck = new Cell[4] {
-                cells[new Point(point.X,point.Y + 1)],  //cell above specified point
-                cells[new Point(point.X,point.Y - 1)],  //cell below specified point
-                cells[new Point(point.X-1,point.Y)],    //cell to the left of the specified point
-                cells[new Point(point.X+1,point.Y)] };  //cell to the right of the specified point
-
-            foreach (var cell in cellsForCheck)
+            if (GetCellByPoint(point).Ship != null)
             {
-                if (cell == null)
-                {
-                    continue;
-                }
-                if (cell.Ship != null)
-                {
-                    isNeighborAbsent = false;
-                    break;
-                }
+                return false;
             }
-            return isNeighborAbsent;
+            return true;
         }
 
         private Cell GetCellByPoint(Point point)
@@ -276,6 +229,36 @@ namespace SeaBattleDomainModel.Entities
             return points;
         }
 
+        private List<Point> GetPointsAround(Point point)
+        {
+            return new List<Point>(4) {
+                            new Point(point.X, point.Y + 1),
+                            new Point(point.X, point.Y - 1),
+                            new Point(point.X - 1, point.Y),
+                            new Point(point.X + 1, point.Y)};
+        }
+
+        private List<Point> GetAllPointsForShip(Point head, Point tail)
+        {
+            var points = GetPointsBetween(head, tail);
+            var additionalPoints = new List<Point>();
+            foreach (var point in points)
+            {
+                additionalPoints.AddRange(GetPointsAround(point));
+            }
+            foreach (var point in additionalPoints)
+            {
+                if (IsPointInsideField(point))
+                {
+                    if (!points.Contains(point))
+                    {
+                        points.Add(point);
+                    }
+                }
+            }
+            return points;
+        }
+
         /// <summary>
         /// Sorting of ships collection by distance to origin point
         /// </summary>
@@ -297,7 +280,7 @@ namespace SeaBattleDomainModel.Entities
         public override string ToString()
         {
             StringBuilder battleFieldState = new StringBuilder();
-            foreach (var cell in cells)
+            foreach (var cell in cells.Where(item => item.Value.Ship != null))
             {
                 battleFieldState.Append(cell.ToString());
             }
