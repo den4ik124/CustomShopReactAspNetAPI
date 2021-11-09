@@ -1,0 +1,64 @@
+INSERT INTO ShipType ([Type]) VALUES ('BattleShip'),('RepairShip'),('ComboShip')
+
+
+DECLARE @BFNumber_min INT, @BFNumber_max INT, @BFSideLength_min INT, @BFSideLength_max INT;
+SET @BFNumber_min = 4;
+SET @BFNumber_max = 6;
+SET @BFSideLength_min= 8;
+SET @BFSideLength_max =15;
+
+
+BEGIN-- —оздаем пол€ бо€
+DECLARE @BFNumber INT, @BFSideLength INT;
+SET @BFNumber = FLOOR(RAND()*(@BFNumber_max-@BFNumber_min+1)+@BFNumber_min)
+
+WHILE @BFNumber != 0
+BEGIN
+	
+	SET @BFSideLength = FLOOR(RAND()*(@BFSideLength_max-@BFSideLength_min+1)+@BFSideLength_min);
+	INSERT INTO BattleField (SideLength) VALUES (@BFSideLength);
+	BEGIN-- Ќабираем точки
+	DECLARE @ROW_MIN INT, @COLUMN_MIN INT,@ROW_MAX INT, @COLUMN_MAX INT;
+		SET @ROW_MIN = ROUND(-@BFSideLength / 2.0, 1, 0);
+	    SET @COLUMN_MIN = ROUND(-@BFSideLength / 2.0, 1, 0);
+		SET @ROW_MAX = ROUND(@BFSideLength / 2.0, 1, 0);
+	    SET @COLUMN_MAX = ROUND(@BFSideLength / 2.0, 1, 0);
+
+        WHILE @COLUMN_MIN <= @COLUMN_MAX
+		BEGIN
+			WHILE @ROW_MIN <= @ROW_MAX
+				BEGIN
+					IF NOT EXISTS (SELECT * FROM Point WHERE (Point.X = @ROW_MIN AND Point.Y = @COLUMN_MIN))
+					BEGIN
+						INSERT INTO Point (X,Y) VALUES (@ROW_MIN, @COLUMN_MIN) -- если таких координат еще нет в базе - добавл€етс€ точка
+					END
+					INSERT INTO Cell (PointID, ShipID,BattleFieldID) VALUES(
+																			(SELECT Point.Id FROM Point WHERE Point.X = @ROW_MIN AND Point.Y = @COLUMN_MIN), --выбираем ID точки с указанными координатами
+																			NULL, --пока не задаем корабль
+																			(SELECT MAX(BattleField.Id) FROM BattleField) --выбираем последнее созданное поле бол€
+																			)
+					SET @ROW_MIN = @ROW_MIN + 1;
+				END;
+			SET @COLUMN_MIN = @COLUMN_MIN + 1;
+			SET @ROW_MIN = ROUND(-@BFSideLength / 2.0, 1, 0);
+		END;
+		END-- Ќабираем точки
+
+		-- ѕрив€зываем тестовые корабли к €чейкам пол€ бо€.
+		DECLARE @BattlefieldID INT;
+		SET @BattlefieldID = (SELECT MAX(BattleField.Id) FROM BattleField);
+		EXECUTE ShipToCellBinding @BattlefieldID;
+
+	SET @BFNumber = @BFNumber  -1
+END
+END-- —оздаем пол€ бо€
+
+--SELECT Ship.ID, Ship.Size, ShipType.[Type] FROM CELL
+--LEFT JOIN SHIP ON Ship.Id = Cell.ShipID
+--LEFT JOIN ShipType ON Ship.TypeId = ShipType.Id
+--WHERE Cell.ShipID IS NOT NULL;
+
+--DELETE Ship;
+--DELETE Point;
+--DELETE BattleField;
+--TRUNCATE TABLE Cell;
