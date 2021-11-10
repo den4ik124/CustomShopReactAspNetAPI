@@ -1,4 +1,3 @@
---------------
 -- Creation of procedure to insert new test ship with random characteristics
 
 CREATE PROCEDURE [dbo].[ShipCreation]

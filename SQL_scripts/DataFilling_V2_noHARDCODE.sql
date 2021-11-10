@@ -52,13 +52,3 @@ BEGIN
 	SET @BFNumber = @BFNumber  -1
 END
 END-- BattleFields creation
-
---SELECT Ship.ID, Ship.Size, ShipType.[Type] FROM CELL
---LEFT JOIN SHIP ON Ship.Id = Cell.ShipID
---LEFT JOIN ShipType ON Ship.TypeId = ShipType.Id
---WHERE Cell.ShipID IS NOT NULL;
-
---DELETE Ship;
---DELETE Point;
---DELETE BattleField;
---TRUNCATE TABLE Cell;

@@ -1,5 +1,3 @@
---CREATE DATABASE SeaBattleTest_FINAL;
-
 USE SeaBattleTest_FINAL
 GO
 
