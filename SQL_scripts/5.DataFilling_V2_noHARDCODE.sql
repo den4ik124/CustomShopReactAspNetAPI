@@ -1,5 +1,4 @@
-INSERT INTO ShipType ([Type]) VALUES ('BattleShip'),('RepairShip'),('ComboShip')
-
+INSERT INTO ShipTypes ([Type]) VALUES ('BattleShip'),('RepairShip'),('ComboShip')
 
 DECLARE @BFNumber_min INT, @BFNumber_max INT, @BFSideLength_min INT, @BFSideLength_max INT;
 SET @BFNumber_min = 4;
@@ -16,7 +15,7 @@ WHILE @BFNumber != 0
 BEGIN
 	
 	SET @BFSideLength = FLOOR(RAND()*(@BFSideLength_max-@BFSideLength_min+1)+@BFSideLength_min);
-	INSERT INTO BattleField (SideLength) VALUES (@BFSideLength);
+	INSERT INTO BattleFields (SideLength) VALUES (@BFSideLength);
 	BEGIN-- Points creation
 	DECLARE @ROW_MIN INT, @COLUMN_MIN INT,@ROW_MAX INT, @COLUMN_MAX INT;
 		SET @ROW_MIN = ROUND(-@BFSideLength / 2.0, 1, 0);
@@ -28,14 +27,14 @@ BEGIN
 		BEGIN
 			WHILE @ROW_MIN <= @ROW_MAX
 				BEGIN
-					IF NOT EXISTS (SELECT * FROM Point WHERE (Point.X = @ROW_MIN AND Point.Y = @COLUMN_MIN))
+					IF NOT EXISTS (SELECT * FROM Points WHERE (Points.X = @ROW_MIN AND Points.Y = @COLUMN_MIN))
 					BEGIN
-						INSERT INTO Point (X,Y) VALUES (@ROW_MIN, @COLUMN_MIN) -- if such coordinates not exists - new point will be added
+						INSERT INTO Points (X,Y) VALUES (@ROW_MIN, @COLUMN_MIN) -- if such coordinates not exists - new point will be added
 					END
-					INSERT INTO Cell (PointID, ShipID,BattleFieldID) VALUES(
-																			(SELECT Point.Id FROM Point WHERE Point.X = @ROW_MIN AND Point.Y = @COLUMN_MIN), --Point ID selection for specified coordinates
+					INSERT INTO Cells (PointID, ShipID,BattleFieldID) VALUES(
+																			(SELECT Points.Id FROM Points WHERE Points.X = @ROW_MIN AND Points.Y = @COLUMN_MIN), --Point ID selection for specified coordinates
 																			NULL, --ships were not created yet - that is why NULL
-																			(SELECT MAX(BattleField.Id) FROM BattleField) --last created battlefield selection
+																			(SELECT MAX(BattleFields.Id) FROM BattleFields) --last created battlefield selection
 																			)
 					SET @ROW_MIN = @ROW_MIN + 1;
 				END;
@@ -46,7 +45,7 @@ BEGIN
 
 		-- Test ships binding to created cells
 		DECLARE @BattlefieldID INT;
-		SET @BattlefieldID = (SELECT MAX(BattleField.Id) FROM BattleField);
+		SET @BattlefieldID = (SELECT MAX(BattleFields.Id) FROM BattleFields);
 		EXECUTE ShipToCellBinding @BattlefieldID;
 
 	SET @BFNumber = @BFNumber  -1
