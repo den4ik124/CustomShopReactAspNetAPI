@@ -17,11 +17,18 @@ namespace SeaBattleDomainModel.Entities
             Id = Ship.nextId++;
         }
 
+        public Ship(int id, int velocity, int range, int size)
+        {
+            this.Id = id;
+            this.Velocity = velocity;   
+            this.Range = range;
+            this.Size = size;
+        }
         #endregion Constructors
 
         #region Properties
 
-        public int Id { get; }
+        public int Id { get; set; }
 
         public int Velocity { get; set; }
 
