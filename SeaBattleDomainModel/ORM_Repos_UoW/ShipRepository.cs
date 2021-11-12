@@ -40,8 +40,8 @@ namespace ORM_Repos_UoW
 
         public IEnumerable<Ship> GetItems()
         {
-            //dbContext.
-            throw new NotImplementedException();   
+            return dbContext.FindAll<Ship>();
+            //throw new NotImplementedException();   
 
             //return this.dbContext;
         }
