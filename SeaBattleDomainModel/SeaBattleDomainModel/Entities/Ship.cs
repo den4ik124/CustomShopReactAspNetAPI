@@ -14,16 +14,24 @@ namespace SeaBattleDomainModel.Entities
 
         public Ship()
         {
-            Id = Ship.nextId++;
         }
 
         public Ship(int id, int velocity, int range, int size)
         {
             this.Id = id;
-            this.Velocity = velocity;   
+            this.Velocity = velocity;
             this.Range = range;
             this.Size = size;
         }
+
+        public Ship(int velocity, int range, int size)
+        {
+            Id = Ship.nextId++;
+            this.Velocity = velocity;
+            this.Range = range;
+            this.Size = size;
+        }
+
         #endregion Constructors
 
         #region Properties

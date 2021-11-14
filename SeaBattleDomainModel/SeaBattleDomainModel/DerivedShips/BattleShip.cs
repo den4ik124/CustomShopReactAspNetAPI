@@ -6,7 +6,11 @@ namespace SeaBattleDomainModel.DerivedShips
 {
     public class BattleShip : Ship, ICanShot
     {
-        public BattleShip(int id, int velocity, int range, int size): base (id, velocity,range,size)
+        public BattleShip(int id, int velocity, int range, int size) : base(id, velocity, range, size)
+        {
+        }
+
+        public BattleShip(int velocity, int range, int size) : base(velocity, range, size)
         {
         }
 

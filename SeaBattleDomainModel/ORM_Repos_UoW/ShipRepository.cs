@@ -1,35 +1,38 @@
-﻿using Microsoft.EntityFrameworkCore;
-using SeaBattleDomainModel.Entities;
+﻿using SeaBattleDomainModel.Entities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ORM_Repos_UoW
 {
     public class ShipRepository : IRepository<Ship>
     {
-        private Context dbContext;
-        public ShipRepository(Context context) //сюда должен передаваться context из ORM
+        private DbContext dbContext;
+
+        //private List<Ship> addedShips = new List<Ship>();
+        //private List<Ship> dirtyShips = new List<Ship>();
+        //private List<Ship> removedShips = new List<Ship>();
+
+        public ShipRepository(DbContext context) //сюда должен передаваться context из ORM
         {
             this.dbContext = context;
         }
 
         public void Create(Ship item)
         {
-            throw new NotImplementedException();
-            //this.dbContext.Add(item);
+            this.dbContext.ShipsList.Items.Add(item, State.Added);
         }
+
         public Ship GetItem(int id)
         {
-            throw new NotImplementedException();
-
-            //return (Ship)this.dbContext.Find<Ship>(id);
+            return this.dbContext.ShipsList.Items.First(item => item.Key.Id == id).Key;
         }
 
         public void Delete(int id)
         {
-            throw new NotImplementedException();
-
-            //this.dbContext.Remove(id);
+            var ship = this.dbContext.ShipsList.Items.FirstOrDefault(item => item.Key.Id == id).Key;
+            if (ship != null)
+                this.dbContext.ShipsList.Items.Remove(ship);
         }
 
         public void Dispose()
@@ -37,13 +40,9 @@ namespace ORM_Repos_UoW
             throw new NotImplementedException();
         }
 
-
         public IEnumerable<Ship> GetItems()
         {
-            return dbContext.FindAll<Ship>();
-            //throw new NotImplementedException();   
-
-            //return this.dbContext;
+            return dbContext.ShipsList.Items.Select(item => item.Key);
         }
     }
 }

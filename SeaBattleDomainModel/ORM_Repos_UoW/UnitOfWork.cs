@@ -5,19 +5,20 @@ namespace ORM_Repos_UoW
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private Context dbContext;
-        public IRepository<Ship> ShipRepository { get; set; }
+        private DbContext dbContext;
+        public IRepository<Ship> ShipRepository { get; }
+        public IRepository<Cell> CellRepository { get; }
 
-        public UnitOfWork(Context dbContext)
+        public UnitOfWork(DbContext dbContext)
         {
             this.dbContext = dbContext;
             ShipRepository = new ShipRepository(dbContext);
+            //CellRepository = new CellRepository(dbContext);
         }
 
         public int Commit()
         {
-            throw new NotImplementedException();
-            //return dbContext.SaveChanges();
+            return dbContext.SaveChanges();
         }
 
         public void Dispose()

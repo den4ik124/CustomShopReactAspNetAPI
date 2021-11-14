@@ -4,7 +4,7 @@ using System;
 
 namespace SeaBattleDomainModel.DerivedShips
 {
-    internal class ComboShip : Ship, ICanShot, ICanRepair
+    public class ComboShip : Ship, ICanShot, ICanRepair
     {
         #region Methods
 
