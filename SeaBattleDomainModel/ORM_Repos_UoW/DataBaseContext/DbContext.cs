@@ -1,27 +1,11 @@
 ﻿using SeaBattleDomainModel.Entities;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 
 namespace ORM_Repos_UoW
 {
-    public class DbSet<T> where T : class
-    {
-        public Dictionary<T, State> Items { get; }
-
-        public DbSet()
-        {
-            Items = new Dictionary<T, State>();
-        }
-
-        public void Add(T item)
-        {
-            Items.Add(item, State.Added);
-        }
-    }
-
     public class DbContext
     {
         private SqlConnection sqlConnection;
@@ -40,6 +24,7 @@ namespace ORM_Repos_UoW
             ShipsList = new DbSet<Ship>();
             da = new SqlDataAdapter();
             dt = new DataTable();
+            dr = dt.NewRow();
             //CellsList = new List<Cell>();
         }
 
