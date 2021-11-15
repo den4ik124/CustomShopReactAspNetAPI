@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ORM_Repos_UoW.Repositories
 {
@@ -17,8 +14,11 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Create(T item)
         {
-             throw new NotImplementedException();
+            //найти в dbContext-e таблицу с  таким же атрибутом, как у класса T.
+            //Записать данные в таблицу согласно указанным колонкам.
+            throw new NotImplementedException();
         }
+
         public T ReadItem(int id)
         {
             throw new NotImplementedException();
@@ -38,6 +38,5 @@ namespace ORM_Repos_UoW.Repositories
         {
             throw new NotImplementedException();
         }
-
     }
 }

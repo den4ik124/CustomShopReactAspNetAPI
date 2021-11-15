@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SeaBattleDomainModel.Attributes;
+using System;
 
 namespace SeaBattleDomainModel.Entities
 {
@@ -6,6 +7,7 @@ namespace SeaBattleDomainModel.Entities
     public class Cell
     {
         public int Id { get; set; }
+
         #region Constructors
 
         public Cell(Point point)

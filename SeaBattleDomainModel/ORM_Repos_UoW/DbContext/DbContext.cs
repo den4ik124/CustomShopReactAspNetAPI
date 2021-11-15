@@ -4,11 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 
 namespace ORM_Repos_UoW
 {
-
     public class DbContext
     {
         private SqlConnection sqlConnection;
@@ -19,8 +17,9 @@ namespace ORM_Repos_UoW
         public DataTable battleFieldsTable;
         private DataRow dr;
 
-        public List<Ship> ShipList {
-            get 
+        public List<Ship> ShipList
+        {
+            get
             {
                 List<Ship> ships = new List<Ship>();
                 var rows = this.shipsTable.Rows;
@@ -31,12 +30,15 @@ namespace ORM_Repos_UoW
                         case 1:
                             ships.Add(new BattleShip((int)rows[i]["Id"], (int)rows[i]["Velocity"], (int)rows[i]["Range"], (int)rows[i]["Size"]));
                             break;
+
                         case 2:
                             ships.Add(new RepairShip((int)rows[i]["Id"], (int)rows[i]["Velocity"], (int)rows[i]["Range"], (int)rows[i]["Size"]));
                             break;
+
                         case 3:
                             ships.Add(new ComboShip((int)rows[i]["Id"], (int)rows[i]["Velocity"], (int)rows[i]["Range"], (int)rows[i]["Size"]));
                             break;
+
                         default:
                             break;
                     }
@@ -53,7 +55,6 @@ namespace ORM_Repos_UoW
             shipsTable = new DataTable();
             battleFieldsTable = new DataTable();
 
-
             Preparing(sqlConnection);
 
             //CellsList = new List<Cell>();
@@ -67,7 +68,6 @@ namespace ORM_Repos_UoW
                 da.Fill(shipsTable);
                 da.SelectCommand = new SqlCommand(SqlGenerator.GetSelectAllString("BattleFields"), connection);
                 da.Fill(battleFieldsTable);
-
             }
             catch (Exception ex)
             {
@@ -88,10 +88,7 @@ namespace ORM_Repos_UoW
 
         private void Add(SqlConnection sqlConnection)
         {
-            
             //var added = ShipsList.Items.Where(item => item.Value == State.Added).Select(item => item.Key).ToList();
-
-
 
             throw new NotImplementedException();
         }

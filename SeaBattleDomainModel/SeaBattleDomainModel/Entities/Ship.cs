@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SeaBattleDomainModel.Attributes;
+using System;
 
 namespace SeaBattleDomainModel.Entities
 {

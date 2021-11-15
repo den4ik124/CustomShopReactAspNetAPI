@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace SeaBattleDomainModel.Entities
+namespace SeaBattleDomainModel.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct )]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class TableAttribute : Attribute
     {
         public TableAttribute(string tableName = "")
