@@ -31,17 +31,36 @@ namespace ORM_Repos_UoW
             return insertIntoSql.ToString();
         }
 
+        public enum ConditionStatement
+        {
+            AND,
+            OR
+        }
+
         //DELETE {tableName} WHERE {parameter} = {value} [AND {parameter2} = {value}]
-        public static string GetDeleteString(string tableName, Dictionary<string, object> columnsValues)
+        public static string GetDeleteString(string tableName, Dictionary<string, object> columnsValues, ConditionStatement conditionStatement)
         {
             StringBuilder deleteSQL = new StringBuilder($"DELETE {tableName} WHERE ");
             deleteSQL.Append($"{columnsValues.First().Key} = {columnsValues.First().Value}");
-            deleteSQL.Remove(0, 1);
+            columnsValues.Remove(columnsValues.First().Key);
             if (columnsValues.Count > 1)
             {
+                string conditionText;
+                switch (conditionStatement)
+                {
+                    case ConditionStatement.AND:
+                        conditionText = " AND ";
+                        break;
+                    case ConditionStatement.OR:
+                        conditionText = " OR ";
+                        break;
+                    default:
+                        conditionText = " ";
+                        break;
+                }
                 foreach (var columnValue in columnsValues)
                 {
-                    deleteSQL.Append($" AND {columnValue.Key} = {columnValue.Value}");
+                    deleteSQL.Append($"{conditionText}{columnValue.Key} = {columnValue.Value}");
                 }
                 return deleteSQL.ToString();
             }
