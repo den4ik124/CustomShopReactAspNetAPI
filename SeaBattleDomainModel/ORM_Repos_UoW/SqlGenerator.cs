@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ORM_Repos_UoW
 {
-    public static class SqlGenerator
+    public static partial class SqlGenerator
     {
         public static string GetSelectAllString(string table)
         {
@@ -29,12 +29,6 @@ namespace ORM_Repos_UoW
 
             insertIntoSql.Append(columns.ToString() + ") VALUES (" + values.ToString() + ")");
             return insertIntoSql.ToString();
-        }
-
-        public enum ConditionStatement
-        {
-            AND,
-            OR
         }
 
         //DELETE {tableName} WHERE {parameter} = {value} [AND {parameter2} = {value}]
