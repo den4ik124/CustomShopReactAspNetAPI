@@ -2,6 +2,7 @@
 
 namespace SeaBattleDomainModel.Entities
 {
+    [Repository("Cells")]
     public class Cell
     {
         #region Constructors

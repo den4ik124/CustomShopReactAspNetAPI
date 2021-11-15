@@ -1,13 +1,17 @@
-﻿using System;
+﻿using SeaBattleDomainModel.Attributes;
+using System;
 
 namespace SeaBattleDomainModel.Entities
 {
+    [Repository("Points")]
+
     public struct Point : IEquatable<Point>
     {
         #region Fields
-
+        [Column("X")]
         private readonly int x;
 
+        [Column("Y")]
         private readonly int y;
 
         private readonly Quadrant quadrantId;

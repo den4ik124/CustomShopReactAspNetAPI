@@ -12,20 +12,9 @@ namespace ORM_Repos_UoW
 
         private Dictionary<Type, object> Repositories { get; set; }
 
-        //public IRepository<Ship> ShipRepository { get; }
-        //public IRepository<Cell> CellRepository { get; }
-        //public IRepository<BattleField> BattleFieldRepository { get; }
-
-        //public IRepository<T> GenericRepository<T> { get; set; }
         public UnitOfWork(DbContext dbContext)
         {
             this.dbContext = dbContext;
-            //ShipRepository = new ShipRepository(dbContext);
-            //BattleFieldRepository = new BattleFieldRepository(dbContext);
-
-            //При вызове конструктора должны создаваться репозитории
-
-            //CellRepository = new CellRepository(dbContext);
         }
 
         public IRepository<T> GetRepository<T>() where T : class
