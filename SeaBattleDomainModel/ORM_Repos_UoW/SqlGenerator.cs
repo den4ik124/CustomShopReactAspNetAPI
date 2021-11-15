@@ -15,11 +15,9 @@ namespace ORM_Repos_UoW
 
         public static string GetInsertIntoString(Dictionary<string, object> columnsValues, string table)
         {
-            StringBuilder insertIntoSql = new StringBuilder();
+            StringBuilder insertIntoSql = new StringBuilder($"INSERT INTO {table} (");
             StringBuilder columns = new StringBuilder();
             StringBuilder values = new StringBuilder();
-            
-            insertIntoSql.Append($"INSERT INTO {table} (");
             
             foreach (var columnValue in columnsValues)
             {
@@ -31,6 +29,26 @@ namespace ORM_Repos_UoW
 
             insertIntoSql.Append(columns.ToString() + ") VALUES (" + values.ToString() + ")");
             return insertIntoSql.ToString();
+        }
+
+        //DELETE {tableName} WHERE {parameter} = {value} [AND {parameter2} = {value}]
+        public static string GetDeleteString(string tableName, Dictionary<string, object> columnsValues)
+        {
+            StringBuilder deleteSQL = new StringBuilder($"DELETE {tableName} WHERE ");
+            deleteSQL.Append($"{columnsValues.First().Key} = {columnsValues.First().Value}");
+            deleteSQL.Remove(0, 1);
+            if (columnsValues.Count > 1)
+            {
+                foreach (var columnValue in columnsValues)
+                {
+                    deleteSQL.Append($" AND {columnValue.Key} = {columnValue.Value}");
+                }
+                return deleteSQL.ToString();
+            }
+            else
+            {
+                return deleteSQL.ToString();
+            }
         }
     }
 }
