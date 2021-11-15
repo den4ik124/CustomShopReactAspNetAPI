@@ -6,6 +6,13 @@ namespace SeaBattleDomainModel.DerivedShips
 {
     public class RepairShip : Ship, ICanRepair
     {
+        public RepairShip(int id, int velocity, int range, int size) : base(id, velocity, range, size)
+        {
+        }
+        public RepairShip(int velocity, int range, int size) : base(velocity, range, size)
+        {
+        }
+
         #region Methods
 
         #region Methods.Public

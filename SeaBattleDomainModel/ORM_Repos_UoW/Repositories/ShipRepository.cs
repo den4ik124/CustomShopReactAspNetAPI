@@ -23,7 +23,7 @@ namespace ORM_Repos_UoW
             this.dbContext.ShipsList.Items.Add(item, State.Added);
         }
 
-        public Ship GetItem(int id)
+        public Ship ReadItem(int id)
         {
             return this.dbContext.ShipsList.Items.First(item => item.Key.Id == id).Key;
         }
@@ -40,7 +40,7 @@ namespace ORM_Repos_UoW
             throw new NotImplementedException();
         }
 
-        public IEnumerable<Ship> GetItems()
+        public IEnumerable<Ship> ReadItems()
         {
             return dbContext.ShipsList.Items.Select(item => item.Key);
         }

@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeaBattleDomainModel", "Sea
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "testCodeHere", "testCodeHere\testCodeHere.csproj", "{89F60B13-F440-491D-B110-87FAD60787C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ORM_Repos_UoW", "ORM_Repos_UoW\ORM_Repos_UoW.csproj", "{61946E26-3C55-4847-9563-54620929B3D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ORM_Repos_UoW", "ORM_Repos_UoW\ORM_Repos_UoW.csproj", "{61946E26-3C55-4847-9563-54620929B3D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReflectionExtensions", "ReflectionExtensions\ReflectionExtensions.csproj", "{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{61946E26-3C55-4847-9563-54620929B3D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61946E26-3C55-4847-9563-54620929B3D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61946E26-3C55-4847-9563-54620929B3D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

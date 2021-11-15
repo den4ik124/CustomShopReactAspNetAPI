@@ -1,10 +1,12 @@
-﻿using System;
+﻿using SeaBattleDomainModel.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace SeaBattleDomainModel.Entities
 {
+    [Table("Battlefields")]
     public class BattleField
     {
         #region Fields
@@ -15,11 +17,14 @@ namespace SeaBattleDomainModel.Entities
 
         private readonly List<Ship> ships;
 
+        [Column("SideLength")]
         private readonly int battleFieldSideLength;
 
         private Dictionary<Point, Cell> cells;
 
         #endregion Fields
+
+        public int Id { get; set; }
 
         #region Constructors
 
