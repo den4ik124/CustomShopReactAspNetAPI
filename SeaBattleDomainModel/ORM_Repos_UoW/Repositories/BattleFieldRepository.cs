@@ -22,12 +22,12 @@ namespace ORM_Repos_UoW
             throw new NotImplementedException();
         }
 
-        public BattleField GetItem(int id)
+        public BattleField ReadItem(int id)
         {
             throw new NotImplementedException();
 
         }
-        public IEnumerable<BattleField> GetItems()
+        public IEnumerable<BattleField> ReadItems()
         {
             throw new NotImplementedException();
         }

@@ -5,6 +5,7 @@ using System.Text;
 
 namespace SeaBattleDomainModel.Entities
 {
+    [Repository("Battlefields")]
     public class BattleField
     {
         #region Fields
