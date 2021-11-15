@@ -8,11 +8,13 @@ namespace ORM_Repos_UoW
         private DbContext dbContext;
         public IRepository<Ship> ShipRepository { get; }
         public IRepository<Cell> CellRepository { get; }
+        public IRepository<BattleField> BattleFieldRepository { get; }
 
         public UnitOfWork(DbContext dbContext)
         {
             this.dbContext = dbContext;
             ShipRepository = new ShipRepository(dbContext);
+            BattleFieldRepository = new BattleFieldRepository(dbContext);
             //CellRepository = new CellRepository(dbContext);
         }
 
