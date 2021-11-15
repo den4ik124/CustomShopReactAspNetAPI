@@ -6,7 +6,7 @@ using System.Text;
 
 namespace SeaBattleDomainModel.Entities
 {
-    [Repository("Battlefields")]
+    [Table("Battlefields")]
     public class BattleField
     {
         #region Fields
@@ -23,6 +23,8 @@ namespace SeaBattleDomainModel.Entities
         private Dictionary<Point, Cell> cells;
 
         #endregion Fields
+
+        public int Id { get; set; }
 
         #region Constructors
 

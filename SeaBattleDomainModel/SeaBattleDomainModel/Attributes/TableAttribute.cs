@@ -3,9 +3,9 @@
 namespace SeaBattleDomainModel.Entities
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct )]
-    public class RepositoryAttribute : Attribute
+    public class TableAttribute : Attribute
     {
-        public RepositoryAttribute(string tableName = "")
+        public TableAttribute(string tableName = "")
         {
             TableName = tableName;
         }

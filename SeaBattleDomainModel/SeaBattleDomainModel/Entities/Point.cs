@@ -3,10 +3,11 @@ using System;
 
 namespace SeaBattleDomainModel.Entities
 {
-    [Repository("Points")]
+    [Table("Points")]
 
     public struct Point : IEquatable<Point>
     {
+        public int Id { get; set; }
         #region Fields
         [Column("X")]
         private readonly int x;

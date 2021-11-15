@@ -2,7 +2,7 @@
 
 namespace SeaBattleDomainModel.Entities
 {
-    [Repository("Ships")]
+    [Table("Ships")]
     public abstract class Ship : IEquatable<Ship>
     {
         #region Fields

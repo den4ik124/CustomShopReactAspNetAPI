@@ -2,9 +2,10 @@
 
 namespace SeaBattleDomainModel.Entities
 {
-    [Repository("Cells")]
+    [Table("Cells")]
     public class Cell
     {
+        public int Id { get; set; }
         #region Constructors
 
         public Cell(Point point)
