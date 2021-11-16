@@ -4,56 +4,25 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 
 namespace ORM_Repos_UoW
 {
     public class DbContext
     {
         private SqlConnection sqlConnection;
-        public DbSet<Ship> ShipsList { get; }
+        public DbSet<Ship> ShipsList { get; set; }
 
-        private SqlDataAdapter da;
-        public DataTable shipsTable;
-        public DataTable battleFieldsTable;
+        private SqlDataAdapter adapter = new SqlDataAdapter();
+        private DataSet tablesWithData = new DataSet();
         private DataRow dr;
-
-        public List<Ship> ShipList
-        {
-            get
-            {
-                List<Ship> ships = new List<Ship>();
-                var rows = this.shipsTable.Rows;
-                for (int i = 0; i < rows.Count; i++)
-                {
-                    switch (rows[i]["TypeId"])
-                    {
-                        case 1:
-                            ships.Add(new BattleShip((int)rows[i]["Id"], (int)rows[i]["Velocity"], (int)rows[i]["Range"], (int)rows[i]["Size"]));
-                            break;
-
-                        case 2:
-                            ships.Add(new RepairShip((int)rows[i]["Id"], (int)rows[i]["Velocity"], (int)rows[i]["Range"], (int)rows[i]["Size"]));
-                            break;
-
-                        case 3:
-                            ships.Add(new ComboShip((int)rows[i]["Id"], (int)rows[i]["Velocity"], (int)rows[i]["Range"], (int)rows[i]["Size"]));
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-                return ships;
-            }
-        }
 
         public DbContext(string connection)
         {
             sqlConnection = new SqlConnection(connection);
             ShipsList = new DbSet<Ship>();
-            da = new SqlDataAdapter();
-            shipsTable = new DataTable();
-            battleFieldsTable = new DataTable();
+            adapter = new SqlDataAdapter();
+            tablesWithData = new DataSet();
 
             Preparing(sqlConnection);
 
@@ -64,10 +33,20 @@ namespace ORM_Repos_UoW
         {
             try
             {
-                da.SelectCommand = new SqlCommand(SqlGenerator.GetSelectAllString("Ships"), connection);
-                da.Fill(shipsTable);
-                da.SelectCommand = new SqlCommand(SqlGenerator.GetSelectAllString("BattleFields"), connection);
-                da.Fill(battleFieldsTable);
+                using (connection)
+                {
+                    connection.Open();
+                    DataTable dbTables = connection.GetSchema("Tables");
+                    for (int i = 0; i < dbTables.Rows.Count; i++)
+                    {
+                        var tableName = dbTables.Rows[i].ItemArray[2];
+                        var sql = $"SELECT * FROM {tableName}";
+                        DataTable table = new DataTable(tableName.ToString());
+                        adapter.SelectCommand = new SqlCommand(sql, connection);
+                        adapter.Fill(table);
+                        tablesWithData.Tables.Add(table);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -88,8 +67,10 @@ namespace ORM_Repos_UoW
 
         private void Add(SqlConnection sqlConnection)
         {
-            //var added = ShipsList.Items.Where(item => item.Value == State.Added).Select(item => item.Key).ToList();
-
+            var added = ShipsList.Items.Where(item => item.Value == State.Added).Select(item => item.Key).ToList();
+            SqlCommand sqlCommand = sqlConnection.CreateCommand();
+            var propsAndValues = new Dictionary<string, object>(); //TODO: реализовать заполнение словаря
+            //sqlCommand.CommandText = SqlGenerator.GetInsertIntoString(test, "table");
             throw new NotImplementedException();
         }
 
