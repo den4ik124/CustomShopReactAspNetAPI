@@ -17,18 +17,18 @@ namespace ORM_Repos_UoW
             this.dbContext = dbContext;
         }
 
-        public IRepository<T> GetRepository<T>() where T : class
+        public GenericRepos<T> GetRepository<T>() where T : class //TODO: поменять GenericRepos на IRepository
         {
             var type = typeof(T);
             if (Repositories == null)
             {
-                Repositories[type] = new Dictionary<Type, object>();
+                Repositories = new Dictionary<Type, object>();
             }
-            if (Repositories.ContainsKey(typeof(T)))
+            if (!Repositories.ContainsKey(typeof(T)))
             {
                 Repositories[type] = new GenericRepos<T>(dbContext);
             }
-            return (IRepository<T>)Repositories[type];
+            return (GenericRepos<T>)Repositories[type];
         }
 
         public int Commit()

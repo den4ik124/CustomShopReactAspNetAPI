@@ -38,13 +38,17 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
+        [Column("Id")]
         public int Id { get; set; }
 
+        [Column("Velocity")]
         public int Velocity { get; set; }
-
-        public int Range { get; set; }
-
+        
+        [Column("Size")]
         public int Size { get; set; }
+
+        [Column("Range")]
+        public int Range { get; set; }
 
         #endregion Properties
 

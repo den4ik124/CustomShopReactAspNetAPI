@@ -13,16 +13,16 @@ namespace ORM_Repos_UoW
         private SqlConnection sqlConnection;
         public DbSet<Ship> ShipsList { get; set; }
 
-        private SqlDataAdapter adapter = new SqlDataAdapter();
-        private DataSet tablesWithData = new DataSet();
-        private DataRow dr;
+        public SqlDataAdapter Adapter { get; set; }
+        public DataSet TablesWithData { get; set; }
+        //private DataRow dr;
 
         public DbContext(string connection)
         {
             sqlConnection = new SqlConnection(connection);
             ShipsList = new DbSet<Ship>();
-            adapter = new SqlDataAdapter();
-            tablesWithData = new DataSet();
+            Adapter = new SqlDataAdapter();
+            TablesWithData = new DataSet();
 
             Preparing(sqlConnection);
 
@@ -42,9 +42,9 @@ namespace ORM_Repos_UoW
                         var tableName = dbTables.Rows[i].ItemArray[2];
                         var sql = $"SELECT * FROM {tableName}";
                         DataTable table = new DataTable(tableName.ToString());
-                        adapter.SelectCommand = new SqlCommand(sql, connection);
-                        adapter.Fill(table);
-                        tablesWithData.Tables.Add(table);
+                        Adapter.SelectCommand = new SqlCommand(sql, connection);
+                        Adapter.Fill(table);
+                        TablesWithData.Tables.Add(table);
                     }
                 }
             }
@@ -54,13 +54,31 @@ namespace ORM_Repos_UoW
             }
         }
 
+        public DataTable GetTable(string tableName)
+        {
+            var tables = TablesWithData.Tables;
+            for (int i = 0; i < tables.Count; i++)
+            {
+                if (tables[i].TableName == tableName)
+                {
+                    return tables[i];
+                }
+            }
+
+            throw new NullReferenceException();
+            return null;
+        }
+
         public int SaveChanges()
         {
             using (sqlConnection)
             {
-                Add(sqlConnection);
-                Update(sqlConnection);
-                Remove(sqlConnection);
+                sqlConnection.Open();
+                Adapter.Update(TablesWithData);
+
+                //Add(sqlConnection);
+                //Update(sqlConnection);
+                //Remove(sqlConnection);
             }
             throw new NotImplementedException();
         }
