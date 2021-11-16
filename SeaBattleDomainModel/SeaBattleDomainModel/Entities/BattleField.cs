@@ -17,7 +17,6 @@ namespace SeaBattleDomainModel.Entities
 
         private readonly List<Ship> ships;
 
-        [Column("SideLength")]
         private readonly int battleFieldSideLength;
 
         private Dictionary<Point, Cell> cells;
@@ -26,6 +25,9 @@ namespace SeaBattleDomainModel.Entities
 
         [Column("Id")]
         public int Id { get; set; }
+        
+        [Column("SideLength")]
+        public int BattleFieldSideLength => battleFieldSideLength;
 
         #region Constructors
 
