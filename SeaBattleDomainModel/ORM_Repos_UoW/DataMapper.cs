@@ -14,11 +14,11 @@ namespace ORM_Repos_UoW
             List<string> columnsName = GetTableColumnsHeaders(table);
 
             var props = type.GetProperties()
-                                .Where(atr => atr.CustomAttributes.Any(i => i.AttributeType.Name == "ColumnAttribute"))
+                                .Where(atr => atr.CustomAttributes
+                                            .Any(i => i.AttributeType.Name == "ColumnAttribute"))
                                 .ToArray();
 
             DataRow row = table.NewRow();
-            //for (int i = 0; i < props.Length; i++)
             for (int i = 0; i < columnsName.Count; i++)
             {
                 var property = props.Where(atr => atr.CustomAttributes
@@ -32,10 +32,8 @@ namespace ORM_Repos_UoW
                 }
                 var propertyValue = property?.FirstOrDefault().GetValue(item);
                 row[i] = propertyValue;
-                //Debug.WriteLine($"{property.FirstOrDefault().Name} \t {row[i]}");
             }
             row.Table.Rows.Add(row);
-            //return row;
         }
 
         private static List<string> GetTableColumnsHeaders(DataTable table)
