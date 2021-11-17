@@ -16,27 +16,19 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Create(T item)
         {
-
-            var dataMapper = new DataMapper(dbContext, item);
-
-            var type = typeof(T);
-            var attributes = type.GetCustomAttributesData().First(a => a.AttributeType.Name == "TableAttribute");//.ConstructorArguments;
-
-            //string? tableName = GetTableName(attributes);
-
-            //var foundedTable = dbContext.GetTable(tableName);
-            //TODO: Реализовать вызов DataMapper здесь
-            //найти в dbContext-e таблицу с  таким же атрибутом, как у класса T.
-            //Записать данные в таблицу согласно указанным колонкам.
-            throw new NotImplementedException();
+            var dataMapper = new DataMapper<T>(dbContext, item);
         }
-
-
-        public DataTable GetTable(System.Reflection.CustomAttributeData attributes)
+        public void Create(List<T> items)
         {
-            var test = dbContext.GetTable(GetTableName(attributes));
-            return dbContext.GetTable(GetTableName(attributes));
+            var dataMapper = new DataMapper<T>(dbContext,items);
         }
+
+
+        //public DataTable GetTable(System.Reflection.CustomAttributeData attributes)
+        //{
+        //    //var test = dbContext.GetTable(GetTableName(attributes));
+        //    //return dbContext.GetTable(GetTableName(attributes));
+        //}
 
         //private string? GetTableName(System.Reflection.CustomAttributeData attributes) //TODO: исправить на private вне тестов
         //{
@@ -51,14 +43,24 @@ namespace ORM_Repos_UoW.Repositories
 
         public T ReadItem(int id)
         {
-            throw new NotImplementedException();
+            T item;
+            using (var dataMapper = new DataMapper<T>(dbContext))
+            {
+                item = dataMapper.Items[0];
+            }
+            return item;
         }
 
         public IEnumerable<T> ReadItems()
         {
-            var dataMapper = new DataMapper<T>(dbContext);
-            
-            return dataMapper.Items;
+            IEnumerable<T> items;
+            using (var dataMapper = new DataMapper<T>(dbContext))
+            {
+                items = dataMapper.Items;
+            }
+            return items;
+            //var dataMapper = new DataMapper<T>(dbContext).Items;
+            //return dataMapper.Items;
         }
 
         public void Delete(int id)

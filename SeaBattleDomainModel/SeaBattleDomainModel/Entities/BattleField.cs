@@ -27,7 +27,7 @@ namespace SeaBattleDomainModel.Entities
         public int Id { get; set; }
         
         [Column("SideLength")]
-        public int BattleFieldSideLength => battleFieldSideLength;
+        public int BattleFieldSideLength => battleFieldSideLength - battleFieldPointsIncreaser;
 
         #region Constructors
 
@@ -38,6 +38,12 @@ namespace SeaBattleDomainModel.Entities
             this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
         }
+        public BattleField(int id, int fieldSideLength) : this (fieldSideLength)
+        {
+            this.Id = id;
+        }
+
+
 
         #endregion Constructors
 
@@ -286,6 +292,12 @@ namespace SeaBattleDomainModel.Entities
             }
             return battleFieldState.ToString();
         }
+
+        //для теста DataMapper-а
+        //public override string ToString()
+        //{
+        //    return $"{this.Id} \t {this.BattleFieldSideLength}";
+        //}
 
         #endregion Methods
     }

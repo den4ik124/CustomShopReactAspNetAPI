@@ -9,7 +9,7 @@ namespace SeaBattleDomainModel.Entities
         [Column("Id")]
         public int Id { get; set; }
         
-        [Column("ShipsId")]
+        [Column("ShipID")]
         public int? ShipId
         {
             get
@@ -19,12 +19,25 @@ namespace SeaBattleDomainModel.Entities
                 else 
                     return null;
             }
+            set { }
         }
 
-        [Column("PointId")]
-        public int PointId { get => Point.Id; }
+        [Column("PointID")]
+        public int PointId 
+        {
+            get => Point.Id; 
+            set { }
+        }
 
         #region Constructors
+
+        //TODO: Можно ли добавить этот конструктор ?
+        //public Cell(int id, int shipId, int pointId)
+        //{
+        //    this.Id = id;
+        //    this.ShipId = shipId;
+        //    this.PointId = pointId;
+        //}
 
         public Cell(Point point)
         {
