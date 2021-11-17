@@ -1,8 +1,6 @@
 ﻿using ORM_Repos_UoW.Repositories;
-using SeaBattleDomainModel.Entities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ORM_Repos_UoW
 {
@@ -31,9 +29,10 @@ namespace ORM_Repos_UoW
             return (GenericRepos<T>)Repositories[type];
         }
 
-        public int Commit()
+        public void Commit()
         {
-            return dbContext.SaveChanges();
+            /*return */
+            dbContext.SaveChanges();
         }
 
         public void Dispose()

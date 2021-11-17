@@ -4,6 +4,8 @@ namespace ORM_Repos_UoW
 {
     internal interface IUnitOfWork : IDisposable
     {
-        int Commit();
+        /*int*/
+
+        void Commit();
     }
 }

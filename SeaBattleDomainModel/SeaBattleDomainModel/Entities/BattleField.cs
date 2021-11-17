@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace SeaBattleDomainModel.Entities
 {
@@ -25,7 +24,7 @@ namespace SeaBattleDomainModel.Entities
 
         [Column("Id")]
         public int Id { get; set; }
-        
+
         [Column("SideLength")]
         public int BattleFieldSideLength => battleFieldSideLength - battleFieldPointsIncreaser;
 
@@ -38,12 +37,11 @@ namespace SeaBattleDomainModel.Entities
             this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
         }
-        public BattleField(int id, int fieldSideLength) : this (fieldSideLength)
+
+        public BattleField(int id, int fieldSideLength) : this(fieldSideLength)
         {
             this.Id = id;
         }
-
-
 
         #endregion Constructors
 
@@ -283,21 +281,21 @@ namespace SeaBattleDomainModel.Entities
             ships.AddRange(sortedShips);
         }
 
-        public override string ToString()
-        {
-            StringBuilder battleFieldState = new StringBuilder();
-            foreach (var cell in cells.Where(item => item.Value.Ship != null))
-            {
-                battleFieldState.Append(cell.ToString());
-            }
-            return battleFieldState.ToString();
-        }
-
-        //для теста DataMapper-а
         //public override string ToString()
         //{
-        //    return $"{this.Id} \t {this.BattleFieldSideLength}";
+        //    StringBuilder battleFieldState = new StringBuilder();
+        //    foreach (var cell in cells.Where(item => item.Value.Ship != null))
+        //    {
+        //        battleFieldState.Append(cell.ToString());
+        //    }
+        //    return battleFieldState.ToString();
         //}
+
+        //для теста DataMapper-а
+        public override string ToString()
+        {
+            return $"{this.Id} \t {this.BattleFieldSideLength}";
+        }
 
         #endregion Methods
     }

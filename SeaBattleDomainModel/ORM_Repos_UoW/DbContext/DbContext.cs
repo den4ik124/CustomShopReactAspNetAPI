@@ -1,10 +1,6 @@
-﻿using SeaBattleDomainModel.DerivedShips;
-using SeaBattleDomainModel.Entities;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 
 namespace ORM_Repos_UoW
 {
@@ -12,15 +8,16 @@ namespace ORM_Repos_UoW
     {
         private SqlConnection sqlConnection;
         private SqlDataAdapter adapter;// { get; set; }
-        public  DataSet TablesWithData { get; set; }
+        public DataSet TablesWithData { get; set; }
+
         //private DataRow dr;
-        private string connectionString; 
+        private string connectionString;
+
         public DbContext(string connectionString)
         {
             this.connectionString = connectionString;
             adapter = new SqlDataAdapter();
             TablesWithData = new DataSet();
-
             Preparing(new SqlConnection(connectionString)); //TODO: нужны ли мне все таблицы?
         }
 
@@ -63,9 +60,9 @@ namespace ORM_Repos_UoW
             return null;
         }
 
-        public int SaveChanges()
+        public void SaveChanges()
         {
-            int res = 0;
+            //int res = 0;
             using (sqlConnection = new SqlConnection(connectionString))
             {
                 sqlConnection.Open();
@@ -73,10 +70,11 @@ namespace ORM_Repos_UoW
                 {
                     adapter.SelectCommand = new SqlCommand($"SELECT * FROM {TablesWithData.Tables[i].TableName}", sqlConnection);
                     SqlCommandBuilder sqlCommandBuilder = new SqlCommandBuilder(adapter);
-                    res += adapter.Update(TablesWithData, TablesWithData.Tables[i].TableName);
+                    /*res += */
+                    adapter.Update(TablesWithData, TablesWithData.Tables[i].TableName);
                 }
             }
-            return res;
+            //return res;
         }
 
         private void Add(SqlConnection sqlConnection)
