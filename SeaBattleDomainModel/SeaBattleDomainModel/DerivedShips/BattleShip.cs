@@ -1,9 +1,12 @@
-﻿using SeaBattleDomainModel.Entities;
+﻿using SeaBattleDomainModel.Attributes;
+using SeaBattleDomainModel.Entities;
 using SeaBattleDomainModel.Interfaces;
 using System;
 
 namespace SeaBattleDomainModel.DerivedShips
 {
+    [Table("Ships")]
+    [ShipType(typeID:1)]
     public class BattleShip : Ship, ICanShot
     {
         public BattleShip(int id, int velocity, int range, int size) : base(id, velocity, range, size)

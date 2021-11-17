@@ -17,10 +17,12 @@ namespace ORM_Repos_UoW.Repositories
         public void Create(T item)
         {
             var dataMapper = new DataMapper<T>(dbContext, item);
+            dataMapper.TransferItemsIntoDB();
         }
         public void Create(List<T> items)
         {
-            var dataMapper = new DataMapper<T>(dbContext,items);
+            var dataMapper = new DataMapper<T>(dbContext, items);
+            dataMapper.TransferItemsIntoDB();
         }
 
 
@@ -43,24 +45,25 @@ namespace ORM_Repos_UoW.Repositories
 
         public T ReadItem(int id)
         {
-            T item;
-            using (var dataMapper = new DataMapper<T>(dbContext))
+            var dataMapper = new DataMapper<T>(dbContext);
+            dataMapper.FillItems();
+
+            foreach (var elem in dataMapper.Items)
             {
-                item = dataMapper.Items[0];
+                if ((int)typeof(T).GetProperties()
+                    .FirstOrDefault(prop => prop.Name == "Id")
+                    .GetValue(elem) == id)
+                {
+                    return elem; 
+                }
             }
-            return item;
+            return null; //TODO: избавиться от return null;
         }
 
         public IEnumerable<T> ReadItems()
         {
-            IEnumerable<T> items;
-            using (var dataMapper = new DataMapper<T>(dbContext))
-            {
-                items = dataMapper.Items;
-            }
-            return items;
-            //var dataMapper = new DataMapper<T>(dbContext).Items;
-            //return dataMapper.Items;
+            var dataMapper = new DataMapper<T>(dbContext);
+            return dataMapper.Items;
         }
 
         public void Delete(int id)

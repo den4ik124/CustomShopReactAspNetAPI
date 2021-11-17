@@ -1,9 +1,12 @@
-﻿using SeaBattleDomainModel.Entities;
+﻿using SeaBattleDomainModel.Attributes;
+using SeaBattleDomainModel.Entities;
 using SeaBattleDomainModel.Interfaces;
 using System;
 
 namespace SeaBattleDomainModel.DerivedShips
 {
+    [Table("Ships")]
+    [ShipType(typeID:3)]
     public class ComboShip : Ship, ICanShot, ICanRepair
     {
 
