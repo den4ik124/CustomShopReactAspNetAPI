@@ -6,7 +6,23 @@ namespace SeaBattleDomainModel.Entities
     [Table("Cells")]
     public class Cell
     {
+        [Column("Id")]
         public int Id { get; set; }
+        
+        [Column("ShipsId")]
+        public int? ShipId
+        {
+            get
+            {
+                if (this.Ship != null)
+                    return this.Ship.Id;
+                else 
+                    return null;
+            }
+        }
+
+        [Column("PointId")]
+        public int PointId { get => Point.Id; }
 
         #region Constructors
 
