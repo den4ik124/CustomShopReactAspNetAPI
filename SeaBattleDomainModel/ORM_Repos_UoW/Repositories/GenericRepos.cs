@@ -51,8 +51,8 @@ namespace ORM_Repos_UoW.Repositories
             foreach (var elem in dataMapper.Items)
             {
                 if ((int)typeof(T).GetProperties()
-                    .FirstOrDefault(prop => prop.Name == "Id")
-                    .GetValue(elem) == id)
+                                    .FirstOrDefault(prop => prop.Name == "Id")
+                                    .GetValue(elem) == id)
                 {
                     return elem; 
                 }
@@ -63,6 +63,7 @@ namespace ORM_Repos_UoW.Repositories
         public IEnumerable<T> ReadItems()
         {
             var dataMapper = new DataMapper<T>(dbContext);
+            dataMapper.FillItems();
             return dataMapper.Items;
         }
 

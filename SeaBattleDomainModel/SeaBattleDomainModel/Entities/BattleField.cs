@@ -26,7 +26,7 @@ namespace SeaBattleDomainModel.Entities
         public int Id { get; set; }
 
         [Column("SideLength")]
-        public int BattleFieldSideLength => battleFieldSideLength - battleFieldPointsIncreaser;
+        public int BattleFieldSideLength { get => battleFieldSideLength - battleFieldPointsIncreaser; }
 
         #region Constructors
 
@@ -59,7 +59,8 @@ namespace SeaBattleDomainModel.Entities
                 for (int x = -battleFieldHalfSide; x <= battleFieldHalfSide; x++)
                 {
                     var point = new Point(x, y);
-                    cells.Add(point, new Cell(point));
+                    var cell = new Cell(point) { BattleFieldId = this.Id};
+                    cells.Add(point, cell);
                 }
             }
         }

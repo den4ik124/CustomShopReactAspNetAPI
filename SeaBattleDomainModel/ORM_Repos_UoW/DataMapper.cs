@@ -1,7 +1,9 @@
 ﻿using ReflectionExtensions;
+using SeaBattleDomainModel.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -14,53 +16,51 @@ namespace ORM_Repos_UoW
         private const string columnAttribute = "ColumnAttribute";
 
         private Type currentType;
-        private CustomAttributeData? attribute;
+        //private CustomAttributeData? attribute;
+        private Attribute attribute;
         private string? tableName;
-        private PropertyInfo[]? properties;
+        private IEnumerable<PropertyInfo>? properties;
         private DbContext dbContext;
 
         public List<T> Items { get;}
-        public Dictionary<int,T> ItemsDict { get; set; }
+        //public Dictionary<int,T> ItemsDict { get; set; }
 
+        private Dictionary<PropertyInfo, string>? _propertiesTables;
         public DataMapper(DbContext dbContext)
         {
+            _propertiesTables = new Dictionary<PropertyInfo, string>();
             this.currentType = typeof(T);
-            this.attribute = currentType.GetCustomAttributesData()
-                            .First(a => a.AttributeType.Name == tableAttribute);
-            this.tableName = currentType.CustomAttributes.FirstOrDefault(atr => atr.AttributeType.Name == attribute.AttributeType.Name) ?
-                            .ConstructorArguments.FirstOrDefault()
-                            .Value?.ToString();
+            this.attribute = currentType.GetCustomAttribute<TableAttribute>();
+
+            this.tableName = ((TableAttribute)attribute).TableName;
+            //this.tableName = currentType.CustomAttributes.FirstOrDefault(atr => atr.AttributeType == attribute.GetType()) ?
+            //                .ConstructorArguments.FirstOrDefault()
+            //                .Value?.ToString();
             this.properties = currentType.GetProperties()
-                        .Where(atr => atr.CustomAttributes
-                                    .Any(i => i.AttributeType.Name == columnAttribute))
-                        .ToArray();
+                                         .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+
             this.dbContext = dbContext;
             Items = new List<T>() {};
         }
         public DataMapper(DbContext dbContext, T item) : this(dbContext)
         {
-            Items = new List<T>(){item};
+            Items.Add(item);
         }
 
         public DataMapper(DbContext dbContext, List<T> items): this(dbContext)
         {
-            Items = items;
+            Items.AddRange(items);
         }
 
         public void FillItems()
         {
-            DataTable dt = dbContext.GetTable(tableName);
+            DataTable dt = dbContext.GetTableWithData(tableName);
             foreach (DataRow row in dt.Rows)
             {
                 var arguments = new List<object>();
-                for (int i = 0; i < properties.Length /*row.ItemArray.Length*/; i++)
+                foreach (var property in properties)
                 {
-                    var tableColumnByPropertyAttribute = properties[i].CustomAttributes //TODO: вылетаем за пределы массива props , т.к. у корабля нет поля TypeID, у Cell нет BattleFieldID
-                                            .FirstOrDefault()?
-                                            .ConstructorArguments
-                                            .FirstOrDefault()
-                                            .Value?.ToString();
-
+                    var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                     arguments.Add(row[tableColumnByPropertyAttribute]);
                 }
                 T item = (T)Activator.CreateInstance(currentType, arguments.ToArray());
@@ -74,14 +74,10 @@ namespace ORM_Repos_UoW
             foreach (var item in Items)
             {
                 DataRow row = dt.NewRow();
-                for (int i = 0; i < this.properties.Length; i++)
+                foreach (var property in properties)
                 {
-                    var tableColumnByPropertyAttribute = properties[i].CustomAttributes //TODO: вылетаем за пределы массива props , т.к. у корабля нет поля TypeID, у Cell нет BattleFieldID
-                        .FirstOrDefault()?
-                        .ConstructorArguments
-                        .FirstOrDefault()
-                        .Value?.ToString();
-                    row[tableColumnByPropertyAttribute] = properties[i].GetValue(item);
+                    var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                    row[tableColumnByPropertyAttribute] = property.GetValue(item);
                 }
                 dt.Rows.Add(row);
             }

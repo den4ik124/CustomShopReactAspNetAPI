@@ -63,5 +63,46 @@ namespace ORM_Repos_UoW
                 return deleteSQL.ToString();
             }
         }
+
+        //MERGE {TargetTableName} AS TargetTable
+        //Using {SourceTableName} AS Source
+        //ON TargetTable.Id = Source.Id
+        //WHEN MATCHED THEN UPDATE SET
+        //    TargetTable.{Field1} = Source.{Field1},
+        //    TargetTable.{Field2} = Source.{Field2},
+        //    TargetTable.{Field3} = Source.{Field3},
+        //      .....................................................
+        //    TargetTable.{FieldN} = Source.{FieldN},
+        //WHEN NOT MATCHED THEN
+        //      INSERT({Field1}, {Field2}, ... , {FieldN})
+        //      VALUES(Source.{Field1}, Source.{Field2}, ... , Source.{FieldN});
+
+        public static string GetMergeString(string TargetTableName, string SourceTableName, List<string> columns)
+        {
+            StringBuilder mergeSQL = new StringBuilder(@$"MERGE {TargetTableName} AS TargetTable Using {SourceTableName} AS Source ON TargetTable.Id = Source.Id WHEN MATCHED THEN UPDATE SET ");
+            StringBuilder updateColumns = new StringBuilder();
+            StringBuilder values = new StringBuilder();
+
+            foreach (var column in columns)
+            {
+                updateColumns.Append($"TargetTable.{column} =  Source.{column},");
+            }
+            updateColumns.Remove(updateColumns.Length - 1, 1);
+
+            mergeSQL.Append(updateColumns.ToString() + "\nWHEN NOT MATCHED THEN\nINSERT (");
+            StringBuilder insertColumns = new StringBuilder();
+
+            foreach (var column in columns)
+            {
+                insertColumns.Append($"{column}, ");
+                values.Append($"Source.{column}, ");
+            }
+            insertColumns.Remove(insertColumns.Length - 2, 2);
+            values.Remove(values.Length - 2, 2);
+
+            mergeSQL.Append(insertColumns.ToString()+") VALUES (");
+            mergeSQL.Append(values.ToString()+");");
+            return mergeSQL.ToString();
+        }
     }
 }

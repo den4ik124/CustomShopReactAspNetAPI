@@ -9,6 +9,11 @@ namespace SeaBattleDomainModel.Entities
         [Column("Id")]
         public int Id { get; set; }
         
+
+        [Column("BattleFieldID")]
+        public int? BattleFieldId { get; set; }
+        
+
         [Column("ShipID")]
         public int? ShipId
         {
@@ -55,9 +60,8 @@ namespace SeaBattleDomainModel.Entities
         #region Properties
 
         public Ship Ship { get; set; }
-
         public Point Point { get; set; }
-        public double DistanceToOrigin { get; set; }
+        public double DistanceToOrigin { get; }
 
         #endregion Properties
 
