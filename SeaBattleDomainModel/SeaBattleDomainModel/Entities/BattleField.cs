@@ -6,6 +6,7 @@ using System.Linq;
 namespace SeaBattleDomainModel.Entities
 {
     [Table("BattleFields")]
+    [Parent]
     public class BattleField
     {
         #region Fields
@@ -22,11 +23,18 @@ namespace SeaBattleDomainModel.Entities
 
         #endregion Fields
 
+        #region Properties
         [Column("Id")]
         public int Id { get; set; }
 
         [Column("SideLength")]
         public int BattleFieldSideLength { get => battleFieldSideLength - battleFieldPointsIncreaser; }
+
+        [Child(table: "Ships")]
+        public List<Ship> Ships => ships;
+        [Child(table: "Ships")]
+        public Dictionary<Point, Cell> Cells { get => cells;}
+        #endregion Properties
 
         #region Constructors
 
