@@ -11,7 +11,7 @@ namespace SeaBattleDomainModel.Entities
         
 
         [Column("BattleFieldID")]
-        public int? BattleFieldId { get; set; }
+        public int BattleFieldId { get; set; }
         
 
         [Column("ShipID")]
