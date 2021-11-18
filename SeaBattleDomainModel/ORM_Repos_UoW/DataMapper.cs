@@ -63,7 +63,7 @@ namespace ORM_Repos_UoW
                     var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                     arguments.Add(row[tableColumnByPropertyAttribute]);
                 }
-                T item = (T)Activator.CreateInstance(currentType, arguments.ToArray());
+                T item = (T)Activator.CreateInstance(currentType, arguments.ToArray()); //TODO: проверить как создаются другие типы
                 Items.Add(item);
             }
         }
