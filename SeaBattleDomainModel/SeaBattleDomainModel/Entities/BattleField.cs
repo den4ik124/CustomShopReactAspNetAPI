@@ -17,26 +17,40 @@ namespace SeaBattleDomainModel.Entities
 
         private readonly List<Ship> ships;
 
-        private readonly int battleFieldSideLength;
+        private int battleFieldSideLength;
 
         private Dictionary<Point, Cell> cells;
 
         #endregion Fields
 
         #region Properties
+
         [Column("Id")]
         public int Id { get; set; }
 
         [Column("SideLength")]
-        public int BattleFieldSideLength { get => battleFieldSideLength - battleFieldPointsIncreaser; }
+        public int BattleFieldSideLength
+        {
+            get => battleFieldSideLength - battleFieldPointsIncreaser;
+            set => this.battleFieldSideLength = value + battleFieldPointsIncreaser;
+        }
 
         [Child(table: "Ships")]
         public List<Ship> Ships => ships;
+
         [Child(table: "Ships")]
-        public Dictionary<Point, Cell> Cells { get => cells;}
+        public Dictionary<Point, Cell> Cells { get => cells; }
+
         #endregion Properties
 
         #region Constructors
+
+        /// <summary>
+        /// Для корректной работы ORM
+        /// </summary>
+        public BattleField()
+        {
+        }
 
         public BattleField(int fieldSideLength)
         {
@@ -44,11 +58,6 @@ namespace SeaBattleDomainModel.Entities
             this.ships = new List<Ship>();
             this.cells = new Dictionary<Point, Cell>(this.battleFieldSideLength * this.battleFieldSideLength);
             FillCells();
-        }
-
-        public BattleField(int id, int fieldSideLength) : this(fieldSideLength)
-        {
-            this.Id = id;
         }
 
         #endregion Constructors
@@ -67,7 +76,7 @@ namespace SeaBattleDomainModel.Entities
                 for (int x = -battleFieldHalfSide; x <= battleFieldHalfSide; x++)
                 {
                     var point = new Point(x, y);
-                    var cell = new Cell(point) { BattleFieldId = this.Id};
+                    var cell = new Cell(point) { BattleFieldId = this.Id };
                     cells.Add(point, cell);
                 }
             }

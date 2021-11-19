@@ -57,13 +57,19 @@ namespace ORM_Repos_UoW
             DataTable dt = dbContext.GetTableWithData(tableName);
             foreach (DataRow row in dt.Rows)
             {
+                T item = (T)Activator.CreateInstance<T>();//TODO: проверить как создаются другие типы
                 var arguments = new List<object>();
                 foreach (var property in properties)
                 {
                     var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                     arguments.Add(row[tableColumnByPropertyAttribute]);
+                    var propValue = row[tableColumnByPropertyAttribute];
+                    property.SetValue(item, propValue);
                 }
-                T item = (T)Activator.CreateInstance(currentType, arguments.ToArray()); //TODO: проверить как создаются другие типы
+                //T item = (T)Activator.CreateInstance(currentType, arguments.ToArray()); //TODO: проверить как создаются другие типы
+
+
+
                 Items.Add(item);
             }
         }

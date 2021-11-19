@@ -36,15 +36,13 @@ namespace SeaBattleDomainModel.Entities
 
         #region Constructors
 
-        //TODO: Можно ли добавить этот конструктор?
-        public Cell(int id, int battleFieldId, int? shipId, int pointId)
+        /// <summary>
+        /// Для корректной работы ORM
+        /// </summary>
+        public Cell()
         {
-            this.Id = id;
-            this.ShipId = shipId;
-            this.PointId = pointId;
-            this.BattleFieldId = battleFieldId;
         }
-
+        
 
         public Cell(Point point)
         {

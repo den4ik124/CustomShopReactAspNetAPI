@@ -6,14 +6,11 @@ namespace SeaBattleDomainModel.Entities
     [Table("Ships")]
     public abstract class Ship : IEquatable<Ship>
     {
-        #region Fields
-
-        private static int nextId = 1;
-
-        #endregion Fields
-
         #region Constructors
 
+        /// <summary>
+        /// Для корректной работы ORM
+        /// </summary>
         public Ship()
         {
         }
@@ -28,7 +25,6 @@ namespace SeaBattleDomainModel.Entities
 
         public Ship(int velocity, int range, int size)
         {
-            Id = Ship.nextId++;
             this.Velocity = velocity;
             this.Range = range;
             this.Size = size;
