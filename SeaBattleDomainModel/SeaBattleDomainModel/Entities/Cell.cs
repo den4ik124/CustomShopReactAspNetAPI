@@ -5,6 +5,7 @@ using System;
 namespace SeaBattleDomainModel.Entities
 {
     [Table("Cells")]
+    [Parent]
     public class Cell
     {
         #region Fields
@@ -14,13 +15,13 @@ namespace SeaBattleDomainModel.Entities
 
         #endregion Fields
 
-        [Column("Id", ReadWriteOption.Write)]
+        [Column("Id", /*KeyType.Primary, */ReadWriteOption.Write)]
         public int Id { get; set; }
 
-        [Column("BattleFieldID")]
+        [Column("BattleFieldID"/*, KeyType.Foreign*/)]
         public int BattleFieldId { get; set; }
 
-        [Column("ShipID")]
+        [Column("ShipID"/*, KeyType.Foreign*/)]
         public int? ShipId
         {
             get
@@ -33,7 +34,7 @@ namespace SeaBattleDomainModel.Entities
             set => this.shipId = value;
         }
 
-        [Column("PointID")]
+        [Column("PointID"/*, KeyType.Foreign*/)]
         public int PointId
         {
             get => this.pointId;
@@ -64,8 +65,12 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
+        [Child(table: "Ships")]
         public Ship Ship { get; set; }
+
+        [Child(table: "Points")]
         public Point Point { get; set; }
+
         public double DistanceToOrigin { get; }
 
         #endregion Properties

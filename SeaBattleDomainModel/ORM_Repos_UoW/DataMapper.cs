@@ -44,16 +44,20 @@ namespace ORM_Repos_UoW
 
         private void DeleteDataFromTable(DataTable dt)
         {
+            var itemsID = mappedItems.Where(item => item.State == State.Deleted)
+                                    .Select(e => e.Item.GetType().
+                                                        GetProperty("Id").
+                                                        GetValue(e));
+            //var itemsID = mappedItems.Where(item => item.State == State.Deleted)
+            //    .Select(e => e.Item)
+            //    .Select(el => currentType.GetProperty("Id").GetValue(el));
             foreach (DataRow row in dt.Rows)
             {
-                var itemsID = mappedItems.Where(item => item.State == State.Deleted).Select(e => e.Item).Select(el => currentType.GetProperty("Id").GetValue(el));
-
                 if (itemsID.Contains(row["Id"]))
                 {
                     row.Delete();
                 }
             }
-            dt.AcceptChanges();
         }
 
         private void AddDataIntoTable(DataTable dt)
@@ -71,7 +75,6 @@ namespace ORM_Repos_UoW
                     row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
                 }
                 dt.Rows.Add(row);
-                dt.AcceptChanges();
             }
         }
 
