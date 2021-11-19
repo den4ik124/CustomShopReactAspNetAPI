@@ -39,7 +39,7 @@ namespace SeaBattleDomainModel.Entities
         [Child(table: "Ships")]
         public List<Ship> Ships => ships;
 
-        [Child(table: "Ships")]
+        [Child(table: "Cells")]
         public Dictionary<Point, Cell> Cells { get => cells; }
 
         #endregion Properties

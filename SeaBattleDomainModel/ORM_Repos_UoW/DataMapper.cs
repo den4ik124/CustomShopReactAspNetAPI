@@ -30,6 +30,53 @@ namespace ORM_Repos_UoW
             this.mappedItems = new List<MappedItem<T>>() { };
         }
 
+        #region Methods
+
+        #region Methods.Private
+
+        private void TransferItemsIntoDbTable()
+        {
+            DataTable dt = dbContext.GetTable(tableName);
+            AddDataIntoTable(dt);
+            DeleteDataFromTable(dt);
+            mappedItems.Clear();
+        }
+
+        private void DeleteDataFromTable(DataTable dt)
+        {
+            foreach (DataRow row in dt.Rows)
+            {
+                var itemsID = mappedItems.Where(item => item.State == State.Deleted).Select(e => e.Item).Select(el => currentType.GetProperty("Id").GetValue(el));
+
+                if (itemsID.Contains(row["Id"]))
+                {
+                    row.Delete();
+                }
+            }
+            dt.AcceptChanges();
+        }
+
+        private void AddDataIntoTable(DataTable dt)
+        {
+            foreach (var mappedElement in mappedItems.Where(item => item.State == State.Added))
+            {
+                DataRow row = dt.NewRow();
+                foreach (var property in properties)
+                {
+                    if (property.GetCustomAttribute<ColumnAttribute>().ReadWriteOption == ReadWriteOption.Write)
+                    {
+                        continue;
+                    }
+                    var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                    row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
+                }
+                dt.Rows.Add(row);
+                dt.AcceptChanges();
+            }
+        }
+
+        #endregion Methods.Private
+
         public void FillItems()
         {
             DataTable dt = dbContext.GetTableWithData(tableName);
@@ -52,45 +99,6 @@ namespace ORM_Repos_UoW
                     }
                 }
                 mappedItems.Add(new MappedItem<T>(item, State.Unchanched));
-            }
-        }
-
-        private void TransferItemsIntoDbTable()
-        {
-            DataTable dt = dbContext.GetTable(tableName);
-            AddDataInoTable(dt);
-            DeleteDataFromTable(dt);
-            mappedItems.Clear();
-        }
-
-        private void DeleteDataFromTable(DataTable dt)
-        {
-            foreach (DataRow row in dt.Rows)
-            {
-                if (mappedItems.Where(item => item.State == State.Deleted).Select(e => e.Item).Contains(row["Id"]))
-                {
-                    row.Delete();
-                }
-            }
-            dt.AcceptChanges();
-        }
-
-        private void AddDataInoTable(DataTable dt)
-        {
-            foreach (var mappedElement in mappedItems.Where(item => item.State == State.Added))
-            {
-                DataRow row = dt.NewRow();
-                foreach (var property in properties)
-                {
-                    if (property.GetCustomAttribute<ColumnAttribute>().ReadWriteOption == ReadWriteOption.Write)
-                    {
-                        continue;
-                    }
-                    var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                    row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
-                }
-                dt.Rows.Add(row);
-                dt.AcceptChanges();
             }
         }
 
@@ -124,6 +132,8 @@ namespace ORM_Repos_UoW
             var item = this.mappedItems.First(e => (int)e.Item.GetType().GetProperty("Id").GetValue(e.Item) == id);
             item.State = State.Deleted;
         }
+
+        #endregion Methods
 
         //public DataRow MatchColumns<T>(DataTable table, T item)
         //{
