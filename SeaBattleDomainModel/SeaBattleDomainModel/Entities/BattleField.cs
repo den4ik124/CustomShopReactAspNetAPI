@@ -1,4 +1,4 @@
-﻿using SeaBattleDomainModel.Attributes;
+﻿using ORM_Repos_UoW.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;

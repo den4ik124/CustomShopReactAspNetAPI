@@ -1,4 +1,4 @@
-﻿using SeaBattleDomainModel.Attributes;
+﻿using ORM_Repos_UoW.Attributes;
 using System;
 
 namespace SeaBattleDomainModel.Entities

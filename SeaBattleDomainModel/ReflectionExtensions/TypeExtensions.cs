@@ -9,6 +9,7 @@ namespace ReflectionExtensions
             var type = typeof(T);
             return type.GetMethods();
         }
+
         public static PropertyInfo[] Properties<T>(this T item)
         {
             var type = typeof(T);

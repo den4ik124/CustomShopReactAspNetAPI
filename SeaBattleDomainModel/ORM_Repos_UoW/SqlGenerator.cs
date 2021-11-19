@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ORM_Repos_UoW
 {
@@ -18,7 +17,7 @@ namespace ORM_Repos_UoW
             StringBuilder insertIntoSql = new StringBuilder($"INSERT INTO {table} (");
             StringBuilder columns = new StringBuilder();
             StringBuilder values = new StringBuilder();
-            
+
             foreach (var columnValue in columnsValues)
             {
                 columns.Append(columnValue.Key + ", ");
@@ -45,9 +44,11 @@ namespace ORM_Repos_UoW
                     case ConditionStatement.AND:
                         conditionText = " AND ";
                         break;
+
                     case ConditionStatement.OR:
                         conditionText = " OR ";
                         break;
+
                     default:
                         conditionText = " ";
                         break;
@@ -100,8 +101,8 @@ namespace ORM_Repos_UoW
             insertColumns.Remove(insertColumns.Length - 2, 2);
             values.Remove(values.Length - 2, 2);
 
-            mergeSQL.Append(insertColumns.ToString()+") VALUES (");
-            mergeSQL.Append(values.ToString()+");");
+            mergeSQL.Append(insertColumns.ToString() + ") VALUES (");
+            mergeSQL.Append(values.ToString() + ");");
             return mergeSQL.ToString();
         }
     }

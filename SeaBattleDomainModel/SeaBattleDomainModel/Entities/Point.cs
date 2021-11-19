@@ -1,14 +1,15 @@
-﻿using SeaBattleDomainModel.Attributes;
+﻿using ORM_Repos_UoW.Attributes;
 using System;
 
 namespace SeaBattleDomainModel.Entities
 {
     [Table("Points")]
-
     public struct Point : IEquatable<Point>
     {
         public int Id { get; set; }
+
         #region Fields
+
         [Column("X")]
         private readonly int x;
 

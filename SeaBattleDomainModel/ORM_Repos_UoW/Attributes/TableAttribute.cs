@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SeaBattleDomainModel.Attributes
+namespace ORM_Repos_UoW.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class TableAttribute : Attribute

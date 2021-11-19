@@ -24,6 +24,7 @@ namespace ORM_Repos_UoW
                 Items[item] = State.Modified;
             }
         }
+
         public void Delete(T item)
         {
             if (Items.Keys.Contains(item))

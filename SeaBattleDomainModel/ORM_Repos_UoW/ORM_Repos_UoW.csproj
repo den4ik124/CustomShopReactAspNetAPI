@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ReflectionExtensions\ReflectionExtensions.csproj" />
-    <ProjectReference Include="..\SeaBattleDomainModel\SeaBattleDomainModel.csproj" />
   </ItemGroup>
 
 </Project>
