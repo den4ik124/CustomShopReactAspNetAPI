@@ -1,4 +1,5 @@
 ﻿using ORM_Repos_UoW.Attributes;
+using ORM_Repos_UoW.Enums;
 using System;
 
 namespace SeaBattleDomainModel.Entities
@@ -6,14 +7,13 @@ namespace SeaBattleDomainModel.Entities
     [Table("Points")]
     public struct Point : IEquatable<Point>
     {
+        [Column("Id", ReadWriteOption.Write)]
         public int Id { get; set; }
 
         #region Fields
 
-        [Column("X")]
         private readonly int x;
 
-        [Column("Y")]
         private readonly int y;
 
         private readonly Quadrant quadrantId;
@@ -42,11 +42,13 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
+        [Column("X")]
         public int X
         {
             get { return this.x; }
         }
 
+        [Column("Y")]
         public int Y
         {
             get { return this.y; }

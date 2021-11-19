@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 
 namespace ORM_Repos_UoW
 {
@@ -18,10 +19,10 @@ namespace ORM_Repos_UoW
         public DbContext(string connectionString)
         {
             this.connectionString = connectionString;
-            adapter = new SqlDataAdapter();
+            this.adapter = new SqlDataAdapter();
             //string sqlCommand = "MERGE ЗАПРОС";
             //adapter.InsertCommand = new SqlCommand(sqlCommand);
-            TablesWithData = new DataSet();
+            this.TablesWithData = new DataSet();
             Preparing(new SqlConnection(connectionString)); //TODO: нужны ли мне все таблицы?
         }
 
@@ -39,6 +40,8 @@ namespace ORM_Repos_UoW
                         tablesNames.Add(tableName);
                         DataTable table = new DataTable(tableName);
                         table.Columns.AddRange(GetColumnsFromTable(connection, tableName));
+                        table.PrimaryKey = new DataColumn[] { table.Columns["Id"] };
+
                         TablesWithData.Tables.Add(table);
                     }
                 }
@@ -53,12 +56,25 @@ namespace ORM_Repos_UoW
         {
             List<DataColumn> columns = new List<DataColumn>();
             var columnsTable = new DataTable();
-            var sqlQuery = $@"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'{tableName}'";
-            adapter.SelectCommand = new SqlCommand(sqlQuery, connection);
+            var sqlQueryColumns = $@"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'{tableName}'";
+            adapter.SelectCommand = new SqlCommand(sqlQueryColumns, connection);
             adapter.Fill(columnsTable);
+
+            var sqlQueryMaxId = $"SELECT MAX(Id) AS Id FROM {tableName}";
+            SqlCommand cmd = new SqlCommand(sqlQueryMaxId, connection);
+            var maxId = (int)cmd.ExecuteScalar() + 1;
+
             for (int j = 0; j < columnsTable.Rows.Count; j++)
             {
-                columns.Add(new DataColumn(columnsTable.Rows[j].ItemArray[0].ToString()));
+                var column = new DataColumn(columnsTable.Rows[j].ItemArray[0].ToString());
+                if (column.ColumnName == "Id")
+                {
+                    column.AutoIncrement = true;
+                    column.AutoIncrementSeed = maxId + 1;
+                    column.AutoIncrementStep = 1;
+                    column.Unique = true;
+                }
+                columns.Add(column);
             }
             return columns.ToArray();
         }

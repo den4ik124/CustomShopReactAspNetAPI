@@ -1,4 +1,5 @@
 ﻿using ORM_Repos_UoW.Attributes;
+using ORM_Repos_UoW.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column("Id")]
+        [Column("Id", ReadWriteOption.Write)]
         public int Id { get; set; }
 
         [Column("SideLength")]

@@ -1,4 +1,5 @@
 ﻿using ORM_Repos_UoW.Attributes;
+using ORM_Repos_UoW.Enums;
 using System;
 
 namespace SeaBattleDomainModel.Entities
@@ -13,7 +14,7 @@ namespace SeaBattleDomainModel.Entities
 
         #endregion Fields
 
-        [Column("Id")]
+        [Column("Id", ReadWriteOption.Write)]
         public int Id { get; set; }
 
         [Column("BattleFieldID")]

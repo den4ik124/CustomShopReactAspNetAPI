@@ -17,15 +17,12 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Create(T item)
         {
-            dataMapper.MappedItems.Add(new MappedItem<T>(item, State.Added));
-            //dataMapper.TransferItemsIntoDbTable();
+            dataMapper.Add(item);
         }
 
         public void Create(List<T> items)
         {
-            dataMapper.MappedItems.AddRange(items.Select(item => new MappedItem<T>(item, State.Added)));
-
-            //dataMapper.TransferItemsIntoDbTable();
+            dataMapper.Add(items);
         }
 
         public T ReadItem(int id)
@@ -36,21 +33,23 @@ namespace ORM_Repos_UoW.Repositories
             //var type = item.GetType();
             //var property = type.GetProperty("Id");
             //var value = property.GetValue(item);
-            return dataMapper.MappedItems.Select(i => i.Item)
-                                         .FirstOrDefault(item => (int)item.GetType()
-                                         .GetProperty("Id")
-                                         .GetValue(item) == id);
+            return dataMapper.ReadItem(id);
+            //MappedItems.Select(i => i.Item)
+            //                                        .FirstOrDefault(item => (int)item.GetType()
+            //                                        .GetProperty("Id")
+            //                                        .GetValue(item) == id);
         }
 
         public IEnumerable<T> ReadItems()
         {
             CheckNumberOfItems();
-            return dataMapper.MappedItems.Select(e => e.Item);
+            return dataMapper.ReadAllItems();
+            //MappedItems.Select(e => e.Item);
         }
 
         private void CheckNumberOfItems()
         {
-            if (dataMapper.MappedItems.Count == 0)
+            if (dataMapper.ItemsCount == 0)
             {
                 dataMapper.FillItems();
             }

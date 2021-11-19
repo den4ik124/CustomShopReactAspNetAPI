@@ -1,4 +1,5 @@
 ﻿using ORM_Repos_UoW.Attributes;
+using ORM_Repos_UoW.Enums;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,14 +8,16 @@ using System.Reflection;
 
 namespace ORM_Repos_UoW
 {
-    public class DataMapper<T> where T : class
+    public class DataMapper<T> : IDataMaper<T> where T : class
     {
         private Type currentType;
         private Attribute attribute;
         private string? tableName;
         private IEnumerable<PropertyInfo>? properties;
         private DbContext dbContext;
-        public List<MappedItem<T>> MappedItems { get; set; }
+        private List<MappedItem<T>> mappedItems;
+
+        public int ItemsCount { get => mappedItems.Count; }
 
         public DataMapper(DbContext dbContext)
         {
@@ -25,7 +28,7 @@ namespace ORM_Repos_UoW
                                          .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
 
             this.dbContext = dbContext;
-            MappedItems = new List<MappedItem<T>>() { };
+            this.mappedItems = new List<MappedItem<T>>() { };
         }
 
         public void FillItems()
@@ -49,34 +52,64 @@ namespace ORM_Repos_UoW
                         property.SetValue(item, null);
                     }
                 }
-                MappedItems.Add(new MappedItem<T>(item, State.Unchanched));
+                mappedItems.Add(new MappedItem<T>(item, State.Unchanched));
             }
         }
 
-        public void TransferItemsIntoDbTable()
+        private void TransferItemsIntoDbTable()
         {
             DataTable dt = dbContext.GetTable(tableName);
-            foreach (var mappedElement in MappedItems)
+            foreach (var mappedElement in mappedItems)
             {
                 DataRow row = dt.NewRow();
                 foreach (var property in properties)
                 {
+                    if (property.GetCustomAttribute<ColumnAttribute>().ReadWriteOption == ReadWriteOption.Write)
+                    {
+                        continue;
+                    }
                     var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                     row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
                 }
-
+                dt.Rows.Add(row);
                 switch (mappedElement.State)
                 {
-                    case State.Added:
-                        row.SetAdded();
-                        break;
-
                     case State.Modified:
                         row.SetModified();
                         break;
                 }
-                dt.Rows.Add(row);
             }
+            mappedItems.Clear();
+        }
+
+        public void Add(T item)
+        {
+            this.mappedItems.Add(new MappedItem<T>(item, State.Added));
+            TransferItemsIntoDbTable();
+        }
+
+        public void Add(IEnumerable<T> items)
+        {
+            this.mappedItems.AddRange(items.Select(item => new MappedItem<T>(item, State.Added)));
+            TransferItemsIntoDbTable();
+        }
+
+        public T ReadItem(int id)
+        {
+            return this.mappedItems.Select(i => i.Item)
+                                   .FirstOrDefault(item => (int)item.GetType()
+                                   .GetProperty("Id")
+                                   .GetValue(item) == id);
+        }
+
+        public IEnumerable<T> ReadAllItems()
+        {
+            return this.mappedItems.Select(e => e.Item);
+        }
+
+        public void Delete(int id)
+        {
+            throw new NotImplementedException();
         }
 
         //public DataRow MatchColumns<T>(DataTable table, T item)
