@@ -26,7 +26,6 @@ namespace ORM_Repos_UoW
             this.tableName = ((TableAttribute)attribute).TableName;
             this.properties = currentType.GetProperties()
                                          .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
-
             this.dbContext = dbContext;
             this.mappedItems = new List<MappedItem<T>>() { };
         }
@@ -59,7 +58,26 @@ namespace ORM_Repos_UoW
         private void TransferItemsIntoDbTable()
         {
             DataTable dt = dbContext.GetTable(tableName);
-            foreach (var mappedElement in mappedItems)
+            AddDataInoTable(dt);
+            DeleteDataFromTable(dt);
+            mappedItems.Clear();
+        }
+
+        private void DeleteDataFromTable(DataTable dt)
+        {
+            foreach (DataRow row in dt.Rows)
+            {
+                if (mappedItems.Where(item => item.State == State.Deleted).Select(e => e.Item).Contains(row["Id"]))
+                {
+                    row.Delete();
+                }
+            }
+            dt.AcceptChanges();
+        }
+
+        private void AddDataInoTable(DataTable dt)
+        {
+            foreach (var mappedElement in mappedItems.Where(item => item.State == State.Added))
             {
                 DataRow row = dt.NewRow();
                 foreach (var property in properties)
@@ -72,14 +90,8 @@ namespace ORM_Repos_UoW
                     row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
                 }
                 dt.Rows.Add(row);
-                switch (mappedElement.State)
-                {
-                    case State.Modified:
-                        row.SetModified();
-                        break;
-                }
+                dt.AcceptChanges();
             }
-            mappedItems.Clear();
         }
 
         public void Add(T item)
@@ -109,7 +121,8 @@ namespace ORM_Repos_UoW
 
         public void Delete(int id)
         {
-            throw new NotImplementedException();
+            var item = this.mappedItems.First(e => (int)e.Item.GetType().GetProperty("Id").GetValue(e.Item) == id);
+            item.State = State.Deleted;
         }
 
         //public DataRow MatchColumns<T>(DataTable table, T item)

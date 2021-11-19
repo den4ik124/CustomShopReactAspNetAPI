@@ -34,17 +34,12 @@ namespace ORM_Repos_UoW.Repositories
             //var property = type.GetProperty("Id");
             //var value = property.GetValue(item);
             return dataMapper.ReadItem(id);
-            //MappedItems.Select(i => i.Item)
-            //                                        .FirstOrDefault(item => (int)item.GetType()
-            //                                        .GetProperty("Id")
-            //                                        .GetValue(item) == id);
         }
 
         public IEnumerable<T> ReadItems()
         {
             CheckNumberOfItems();
             return dataMapper.ReadAllItems();
-            //MappedItems.Select(e => e.Item);
         }
 
         private void CheckNumberOfItems()
@@ -57,7 +52,7 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Delete(int id)
         {
-            throw new NotImplementedException();
+            dataMapper.Delete(id);
         }
 
         public void Dispose()
