@@ -8,11 +8,9 @@ namespace SeaBattleDomainModel.Entities
     {
         [Column("Id")]
         public int Id { get; set; }
-        
 
         [Column("BattleFieldID")]
         public int BattleFieldId { get; set; }
-        
 
         [Column("ShipID")]
         public int? ShipId
@@ -21,16 +19,16 @@ namespace SeaBattleDomainModel.Entities
             {
                 if (this.Ship != null)
                     return this.Ship.Id;
-                else 
+                else
                     return null;
             }
             set { }
         }
 
         [Column("PointID")]
-        public int PointId 
+        public int PointId
         {
-            get => Point.Id; 
+            get => Point.Id;
             set { }
         }
 
@@ -42,7 +40,6 @@ namespace SeaBattleDomainModel.Entities
         public Cell()
         {
         }
-        
 
         public Cell(Point point)
         {
@@ -85,7 +82,8 @@ namespace SeaBattleDomainModel.Entities
 
         public override string ToString()
         {
-            return $"\tShip:\n{Ship}\n" +
+            return $"\tId:\n{Id}\n" +
+                   $"\tShip:\n{Ship}\n" +
                    $"\tPoint:\n{Point}";
         }
 

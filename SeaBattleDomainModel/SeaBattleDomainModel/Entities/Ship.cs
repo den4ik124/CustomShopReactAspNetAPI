@@ -15,14 +15,6 @@ namespace SeaBattleDomainModel.Entities
         {
         }
 
-        public Ship(int id, int velocity, int range, int size)
-        {
-            this.Id = id;
-            this.Velocity = velocity;
-            this.Range = range;
-            this.Size = size;
-        }
-
         public Ship(int velocity, int range, int size)
         {
             this.Velocity = velocity;
@@ -39,7 +31,7 @@ namespace SeaBattleDomainModel.Entities
 
         [Column("Velocity")]
         public int Velocity { get; set; }
-        
+
         [Column("Size")]
         public int Size { get; set; }
 

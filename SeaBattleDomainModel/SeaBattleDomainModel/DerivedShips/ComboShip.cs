@@ -6,16 +6,20 @@ using System;
 namespace SeaBattleDomainModel.DerivedShips
 {
     [Table("Ships")]
-    [ShipType(typeID:3)]
+    [ShipType(typeID: 3)]
     public class ComboShip : Ship, ICanShot, ICanRepair
     {
-
-        public ComboShip(int id, int velocity, int range, int size) : base(id, velocity, range, size)
+        /// <summary>
+        /// for custom ORM
+        /// </summary>
+        public ComboShip()
         {
         }
+
         public ComboShip(int velocity, int range, int size) : base(velocity, range, size)
         {
         }
+
         #region Methods
 
         #region Methods.Public

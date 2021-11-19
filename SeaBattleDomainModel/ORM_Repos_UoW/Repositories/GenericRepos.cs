@@ -17,47 +17,32 @@ namespace ORM_Repos_UoW.Repositories
         public void Create(T item)
         {
             var dataMapper = new DataMapper<T>(dbContext, item);
-            dataMapper.TransferItemsIntoDB();
+            dataMapper.TransferItemsIntoDbTable();
         }
+
         public void Create(List<T> items)
         {
             var dataMapper = new DataMapper<T>(dbContext, items);
-            dataMapper.TransferItemsIntoDB();
+            dataMapper.TransferItemsIntoDbTable();
         }
-
-
-        //public DataTable GetTable(System.Reflection.CustomAttributeData attributes)
-        //{
-        //    //var test = dbContext.GetTable(GetTableName(attributes));
-        //    //return dbContext.GetTable(GetTableName(attributes));
-        //}
-
-        //private string? GetTableName(System.Reflection.CustomAttributeData attributes) //TODO: исправить на private вне тестов
-        //{
-        //    List<string> tablesNames = new List<string>();
-        //    for (int i = 0; i < dbContext.tablesWithData.Tables.Count; i++)
-        //    {
-        //        tablesNames.Add(dbContext.tablesWithData.Tables[i].TableName);
-        //    }
-        //    var tableName = tablesNames.FirstOrDefault(arg => attributes?.ConstructorArguments[0].Value.ToString() == arg);
-        //    return tableName;
-        //}
 
         public T ReadItem(int id)
         {
             var dataMapper = new DataMapper<T>(dbContext);
-            dataMapper.FillItems();
+            dataMapper.FillItems(id);
 
-            foreach (var elem in dataMapper.Items)
-            {
-                if ((int)typeof(T).GetProperties()
-                                    .FirstOrDefault(prop => prop.Name == "Id")
-                                    .GetValue(elem) == id)
-                {
-                    return elem; 
-                }
-            }
-            return null; //TODO: избавиться от return null;
+            return dataMapper.Items[0];
+
+            //foreach (var elem in dataMapper.Items)
+            //{
+            //    if ((int)typeof(T).GetProperties()
+            //                        .FirstOrDefault(prop => prop.Name == "Id")
+            //                        .GetValue(elem) == id)
+            //    {
+            //        return elem;
+            //    }
+            //}
+            //return null; //TODO: избавиться от return null;
         }
 
         public IEnumerable<T> ReadItems()

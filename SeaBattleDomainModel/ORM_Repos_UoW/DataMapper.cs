@@ -12,69 +12,63 @@ namespace ORM_Repos_UoW
 {
     public class DataMapper<T>
     {
-        private const string tableAttribute = "TableAttribute";
-        private const string columnAttribute = "ColumnAttribute";
-
         private Type currentType;
-        //private CustomAttributeData? attribute;
         private Attribute attribute;
         private string? tableName;
         private IEnumerable<PropertyInfo>? properties;
         private DbContext dbContext;
 
-        public List<T> Items { get;}
-        //public Dictionary<int,T> ItemsDict { get; set; }
+        public List<T> Items { get; }
 
-        private Dictionary<PropertyInfo, string>? _propertiesTables;
         public DataMapper(DbContext dbContext)
         {
-            _propertiesTables = new Dictionary<PropertyInfo, string>();
             this.currentType = typeof(T);
             this.attribute = currentType.GetCustomAttribute<TableAttribute>();
-
             this.tableName = ((TableAttribute)attribute).TableName;
-            //this.tableName = currentType.CustomAttributes.FirstOrDefault(atr => atr.AttributeType == attribute.GetType()) ?
-            //                .ConstructorArguments.FirstOrDefault()
-            //                .Value?.ToString();
             this.properties = currentType.GetProperties()
                                          .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
 
             this.dbContext = dbContext;
-            Items = new List<T>() {};
+            Items = new List<T>() { };
         }
+
         public DataMapper(DbContext dbContext, T item) : this(dbContext)
         {
             Items.Add(item);
         }
 
-        public DataMapper(DbContext dbContext, List<T> items): this(dbContext)
+        public DataMapper(DbContext dbContext, List<T> items) : this(dbContext)
         {
             Items.AddRange(items);
         }
 
-        public void FillItems()
+        public void FillItems(int? id = null)
         {
-            DataTable dt = dbContext.GetTableWithData(tableName);
+            DataTable dt = dbContext.GetTableWithData(tableName, id);
             foreach (DataRow row in dt.Rows)
             {
                 T item = (T)Activator.CreateInstance<T>();//TODO: проверить как создаются другие типы
-                var arguments = new List<object>();
                 foreach (var property in properties)
                 {
+                    //TODO: втулить проверку на наличие дочерних элементов
+                    //CreateChild();
                     var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                    arguments.Add(row[tableColumnByPropertyAttribute]);
                     var propValue = row[tableColumnByPropertyAttribute];
-                    property.SetValue(item, propValue);
+                    //var test = propValue.GetType();
+                    if (propValue.GetType() != typeof(DBNull))
+                    {
+                        property.SetValue(item, propValue);
+                    }
+                    else
+                    {
+                        property.SetValue(item, null);
+                    }
                 }
-                //T item = (T)Activator.CreateInstance(currentType, arguments.ToArray()); //TODO: проверить как создаются другие типы
-
-
-
                 Items.Add(item);
             }
         }
 
-        public void TransferItemsIntoDB()
+        public void TransferItemsIntoDbTable()
         {
             DataTable dt = dbContext.GetTable(tableName);
             foreach (var item in Items)
@@ -88,7 +82,6 @@ namespace ORM_Repos_UoW
                 dt.Rows.Add(row);
             }
         }
-
 
         //public DataRow MatchColumns<T>(DataTable table, T item)
         //{
@@ -121,7 +114,5 @@ namespace ORM_Repos_UoW
         //    var tableName = tablesNames.FirstOrDefault(arg => attributes?.ConstructorArguments[0].Value.ToString() == arg);
         //    return tableName;
         //}
-
     }
-
 }

@@ -20,8 +20,8 @@ namespace ORM_Repos_UoW
         {
             this.connectionString = connectionString;
             adapter = new SqlDataAdapter();
-                //string sqlCommand = "MERGE ЗАПРОС";
-                //adapter.InsertCommand = new SqlCommand(sqlCommand);
+            //string sqlCommand = "MERGE ЗАПРОС";
+            //adapter.InsertCommand = new SqlCommand(sqlCommand);
             TablesWithData = new DataSet();
             Preparing(new SqlConnection(connectionString)); //TODO: нужны ли мне все таблицы?
         }
@@ -60,9 +60,9 @@ namespace ORM_Repos_UoW
                         tablesNames.Add(tableName);
                         DataTable table = new DataTable(tableName);
                         table.Columns.AddRange(GetColumnsFromTable(connection, tableName));
-                            //var sql = SqlGenerator.GetSelectAllString(tableName);
-                            //adapter.SelectCommand = new SqlCommand(sql, connection);
-                            //adapter.Fill(table);
+                        //var sql = SqlGenerator.GetSelectAllString(tableName);
+                        //adapter.SelectCommand = new SqlCommand(sql, connection);
+                        //adapter.Fill(table);
                         TablesWithData.Tables.Add(table);
                     }
                     //    DataColumn cellColumn = TablesWithData.Tables["Cells"].Columns["ShipID"];
@@ -99,28 +99,41 @@ namespace ORM_Repos_UoW
         {
             return TablesWithData.Tables[tableName];
         }
+
         public DataTable GetTableWithData(string tableName)
         {
-            DataTable dataTable = new DataTable();
+            var sqlQuery = $"SELECT * FROM {tableName}";
+            return GetDataFromDbTable(tableName, sqlQuery);
+        }
+
+        public DataTable GetTableWithData(string tableName, int? id)
+        {
+            var sqlQuery = $"SELECT * FROM {tableName} WHERE {tableName}.Id = {id}";
+            return GetDataFromDbTable(tableName, sqlQuery);
+        }
+
+        private DataTable GetDataFromDbTable(string tableName, string sqlQuery)
+        {
+            DataTable dataTable = new DataTable(tableName);
             SqlConnection connection = new SqlConnection(connectionString);
-                using (connection)
+            using (connection)
+            {
+                try
                 {
-                    try
-                    {
-                        connection.Open();
-                        string sqlQuery = $"SELECT * FROM {tableName}";
-                        adapter.SelectCommand = new SqlCommand(sqlQuery, connection);
-                        adapter.Fill(dataTable);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                    finally
-                    {
-                        connection.Close();
-                    }
+                    connection.Open();
+
+                    adapter.SelectCommand = new SqlCommand(sqlQuery, connection);
+                    adapter.Fill(dataTable);
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
             return dataTable;
         }
 

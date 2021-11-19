@@ -9,9 +9,13 @@ namespace SeaBattleDomainModel.DerivedShips
     [ShipType(typeID: 2)]
     public class RepairShip : Ship, ICanRepair
     {
-        public RepairShip(int id, int velocity, int range, int size) : base(id, velocity, range, size)
+        /// <summary>
+        /// for custom ORM
+        /// </summary>
+        public RepairShip()
         {
         }
+
         public RepairShip(int velocity, int range, int size) : base(velocity, range, size)
         {
         }
