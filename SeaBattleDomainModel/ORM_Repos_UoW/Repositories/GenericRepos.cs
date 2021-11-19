@@ -7,48 +7,53 @@ namespace ORM_Repos_UoW.Repositories
     public class GenericRepos<T> : IRepository<T> where T : class
     {
         private DbContext dbContext;
+        private DataMapper<T> dataMapper;
 
         public GenericRepos(DbContext context)
         {
             this.dbContext = context;
+            this.dataMapper = new DataMapper<T>(context);
         }
 
         public void Create(T item)
         {
-            var dataMapper = new DataMapper<T>(dbContext, item);
-            dataMapper.TransferItemsIntoDbTable();
+            dataMapper.MappedItems.Add(new MappedItem<T>(item, State.Added));
+            //dataMapper.TransferItemsIntoDbTable();
         }
 
         public void Create(List<T> items)
         {
-            var dataMapper = new DataMapper<T>(dbContext, items);
-            dataMapper.TransferItemsIntoDbTable();
+            dataMapper.MappedItems.AddRange(items.Select(item => new MappedItem<T>(item, State.Added)));
+
+            //dataMapper.TransferItemsIntoDbTable();
         }
 
         public T ReadItem(int id)
         {
-            var dataMapper = new DataMapper<T>(dbContext);
-            dataMapper.FillItems(id);
+            CheckNumberOfItems();
 
-            return dataMapper.Items[0];
-
-            //foreach (var elem in dataMapper.Items)
-            //{
-            //    if ((int)typeof(T).GetProperties()
-            //                        .FirstOrDefault(prop => prop.Name == "Id")
-            //                        .GetValue(elem) == id)
-            //    {
-            //        return elem;
-            //    }
-            //}
-            //return null; //TODO: избавиться от return null;
+            //var item = dataMapper.MappedItems.Select(i => i.Item).First();
+            //var type = item.GetType();
+            //var property = type.GetProperty("Id");
+            //var value = property.GetValue(item);
+            return dataMapper.MappedItems.Select(i => i.Item)
+                                         .FirstOrDefault(item => (int)item.GetType()
+                                         .GetProperty("Id")
+                                         .GetValue(item) == id);
         }
 
         public IEnumerable<T> ReadItems()
         {
-            var dataMapper = new DataMapper<T>(dbContext);
-            dataMapper.FillItems();
-            return dataMapper.Items;
+            CheckNumberOfItems();
+            return dataMapper.MappedItems.Select(e => e.Item);
+        }
+
+        private void CheckNumberOfItems()
+        {
+            if (dataMapper.MappedItems.Count == 0)
+            {
+                dataMapper.FillItems();
+            }
         }
 
         public void Delete(int id)

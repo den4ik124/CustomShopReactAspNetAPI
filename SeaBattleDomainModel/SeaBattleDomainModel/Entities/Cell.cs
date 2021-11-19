@@ -6,6 +6,13 @@ namespace SeaBattleDomainModel.Entities
     [Table("Cells")]
     public class Cell
     {
+        #region Fields
+
+        private int? shipId;
+        private int pointId;
+
+        #endregion Fields
+
         [Column("Id")]
         public int Id { get; set; }
 
@@ -20,16 +27,16 @@ namespace SeaBattleDomainModel.Entities
                 if (this.Ship != null)
                     return this.Ship.Id;
                 else
-                    return null;
+                    return this.shipId;
             }
-            set { }
+            set => this.shipId = value;
         }
 
         [Column("PointID")]
         public int PointId
         {
-            get => Point.Id;
-            set { }
+            get => this.pointId;
+            set => this.pointId = value;
         }
 
         #region Constructors
@@ -82,9 +89,12 @@ namespace SeaBattleDomainModel.Entities
 
         public override string ToString()
         {
-            return $"\tId:\n{Id}\n" +
-                   $"\tShip:\n{Ship}\n" +
-                   $"\tPoint:\n{Point}";
+            //return $"\tId:\n{Id}\n" +
+            //       $"\tShip:\n{Ship}\n" +
+            //       $"\tPoint:\n{Point}";
+            return $"Id:\t{Id}\n" +
+                   $"Ship:\t{ShipId}\n" +
+                   $"Point:\t{PointId}";
         }
 
         #endregion Methods.public

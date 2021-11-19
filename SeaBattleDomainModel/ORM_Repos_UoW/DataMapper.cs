@@ -7,15 +7,14 @@ using System.Reflection;
 
 namespace ORM_Repos_UoW
 {
-    public class DataMapper<T>
+    public class DataMapper<T> where T : class
     {
         private Type currentType;
         private Attribute attribute;
         private string? tableName;
         private IEnumerable<PropertyInfo>? properties;
         private DbContext dbContext;
-
-        public List<T> Items { get; }
+        public List<MappedItem<T>> MappedItems { get; set; }
 
         public DataMapper(DbContext dbContext)
         {
@@ -26,32 +25,21 @@ namespace ORM_Repos_UoW
                                          .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
 
             this.dbContext = dbContext;
-            Items = new List<T>() { };
+            MappedItems = new List<MappedItem<T>>() { };
         }
 
-        public DataMapper(DbContext dbContext, T item) : this(dbContext)
+        public void FillItems()
         {
-            Items.Add(item);
-        }
-
-        public DataMapper(DbContext dbContext, List<T> items) : this(dbContext)
-        {
-            Items.AddRange(items);
-        }
-
-        public void FillItems(int? id = null)
-        {
-            DataTable dt = dbContext.GetTableWithData(tableName, id);
+            DataTable dt = dbContext.GetTableWithData(tableName);
             foreach (DataRow row in dt.Rows)
             {
-                T item = (T)Activator.CreateInstance<T>();//TODO: проверить как создаются другие типы
+                T item = Activator.CreateInstance<T>();//TODO: проверить как создаются другие типы
                 foreach (var property in properties)
                 {
                     //TODO: втулить проверку на наличие дочерних элементов
                     //CreateChild();
                     var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                     var propValue = row[tableColumnByPropertyAttribute];
-                    //var test = propValue.GetType();
                     if (propValue.GetType() != typeof(DBNull))
                     {
                         property.SetValue(item, propValue);
@@ -61,20 +49,31 @@ namespace ORM_Repos_UoW
                         property.SetValue(item, null);
                     }
                 }
-                Items.Add(item);
+                MappedItems.Add(new MappedItem<T>(item, State.Unchanched));
             }
         }
 
         public void TransferItemsIntoDbTable()
         {
             DataTable dt = dbContext.GetTable(tableName);
-            foreach (var item in Items)
+            foreach (var mappedElement in MappedItems)
             {
                 DataRow row = dt.NewRow();
                 foreach (var property in properties)
                 {
                     var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                    row[tableColumnByPropertyAttribute] = property.GetValue(item);
+                    row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
+                }
+
+                switch (mappedElement.State)
+                {
+                    case State.Added:
+                        row.SetAdded();
+                        break;
+
+                    case State.Modified:
+                        row.SetModified();
+                        break;
                 }
                 dt.Rows.Add(row);
             }

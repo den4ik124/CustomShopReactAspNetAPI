@@ -8,12 +8,11 @@ namespace ORM_Repos_UoW
     public class DbContext
     {
         private SqlConnection sqlConnection;
-        private SqlDataAdapter adapter;// { get; set; }
+        private SqlDataAdapter adapter;
         public DataSet TablesWithData { get; set; }
 
         private List<string> tablesNames = new List<string>();
 
-        //private DataRow dr;
         private string connectionString;
 
         public DbContext(string connectionString)
@@ -25,26 +24,6 @@ namespace ORM_Repos_UoW
             TablesWithData = new DataSet();
             Preparing(new SqlConnection(connectionString)); //TODO: нужны ли мне все таблицы?
         }
-
-        //public void GetTablesNames(SqlConnection connection)
-        //{
-        //    try
-        //    {
-        //        using (connection)
-        //        {
-        //            connection.Open();
-        //            DataTable dbTables = connection.GetSchema("Tables");
-        //            for (int i = 0; i < dbTables.Rows.Count; i++)
-        //            {
-        //                tablesNames.Add(dbTables.Rows[i].ItemArray[2]?.ToString());
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex.Message);
-        //    }
-        //}
 
         private void Preparing(SqlConnection connection)
         {
@@ -60,19 +39,8 @@ namespace ORM_Repos_UoW
                         tablesNames.Add(tableName);
                         DataTable table = new DataTable(tableName);
                         table.Columns.AddRange(GetColumnsFromTable(connection, tableName));
-                        //var sql = SqlGenerator.GetSelectAllString(tableName);
-                        //adapter.SelectCommand = new SqlCommand(sql, connection);
-                        //adapter.Fill(table);
                         TablesWithData.Tables.Add(table);
                     }
-                    //    DataColumn cellColumn = TablesWithData.Tables["Cells"].Columns["ShipID"];
-                    //cellColumn.AllowDBNull = true;
-
-                    //DataColumn shipColumn = TablesWithData.Tables["Ships"].Columns["Id"];
-                    //    shipColumn.Unique = true;
-
-                    //DataRelation relation = new DataRelation("CellShip", cellColumn, shipColumn);
-                    //TablesWithData.Relations.Add(relation);
                 }
             }
             catch (Exception ex)
@@ -121,7 +89,6 @@ namespace ORM_Repos_UoW
                 try
                 {
                     connection.Open();
-
                     adapter.SelectCommand = new SqlCommand(sqlQuery, connection);
                     adapter.Fill(dataTable);
                 }
@@ -139,7 +106,6 @@ namespace ORM_Repos_UoW
 
         public void SaveChanges()
         {
-            //int res = 0;
             using (sqlConnection = new SqlConnection(connectionString))
             {
                 sqlConnection.Open();
@@ -147,11 +113,9 @@ namespace ORM_Repos_UoW
                 {
                     adapter.SelectCommand = new SqlCommand($"SELECT * FROM {TablesWithData.Tables[i].TableName}", sqlConnection);
                     SqlCommandBuilder sqlCommandBuilder = new SqlCommandBuilder(adapter);
-                    /*res += */
                     adapter.Update(TablesWithData, TablesWithData.Tables[i].TableName);
                 }
             }
-            //return res;
         }
 
         private void Add(SqlConnection sqlConnection)
@@ -168,16 +132,5 @@ namespace ORM_Repos_UoW
         {
             throw new NotImplementedException();
         }
-
-        //private string? GetTableName(System.Reflection.CustomAttributeData attributes) //TODO: исправить на private вне тестов
-        //{
-        //    List<string> tablesNames = new List<string>();
-        //    for (int i = 0; i < this.TablesWithData.Tables.Count; i++)
-        //    {
-        //        tablesNames.Add(this.TablesWithData.Tables[i].TableName);
-        //    }
-        //    var tableName = tablesNames.FirstOrDefault(arg => attributes?.ConstructorArguments[0].Value?.ToString() == arg);
-        //    return tableName;
-        //}
     }
 }
