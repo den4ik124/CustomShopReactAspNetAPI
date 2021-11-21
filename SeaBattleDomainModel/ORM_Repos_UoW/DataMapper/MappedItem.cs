@@ -1,4 +1,5 @@
 ﻿using ORM_Repos_UoW.Attributes;
+using ORM_Repos_UoW.Enums;
 using System;
 using System.Data;
 using System.Linq;
@@ -54,7 +55,14 @@ namespace ORM_Repos_UoW.DataMapper
             {
                 string columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var value = row[columnName];
-                prop.SetValue(item, value);
+                if (prop.GetType() != typeof(DBNull))
+                {
+                    prop.SetValue(item, value);
+                }
+                else
+                {
+                    prop.SetValue(item, null);
+                }
             }
             return item;
         }
@@ -69,6 +77,10 @@ namespace ORM_Repos_UoW.DataMapper
             DataRow row = dt.NewRow();
             foreach (var prop in properties)
             {
+                if (prop.GetCustomAttribute<ColumnAttribute>().ReadWriteOption == ReadWriteOption.Write)
+                {
+                    continue;
+                }
                 var columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 row[columnName] = prop.GetValue(item);
             }

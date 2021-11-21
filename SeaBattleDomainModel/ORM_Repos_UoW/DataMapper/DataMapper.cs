@@ -90,23 +90,29 @@ namespace ORM_Repos_UoW.DataMapper
             DataTable dt = dbContext.GetTableWithData(tableName);
             foreach (DataRow row in dt.Rows)
             {
-                T item = Activator.CreateInstance<T>();//TODO: проверить как создаются другие типы
-                foreach (var property in properties)
-                {
-                    //TODO: втулить проверку на наличие дочерних элементов
-                    //CreateChild();
-                    var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                    var propValue = row[tableColumnByPropertyAttribute];
-                    if (propValue.GetType() != typeof(DBNull))
-                    {
-                        property.SetValue(item, propValue);
-                    }
-                    else
-                    {
-                        property.SetValue(item, null);
-                    }
-                }
-                mappedItems.Add(new MappedItem<T>(item, State.Unchanched));
+                this.mappedItems.Add(new MappedItem<T>(row, State.Added));
+
+                #region old mapper logic
+
+                //T item = Activator.CreateInstance<T>();//TODO: проверить как создаются другие типы
+                //foreach (var property in properties)
+                //{
+                //    //TODO: втулить проверку на наличие дочерних элементов
+                //    //CreateChild();
+                //    var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                //    var propValue = row[tableColumnByPropertyAttribute];
+                //    if (propValue.GetType() != typeof(DBNull))
+                //    {
+                //        property.SetValue(item, propValue);
+                //    }
+                //    else
+                //    {
+                //        property.SetValue(item, null);
+                //    }
+                //}
+                //mappedItems.Add(new MappedItem<T>(item, State.Unchanched));
+
+                #endregion old mapper logic
             }
         }
 
