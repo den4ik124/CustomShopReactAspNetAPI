@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ORM_Repos_UoW.Repositories
 {
     public class GenericRepos<T> : IRepository<T> where T : class
     {
-        private DbContext dbContext;
-        private DataMapper<T> dataMapper;
+        private IDataMapper<T> dataMapper;
 
         public GenericRepos(DbContext context)
         {
-            this.dbContext = context;
-            this.dataMapper = new DataMapper<T>(context);
+            this.dataMapper = context.GetDataMapper<T>();
         }
 
         public void Create(T item)
@@ -25,7 +22,7 @@ namespace ORM_Repos_UoW.Repositories
             dataMapper.Add(items);
         }
 
-        public T ReadItem(int id)
+        public T ReadItemById(int id)
         {
             CheckNumberOfItems();
 
@@ -33,7 +30,7 @@ namespace ORM_Repos_UoW.Repositories
             //var type = item.GetType();
             //var property = type.GetProperty("Id");
             //var value = property.GetValue(item);
-            return dataMapper.ReadItem(id);
+            return dataMapper.ReadItemById(id);
         }
 
         public IEnumerable<T> ReadItems()

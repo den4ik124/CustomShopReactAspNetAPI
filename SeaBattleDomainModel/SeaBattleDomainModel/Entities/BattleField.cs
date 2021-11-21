@@ -36,10 +36,14 @@ namespace SeaBattleDomainModel.Entities
             set => this.battleFieldSideLength = value + battleFieldPointsIncreaser;
         }
 
-        [Child(table: "Ships")]
+        [Child(Table = "Ships",
+               RelatedType = typeof(Ship),
+               IsCollection = true)]
         public List<Ship> Ships => ships;
 
-        [Child(table: "Cells")]
+        [Child(Table = "Cells",
+               RelatedType = typeof(Dictionary<Point, Cell>),
+            IsCollection = true)]
         public Dictionary<Point, Cell> Cells { get => cells; }
 
         #endregion Properties

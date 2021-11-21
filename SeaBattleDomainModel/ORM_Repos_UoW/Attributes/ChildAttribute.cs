@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace ORM_Repos_UoW.Attributes
 {
@@ -7,10 +6,18 @@ namespace ORM_Repos_UoW.Attributes
     public class ChildAttribute : Attribute
     {
         public string Table { get; set; }
+        public Type RelatedType { get; set; }
 
-        public ChildAttribute(string table)
+        public bool IsCollection { get; set; }
+
+        public ChildAttribute()
         {
-            Table = table;
         }
+
+        //public ChildAttribute(string table, Type relatedType)
+        //{
+        //    Table = table;
+        //    RelatedType = relatedType;
+        //}
     }
 }

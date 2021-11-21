@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -10,6 +9,27 @@ namespace ORM_Repos_UoW
         public static string GetSelectAllString(string table)
         {
             return $"SELECT * FROM {table}";
+        }
+
+        //SELECT
+        // BattleFields.Id AS BF_ID,
+        // BattleFields.SideLength,
+        // Cells.Id AS CELL_ID,
+        // Cells.ShipId,
+        // Cells.BattleFieldID,
+        // Ships.Id AS SHIP_ID,
+        // Ships.TypeId,
+        // Ships.Velocity,
+        // Ships.[Range],
+        // Ships.Size,
+        // ShipTypes.[Type]
+        //FROM BattleFields
+        // LEFT JOIN Cells ON Cells.BattleFieldID = BattleFields.Id
+        // LEFT JOIN ships on Ships.id = cells.shipid
+        // LEFT JOIN ShipTypes on Ships.TypeId = ShipTypes.Id
+        public static string GetSelectJoinString(string table1, string relatedTable, string table2, string table3 = "")
+        {
+            return "";
         }
 
         public static string GetInsertIntoString(Dictionary<string, object> columnsValues, string table)

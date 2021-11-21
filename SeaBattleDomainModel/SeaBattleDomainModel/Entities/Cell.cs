@@ -13,6 +13,8 @@ namespace SeaBattleDomainModel.Entities
         private int? shipId;
         private int pointId;
 
+        private Point point;
+
         #endregion Fields
 
         [Column("Id", /*KeyType.Primary, */ReadWriteOption.Write)]
@@ -65,13 +67,21 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Child(table: "Ships")]
+        [Child(Table = "Ships", RelatedType = typeof(Ship))]
         public Ship Ship { get; set; }
 
-        [Child(table: "Points")]
-        public Point Point { get; set; }
+        [Child(Table = "Points", RelatedType = typeof(Point))]
+        public Point Point
+        {
+            get => this.point;
+            set
+            {
+                this.point = value;
+                DistanceToOrigin = GetDistanceToOrigin(this.point);
+            }
+        }
 
-        public double DistanceToOrigin { get; }
+        public double DistanceToOrigin { get; private set; }
 
         #endregion Properties
 

@@ -8,12 +8,13 @@ using System.Reflection;
 
 namespace ORM_Repos_UoW
 {
-    public class DataMapper<T> : IDataMaper<T> where T : class
+    public class DataMapper<T> : IDataMapper<T> where T : class
     {
         private Type currentType;
         private Attribute attribute;
         private string? tableName;
         private IEnumerable<PropertyInfo>? properties;
+        private IEnumerable<PropertyInfo>? propertiesChilds;
         private DbContext dbContext;
         private List<MappedItem<T>> mappedItems;
 
@@ -26,6 +27,8 @@ namespace ORM_Repos_UoW
             this.tableName = ((TableAttribute)attribute).TableName;
             this.properties = currentType.GetProperties()
                                          .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            this.propertiesChilds = currentType.GetProperties()
+                                         .Where(prop => prop.GetCustomAttributes<ChildAttribute>().Count() > 0);
             this.dbContext = dbContext;
             this.mappedItems = new List<MappedItem<T>>() { };
         }
@@ -82,6 +85,7 @@ namespace ORM_Repos_UoW
 
         public void FillItems()
         {
+            string sqlQuery = GetSqlQuery();
             DataTable dt = dbContext.GetTableWithData(tableName);
             foreach (DataRow row in dt.Rows)
             {
@@ -117,7 +121,7 @@ namespace ORM_Repos_UoW
             TransferItemsIntoDbTable();
         }
 
-        public T ReadItem(int id)
+        public T ReadItemById(int id)
         {
             return this.mappedItems.Select(i => i.Item)
                                    .FirstOrDefault(item => (int)item.GetType()
@@ -132,42 +136,12 @@ namespace ORM_Repos_UoW
 
         public void Delete(int id)
         {
-            var item = this.mappedItems.First(e => (int)e.Item.GetType().GetProperty("Id").GetValue(e.Item) == id);
+            var item = this.mappedItems.First(e => (int)e.Item.GetType()
+                                                                .GetProperty("Id")
+                                                                .GetValue(e.Item) == id);
             item.State = State.Deleted;
         }
 
         #endregion Methods
-
-        //public DataRow MatchColumns<T>(DataTable table, T item)
-        //{
-        //    var type = typeof(T);
-        //    var props = type.GetProperties()
-        //                        .Where(atr => atr.CustomAttributes
-        //                                    .Any(i => i.AttributeType.Name == "ColumnAttribute"))
-        //                        .ToArray();
-        //    DataRow row = table.NewRow();
-        //    for (int i = 0; i < props.Length; i++)
-        //    {
-        //        var propAttributeArgumentName = props[i].CustomAttributes
-        //                                .FirstOrDefault()?
-        //                                .ConstructorArguments
-        //                                .FirstOrDefault()
-        //                                .Value?.ToString();
-
-        //        row[propAttributeArgumentName] = props[i]?.GetValue(item)?.ToString();
-        //    }
-        //    return row;
-        //}
-
-        //private static string? GetTableName(DbContext dbContext, System.Reflection.CustomAttributeData attributes) //TODO: исправить на private вне тестов
-        //{
-        //    List<string> tablesNames = new List<string>();
-        //    for (int i = 0; i < dbContext.tablesWithData.Tables.Count; i++)
-        //    {
-        //        tablesNames.Add(dbContext.tablesWithData.Tables[i].TableName);
-        //    }
-        //    var tableName = tablesNames.FirstOrDefault(arg => attributes?.ConstructorArguments[0].Value.ToString() == arg);
-        //    return tableName;
-        //}
     }
 }

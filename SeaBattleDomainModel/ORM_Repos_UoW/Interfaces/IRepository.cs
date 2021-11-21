@@ -7,7 +7,7 @@ namespace ORM_Repos_UoW
     {
         void Create(T item);
 
-        T ReadItem(int id);
+        T ReadItemById(int id);
 
         IEnumerable<T> ReadItems();
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 
 namespace ORM_Repos_UoW
 {
@@ -11,6 +10,8 @@ namespace ORM_Repos_UoW
         private SqlConnection sqlConnection;
         private SqlDataAdapter adapter;
         public DataSet TablesWithData { get; set; }
+
+        private Dictionary<Type, object> mappers;
 
         private List<string> tablesNames = new List<string>();
 
@@ -52,6 +53,21 @@ namespace ORM_Repos_UoW
             }
         }
 
+        public IDataMapper<T> GetDataMapper<T>() where T : class
+        {
+            var type = typeof(T);
+
+            if (this.mappers == null)
+            {
+                this.mappers = new Dictionary<Type, object>();
+            }
+            if (!this.mappers.ContainsKey(typeof(T)))
+            {
+                this.mappers[type] = new DataMapper<T>(this);
+            }
+            return (DataMapper<T>)this.mappers[type];
+        }
+
         private DataColumn[] GetColumnsFromTable(SqlConnection connection, string tableName)
         {
             List<DataColumn> columns = new List<DataColumn>();
@@ -84,17 +100,17 @@ namespace ORM_Repos_UoW
             return TablesWithData.Tables[tableName];
         }
 
-        public DataTable GetTableWithData(string tableName)
+        public DataTable GetTableWithData(string tableName, string sqlQuery)
         {
-            var sqlQuery = $"SELECT * FROM {tableName}";
+            //var sqlQuery = $"SELECT * FROM {tableName}";
             return GetDataFromDbTable(tableName, sqlQuery);
         }
 
-        public DataTable GetTableWithData(string tableName, int? id)
-        {
-            var sqlQuery = $"SELECT * FROM {tableName} WHERE {tableName}.Id = {id}";
-            return GetDataFromDbTable(tableName, sqlQuery);
-        }
+        //public DataTable GetTableWithData(string tableName, int? id)
+        //{
+        //    var sqlQuery = $"SELECT * FROM {tableName} WHERE {tableName}.Id = {id}";
+        //    return GetDataFromDbTable(tableName, sqlQuery);
+        //}
 
         private DataTable GetDataFromDbTable(string tableName, string sqlQuery)
         {
