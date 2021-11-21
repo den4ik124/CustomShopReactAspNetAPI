@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ORM_Repos_UoW
+namespace ORM_Repos_UoW.Interfaces
 {
     public interface IDataMapper<T> where T : class
     {

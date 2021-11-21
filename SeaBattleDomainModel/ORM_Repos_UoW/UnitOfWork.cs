@@ -1,4 +1,5 @@
-﻿using ORM_Repos_UoW.Repositories;
+﻿using ORM_Repos_UoW.Interfaces;
+using ORM_Repos_UoW.Repositories;
 using System;
 using System.Collections.Generic;
 
@@ -26,6 +27,9 @@ namespace ORM_Repos_UoW
             {
                 Repositories[type] = new GenericRepos<T>(dbContext);
             }
+
+            //TODO: вставить здесь проверку на вложенные классы и вызов метода GetRepository
+
             return (GenericRepos<T>)Repositories[type];
         }
 

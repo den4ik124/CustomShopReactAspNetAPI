@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ORM_Repos_UoW.DataMapper;
+using ORM_Repos_UoW.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -100,9 +102,9 @@ namespace ORM_Repos_UoW
             return TablesWithData.Tables[tableName];
         }
 
-        public DataTable GetTableWithData(string tableName, string sqlQuery)
+        public DataTable GetTableWithData(string tableName/*, string sqlQuery*/)
         {
-            //var sqlQuery = $"SELECT * FROM {tableName}";
+            var sqlQuery = $"SELECT * FROM {tableName}";
             return GetDataFromDbTable(tableName, sqlQuery);
         }
 

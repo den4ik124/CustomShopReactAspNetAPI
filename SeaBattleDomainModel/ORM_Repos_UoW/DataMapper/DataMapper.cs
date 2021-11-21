@@ -1,12 +1,13 @@
 ﻿using ORM_Repos_UoW.Attributes;
 using ORM_Repos_UoW.Enums;
+using ORM_Repos_UoW.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
 
-namespace ORM_Repos_UoW
+namespace ORM_Repos_UoW.DataMapper
 {
     public class DataMapper<T> : IDataMapper<T> where T : class
     {
@@ -85,7 +86,7 @@ namespace ORM_Repos_UoW
 
         public void FillItems()
         {
-            string sqlQuery = GetSqlQuery();
+            //string sqlQuery = GetSqlQuery();
             DataTable dt = dbContext.GetTableWithData(tableName);
             foreach (DataRow row in dt.Rows)
             {

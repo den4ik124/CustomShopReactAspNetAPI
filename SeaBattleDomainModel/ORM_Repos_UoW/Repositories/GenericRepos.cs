@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ORM_Repos_UoW.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace ORM_Repos_UoW.Repositories

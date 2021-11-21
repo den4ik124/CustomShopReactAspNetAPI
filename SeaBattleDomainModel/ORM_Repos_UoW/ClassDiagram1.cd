@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="ORM_Repos_UoW.Attributes.ChildAttribute" Collapsed="true">
+    <Position X="9" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAAAAAAAAAAAAQAAAAAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Attributes\ChildAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ORM_Repos_UoW.Attributes.ColumnAttribute" Collapsed="true">
+    <Position X="12.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAABAAAAAAAAQAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Attributes\ColumnAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ORM_Repos_UoW.Attributes.ParentAttribute" Collapsed="true">
+    <Position X="11.25" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Attributes\ParentAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ORM_Repos_UoW.Attributes.ShipTypeAttribute" Collapsed="true">
+    <Position X="8.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Attributes\ShipTypeAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ORM_Repos_UoW.Attributes.TableAttribute" Collapsed="true">
+    <Position X="10.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAA=</HashCode>
+      <FileName>Attributes\TableAttribute.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ORM_Repos_UoW.DataMapper.DataMapper&lt;T&gt;" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="4.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAIAAAAAAAAAAAwAIwQBAAAAAAEAAEgRAAAAAAAAAAA=</HashCode>
+      <FileName>DataMapper\DataMapper.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ORM_Repos_UoW.DataMapper.MappedItem&lt;T&gt;" Collapsed="true">
+    <Position X="6.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgQAAAAGAAABAgBAAAAABAAAAAA=</HashCode>
+      <FileName>DataMapper\MappedItem.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ORM_Repos_UoW.DbContext">
+    <Position X="0.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gEYgAAAAAwAAAAgAAAACAAgIAAEAEABAEAAAAAAAgAA=</HashCode>
+      <FileName>DbContext\DbContext.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ORM_Repos_UoW.SqlGenerator" Collapsed="true">
+    <Position X="10.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAAIAAAAAAIAAAAAAAAAAAAAAAAAARA=</HashCode>
+      <FileName>Enums\ConditionStatement.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ORM_Repos_UoW.UnitOfWork" BaseTypeListCollapsed="true">
+    <Position X="0.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAEAAACAAAAAAAQAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UnitOfWork.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ORM_Repos_UoW.Repositories.GenericRepos&lt;T&gt;" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="2.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQCAAAAAAAAABAAAAAIEAAEACAAAAAAAAAAA=</HashCode>
+      <FileName>Repositories\GenericRepos.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Interface Name="ORM_Repos_UoW.Interfaces.IDataMapper&lt;T&gt;" Collapsed="true">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAAAAwAAAABAAAAAAEAAAgAAAAAAAAAAAA=</HashCode>
+      <FileName>Interfaces\IDataMapper.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="ORM_Repos_UoW.Interfaces.IRepository&lt;T&gt;" Collapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAAAAAAAAABAAAAAAEAAEAAAAAAAAAAAAA=</HashCode>
+      <FileName>Interfaces\IRepository.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="ORM_Repos_UoW.Interfaces.IUnitOfWork" Collapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Interfaces\IUnitOfWork.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="ORM_Repos_UoW.State" Collapsed="true">
+    <Position X="12.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAABIAEEAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Enums\State.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="ORM_Repos_UoW.Enums.KeyType" Collapsed="true">
+    <Position X="9" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAGAAAA=</HashCode>
+      <FileName>Enums\KeyType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="ORM_Repos_UoW.Enums.ReadWriteOption" Collapsed="true">
+    <Position X="10.75" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Enums\ReadWriteOption.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
