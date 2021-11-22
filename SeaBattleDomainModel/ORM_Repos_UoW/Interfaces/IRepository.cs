@@ -7,10 +7,16 @@ namespace ORM_Repos_UoW.Interfaces
     {
         void Create(T item);
 
+        void Create(IEnumerable<T> items);
+
+        void Update(T item);
+
         T ReadItemById(int id);
 
         IEnumerable<T> ReadItems();
 
         void Delete(int id);
+
+        void Delete(T item);
     }
 }

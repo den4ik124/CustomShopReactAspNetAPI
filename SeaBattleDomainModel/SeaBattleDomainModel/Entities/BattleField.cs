@@ -46,7 +46,7 @@ namespace SeaBattleDomainModel.Entities
         [Child(Table = "Cells",
                RelatedType = typeof(Dictionary<Point, Cell>),
             IsCollection = true)]
-        public Dictionary<Point, Cell> Cells { get => cells; }
+        public Dictionary<Point, Cell> Cells { get => this.cells; }
 
         #endregion Properties
 
@@ -84,7 +84,7 @@ namespace SeaBattleDomainModel.Entities
                 {
                     var point = new Point(x, y);
                     var cell = new Cell(point) { BattleFieldId = this.Id };
-                    cells.Add(point, cell);
+                    this.cells.Add(point, cell);
                 }
             }
         }
@@ -103,7 +103,7 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>Ship from list</returns>
         private Ship GetShipByCoordinates(Quadrant quadrant, int x, int y)
         {
-            return cells.FirstOrDefault(point => point.Key.XAbsolute == x
+            return this.cells.FirstOrDefault(point => point.Key.XAbsolute == x
                                             && point.Key.YAbsolute == y
                                             && point.Key.Quadrant == quadrant).Value?.Ship;
         }

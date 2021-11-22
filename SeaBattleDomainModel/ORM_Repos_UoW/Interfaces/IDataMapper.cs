@@ -12,7 +12,11 @@ namespace ORM_Repos_UoW.Interfaces
 
         IEnumerable<T> ReadAllItems();
 
+        void Update(T item);
+
         void Delete(int id);
+
+        void Delete(T item);
 
         void FillItems();
 

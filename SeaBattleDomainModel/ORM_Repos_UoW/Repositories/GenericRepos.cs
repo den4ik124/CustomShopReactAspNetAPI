@@ -18,7 +18,7 @@ namespace ORM_Repos_UoW.Repositories
             dataMapper.Add(item);
         }
 
-        public void Create(List<T> items)
+        public void Create(IEnumerable<T> items)
         {
             dataMapper.Add(items);
         }
@@ -43,9 +43,19 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
+        public void Update(T item)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Delete(int id)
         {
             dataMapper.Delete(id);
+        }
+
+        public void Delete(T item)
+        {
+            throw new NotImplementedException();
         }
 
         public void Dispose()

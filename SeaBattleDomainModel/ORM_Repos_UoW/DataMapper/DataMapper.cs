@@ -68,17 +68,22 @@ namespace ORM_Repos_UoW.DataMapper
         {
             foreach (var mappedElement in mappedItems.Where(item => item.State == State.Added))
             {
-                DataRow row = dt.NewRow();
-                foreach (var property in properties)
-                {
-                    if (property.GetCustomAttribute<ColumnAttribute>().ReadWriteOption == ReadWriteOption.Write)
-                    {
-                        continue;
-                    }
-                    var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                    row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
-                }
-                dt.Rows.Add(row);
+                #region Old code items adding
+
+                //DataRow row = dt.NewRow();
+                //foreach (var property in properties)
+                //{
+                //    if (property.GetCustomAttribute<ColumnAttribute>().ReadWriteOption == ReadWriteOption.Write)
+                //    {
+                //        continue;
+                //    }
+                //    var tableColumnByPropertyAttribute = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                //    row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
+                //}
+                //dt.Rows.Add(row);
+                #endregion Old code items adding
+
+                dt.Rows.Add(mappedElement.Row);
             }
         }
 
@@ -148,12 +153,22 @@ namespace ORM_Repos_UoW.DataMapper
             return this.mappedItems.Select(e => e.Item);
         }
 
+        public void Update(T item)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Delete(int id)
         {
             var item = this.mappedItems.First(e => (int)e.Item.GetType()
                                                                 .GetProperty("Id")
                                                                 .GetValue(e.Item) == id);
             item.State = State.Deleted;
+        }
+
+        public void Delete(T item)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion Methods

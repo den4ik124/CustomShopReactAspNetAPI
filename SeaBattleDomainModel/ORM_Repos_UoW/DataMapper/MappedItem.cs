@@ -1,5 +1,6 @@
 ﻿using ORM_Repos_UoW.Attributes;
 using ORM_Repos_UoW.Enums;
+using ORM_Repos_UoW.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,7 +9,7 @@ using System.Reflection;
 
 namespace ORM_Repos_UoW.DataMapper
 {
-    public class MappedItem<T> where T : class
+    public class MappedItem<T> : IMappedItem<T> where T : class
     {
         private Assembly assembly;
         private T item;
@@ -78,8 +79,27 @@ namespace ORM_Repos_UoW.DataMapper
 
         private object CreateItemInstance(DataRow row, Type type)
         {
+            object item;
+            var subEntities = type.GetProperties().Where(prop => prop.GetCustomAttributes<ChildAttribute>().Count() > 0);
+            Dictionary<int, Type> idType = new Dictionary<int, Type>();
+            if (type.IsAbstract)
+            {
+                var derivedTypes = assembly.ExportedTypes.Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0)
+                                                         .Where(t => t.GetCustomAttribute<InheritanceRelationAttribute>().IsBase == false);
+
+                foreach (var derivedType in derivedTypes)
+                {
+                    idType.Add(derivedType.GetCustomAttribute<ShipTypeAttribute>().ShipTypeID, derivedType);
+                }
+                if (row["TypeId"].GetType() == typeof(DBNull))
+                {
+                    return null;
+                }
+                type = idType[(int)row["TypeId"]];
+            }
+
+            item = Activator.CreateInstance(type);
             //T item = Activator.CreateInstance<T>();
-            var item = Activator.CreateInstance(type);
             var properties = item.GetType().GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
             foreach (var prop in properties)
             {
@@ -95,21 +115,11 @@ namespace ORM_Repos_UoW.DataMapper
                 }
             }
 
-            var subEntities = type.GetProperties().Where(prop => prop.GetCustomAttributes<ChildAttribute>().Count() > 0);
-
             if (subEntities.Count() == 0)
             {
                 return item;
             }
 
-            var derivedTypes = assembly.ExportedTypes.Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0)
-                                                     .Where(t => t.GetCustomAttribute<InheritanceRelationAttribute>().IsBase == false);
-            Dictionary<int, Type> typeId = new Dictionary<int, Type>();
-
-            foreach (var derivedType in derivedTypes)
-            {
-                typeId.Add(derivedType.GetCustomAttribute<ShipTypeAttribute>().ShipTypeID, derivedType);
-            }
             //var types = assemblies.Where(t => t.DefinedTypes.Contains(typeof(Ship).GetTypeInfo()));//.Select(type => type.GetTypes().Where(prop => prop.GetCustomAttributes<ShipTypeAttribute>().Count() > 0));
             foreach (var subEntity in subEntities)
             {
@@ -124,9 +134,9 @@ namespace ORM_Repos_UoW.DataMapper
                 if (childType.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
                     && childType.GetCustomAttribute<InheritanceRelationAttribute>().IsBase) // TODO: подумать как сделать так, что условие выполнялось только если создаем корабль
                 {
-                    if (typeId.ContainsKey((int)row["TypeId"]))
+                    if (idType.ContainsKey((int)row["TypeId"]))
                     {
-                        value = CreateItemInstance(row, typeId[(int)row["TypeId"]]);
+                        value = CreateItemInstance(row, idType[(int)row["TypeId"]]);
                     }
                     else
                     {
