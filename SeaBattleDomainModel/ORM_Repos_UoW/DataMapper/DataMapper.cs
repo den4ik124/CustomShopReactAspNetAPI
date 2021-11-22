@@ -87,10 +87,12 @@ namespace ORM_Repos_UoW.DataMapper
         public void FillItems()
         {
             //string sqlQuery = GetSqlQuery();
-            DataTable dt = dbContext.GetTableWithData(tableName);
+            DataTable dt = dbContext.GetTableWithData(tableName); //получить JOIN таблицу
             foreach (DataRow row in dt.Rows)
             {
-                this.mappedItems.Add(new MappedItem<T>(row, State.Added));
+                var test = new MappedItem<T>(row, State.Added);
+                this.mappedItems.Add(test);
+                //this.mappedItems.Add(new MappedItem<T>(row, State.Added));
 
                 #region old mapper logic
 
@@ -130,9 +132,14 @@ namespace ORM_Repos_UoW.DataMapper
 
         public T ReadItemById(int id)
         {
+            var test = this.mappedItems.Select(i => i.Item)
+                                   .FirstOrDefault(item => (int)item.GetType()
+                                                                    .GetProperty("Id") //TODO: а если поменяется имя свойства? Как убрать string из метода?
+                                                                    .GetValue(item) == id);
+
             return this.mappedItems.Select(i => i.Item)
                                    .FirstOrDefault(item => (int)item.GetType()
-                                   .GetProperty("Id")
+                                   .GetProperty("Id") //TODO: а если поменяется имя свойства? Как убрать string из метода?
                                    .GetValue(item) == id);
         }
 

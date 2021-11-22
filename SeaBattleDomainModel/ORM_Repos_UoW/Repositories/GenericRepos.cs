@@ -26,11 +26,6 @@ namespace ORM_Repos_UoW.Repositories
         public T ReadItemById(int id)
         {
             CheckNumberOfItems();
-
-            //var item = dataMapper.MappedItems.Select(i => i.Item).First();
-            //var type = item.GetType();
-            //var property = type.GetProperty("Id");
-            //var value = property.GetValue(item);
             return dataMapper.ReadItemById(id);
         }
 

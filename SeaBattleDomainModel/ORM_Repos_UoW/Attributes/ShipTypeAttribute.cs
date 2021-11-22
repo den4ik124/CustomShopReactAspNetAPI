@@ -5,11 +5,15 @@ namespace ORM_Repos_UoW.Attributes
 {
     public class ShipTypeAttribute : Attribute
     {
-        public int ShipTypID { get; set; }
+        private Type baseType;
 
-        public ShipTypeAttribute(int typeID)
+        public int ShipTypeID { get; set; }
+        public Type ShipType { get; set; }
+        public Type BaseType { get => baseType; set => baseType = value; }
+        public string BaseTypeName { get => this.baseType.Name; }
+
+        public ShipTypeAttribute()
         {
-            ShipTypID = typeID;
         }
     }
 }

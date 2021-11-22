@@ -5,6 +5,7 @@ using System;
 namespace SeaBattleDomainModel.Entities
 {
     [Table("Ships")]
+    [InheritanceRelation(IsBase = true)]
     public abstract class Ship : IEquatable<Ship>
     {
         #region Constructors

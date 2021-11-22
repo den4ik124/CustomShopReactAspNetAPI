@@ -105,6 +105,24 @@ namespace ORM_Repos_UoW
         public DataTable GetTableWithData(string tableName/*, string sqlQuery*/)
         {
             var sqlQuery = $"SELECT * FROM {tableName}";
+            sqlQuery = $@"SELECT
+                            BattleFields.Id,
+                            BattleFields.SideLength,
+                            Cells.Id,
+                            Cells.ShipId,
+                            Cells.BattleFieldID,
+                            Cells.PointID,
+                            Points.X,
+                            Points.Y,
+                            Ships.Id,
+                            Ships.TypeId,
+                            Ships.Velocity,
+                            Ships.[Range],
+                            Ships.Size
+                        FROM BattleFields
+                            LEFT JOIN Cells ON Cells.BattleFieldID = BattleFields.Id
+                            LEFT JOIN Ships on Ships.id = cells.shipid
+                            LEFT JOIN points on Points.Id = Cells.PointID";
             return GetDataFromDbTable(tableName, sqlQuery);
         }
 

@@ -1,6 +1,7 @@
 ﻿using ORM_Repos_UoW.Attributes;
 using ORM_Repos_UoW.Enums;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -9,20 +10,28 @@ namespace ORM_Repos_UoW.DataMapper
 {
     public class MappedItem<T> where T : class
     {
+        private Assembly assembly;
         private T item;
         private DataRow row;
         private Type type = typeof(T);
 
-        public MappedItem(T item, State state)
+        public Dictionary<string, object> PropertyValue { get; set; }
+
+        public MappedItem()
         {
-            Item = item;
-            State = state;
+            assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
         }
 
-        public MappedItem(DataRow row, State state)
+        public MappedItem(T item, State state) : this()
         {
-            Row = row;
-            State = state;
+            this.Item = item;
+            this.State = state;
+        }
+
+        public MappedItem(DataRow row, State state) : this()
+        {
+            this.Row = row;
+            this.State = state;
         }
 
         public State State { get; set; }
@@ -32,8 +41,9 @@ namespace ORM_Repos_UoW.DataMapper
             get => row;
             set
             {
-                row = value;
-                item = ConvertRowToObject(value);
+                this.row = value;
+                this.item = ConvertRowToObject(value);
+                PropertyValue = GetPropertyValue(this.item);
             }
         }
 
@@ -42,20 +52,40 @@ namespace ORM_Repos_UoW.DataMapper
             get => this.item;
             set
             {
-                item = value;
-                row = ConvertObjectToRow(value);
+                this.item = value;
+                PropertyValue = GetPropertyValue(this.item);
+                this.row = ConvertObjectToRow(value);
             }
         }
 
-        private T ConvertRowToObject(DataRow row)
+        private Dictionary<string, object> GetPropertyValue(T item)
         {
-            T item = Activator.CreateInstance<T>();
+            var dictionary = new Dictionary<string, object>();
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            foreach (var prop in properties)
+            {
+                dictionary.Add(prop.GetCustomAttribute<ColumnAttribute>().ColumnName, prop.GetValue(item));
+            }
+            return dictionary;
+        }
+
+        private T ConvertRowToObject(DataRow row) //TODO: обработать вложенные сущности здесь !!!
+        {
+            var item = CreateItemInstance(row, typeof(T));
+
+            return (T)item;
+        }
+
+        private object CreateItemInstance(DataRow row, Type type)
+        {
+            //T item = Activator.CreateInstance<T>();
+            var item = Activator.CreateInstance(type);
+            var properties = item.GetType().GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
             foreach (var prop in properties)
             {
                 string columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var value = row[columnName];
-                if (prop.GetType() != typeof(DBNull))
+                if (value.GetType() != typeof(DBNull))
                 {
                     prop.SetValue(item, value);
                 }
@@ -63,6 +93,51 @@ namespace ORM_Repos_UoW.DataMapper
                 {
                     prop.SetValue(item, null);
                 }
+            }
+
+            var subEntities = type.GetProperties().Where(prop => prop.GetCustomAttributes<ChildAttribute>().Count() > 0);
+
+            if (subEntities.Count() == 0)
+            {
+                return item;
+            }
+
+            var derivedTypes = assembly.ExportedTypes.Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0)
+                                                     .Where(t => t.GetCustomAttribute<InheritanceRelationAttribute>().IsBase == false);
+            Dictionary<int, Type> typeId = new Dictionary<int, Type>();
+
+            foreach (var derivedType in derivedTypes)
+            {
+                typeId.Add(derivedType.GetCustomAttribute<ShipTypeAttribute>().ShipTypeID, derivedType);
+            }
+            //var types = assemblies.Where(t => t.DefinedTypes.Contains(typeof(Ship).GetTypeInfo()));//.Select(type => type.GetTypes().Where(prop => prop.GetCustomAttributes<ShipTypeAttribute>().Count() > 0));
+            foreach (var subEntity in subEntities)
+            {
+                var childType = subEntity.GetCustomAttribute<ChildAttribute>().RelatedType;
+                object value;
+                if (row["TypeId"].GetType() == typeof(DBNull) && childType.GetCustomAttribute<TableAttribute>().TableName == "Ships")
+                {
+                    subEntity.SetValue(item, null);
+                    continue;
+                }
+
+                if (childType.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
+                    && childType.GetCustomAttribute<InheritanceRelationAttribute>().IsBase) // TODO: подумать как сделать так, что условие выполнялось только если создаем корабль
+                {
+                    if (typeId.ContainsKey((int)row["TypeId"]))
+                    {
+                        value = CreateItemInstance(row, typeId[(int)row["TypeId"]]);
+                    }
+                    else
+                    {
+                        value = CreateItemInstance(row, subEntity.PropertyType);
+                    }
+                }
+                else
+                {
+                    value = CreateItemInstance(row, subEntity.PropertyType);
+                }
+                subEntity.SetValue(item, value);
             }
             return item;
         }

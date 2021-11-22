@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+[assembly: DomainModel]
+
 namespace SeaBattleDomainModel.Entities
 {
     [Table("BattleFields")]
@@ -317,7 +319,7 @@ namespace SeaBattleDomainModel.Entities
         //для теста DataMapper-а
         public override string ToString()
         {
-            return $"{this.Id} \t {this.BattleFieldSideLength}";
+            return $"ID: {this.Id} \t Length: {this.BattleFieldSideLength}";
         }
 
         #endregion Methods
