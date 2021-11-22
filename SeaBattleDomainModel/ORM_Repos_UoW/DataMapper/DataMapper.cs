@@ -17,7 +17,9 @@ namespace ORM_Repos_UoW.DataMapper
         private IEnumerable<PropertyInfo>? properties;
         private IEnumerable<PropertyInfo>? propertiesChilds;
         private DbContext dbContext;
-        private List<MappedItem<T>> mappedItems;
+
+        //private List<MappedItem<T>> mappedItems;
+        public List<MappedItem<T>> mappedItems { get; set; }
 
         public int ItemsCount { get => mappedItems.Count; }
 
@@ -81,6 +83,7 @@ namespace ORM_Repos_UoW.DataMapper
                 //    row[tableColumnByPropertyAttribute] = property.GetValue(mappedElement.Item);
                 //}
                 //dt.Rows.Add(row);
+
                 #endregion Old code items adding
 
                 dt.Rows.Add(mappedElement.Row);
@@ -92,7 +95,7 @@ namespace ORM_Repos_UoW.DataMapper
         public void FillItems()
         {
             //string sqlQuery = GetSqlQuery();
-            DataTable dt = dbContext.GetTableWithData(tableName); //получить JOIN таблицу
+            DataTable dt = dbContext.GetTableWithData(tableName); //TODO: получить JOIN таблицу
             foreach (DataRow row in dt.Rows)
             {
                 var test = new MappedItem<T>(row, State.Added);

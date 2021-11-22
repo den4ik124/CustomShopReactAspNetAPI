@@ -1,9 +1,11 @@
 ﻿using ORM_Repos_UoW.DataMapper;
 using ORM_Repos_UoW.Interfaces;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 
 namespace ORM_Repos_UoW
 {
@@ -106,24 +108,24 @@ namespace ORM_Repos_UoW
         {
             var sqlQuery = $"SELECT * FROM {tableName}";
             //TODO: переделать запрос
-            //sqlQuery = $@"SELECT
-            //                BattleFields.Id,
-            //                BattleFields.SideLength,
-            //                Cells.Id,
-            //                Cells.ShipId,
-            //                Cells.BattleFieldID,
-            //                Cells.PointID,
-            //                Points.X,
-            //                Points.Y,
-            //                Ships.Id,
-            //                Ships.TypeId,
-            //                Ships.Velocity,
-            //                Ships.[Range],
-            //                Ships.Size
-            //            FROM BattleFields
-            //                LEFT JOIN Cells ON Cells.BattleFieldID = BattleFields.Id
-            //                LEFT JOIN Ships on Ships.id = cells.shipid
-            //                LEFT JOIN points on Points.Id = Cells.PointID";
+            sqlQuery = $@"SELECT
+                            BattleFields.Id,
+                            BattleFields.SideLength,
+                            Cells.Id,
+                            Cells.ShipId,
+                            Cells.BattleFieldID,
+                            Cells.PointID,
+                            Points.X,
+                            Points.Y,
+                            Ships.Id,
+                            Ships.TypeId,
+                            Ships.Velocity,
+                            Ships.[Range],
+                            Ships.Size
+                        FROM BattleFields
+                            LEFT JOIN Cells ON Cells.BattleFieldID = BattleFields.Id
+                            LEFT JOIN Ships on Ships.id = cells.shipid
+                            LEFT JOIN points on Points.Id = Cells.PointID";
             return GetDataFromDbTable(tableName, sqlQuery);
         }
 
@@ -159,21 +161,45 @@ namespace ORM_Repos_UoW
 
         public void SaveChanges()
         {
-            using (sqlConnection = new SqlConnection(connectionString))
+            try
             {
-                sqlConnection.Open();
-                for (int i = 0; i < TablesWithData.Tables.Count; i++)
+                using (sqlConnection = new SqlConnection(connectionString))
                 {
-                    adapter.SelectCommand = new SqlCommand($"SELECT * FROM {TablesWithData.Tables[i].TableName}", sqlConnection);
-                    SqlCommandBuilder sqlCommandBuilder = new SqlCommandBuilder(adapter);
-                    adapter.Update(TablesWithData, TablesWithData.Tables[i].TableName);
+                    #region old DataAdapter.Update()
+
+                    //sqlConnection.Open();
+                    //for (int i = 0; i < TablesWithData.Tables.Count; i++)
+                    //{
+                    //    adapter.SelectCommand = new SqlCommand($"SELECT * FROM {TablesWithData.Tables[i].TableName}", sqlConnection);
+                    //    SqlCommandBuilder sqlCommandBuilder = new SqlCommandBuilder(adapter);
+                    //    adapter.Update(TablesWithData, TablesWithData.Tables[i].TableName);
+                    //}
+
+                    #endregion old DataAdapter.Update()
+
+                    Add(sqlConnection);
+                    Update(sqlConnection);
+                    Delete(sqlConnection);
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
             }
         }
 
         private void Add(SqlConnection sqlConnection)
         {
-            throw new NotImplementedException();
+            var test = mappers.Values.First();
+
+            var res = ((IDataMapper<>)test).mappedItems.First();
+            var bla = res
+
+            //for (int i = 0; i < mappers.Count; i++)
+            //{
+            //    IDataMapper mapper = mappers[i];
+            //}
+            //SqlGenerator.GetInsertIntoString();
         }
 
         private void Update(SqlConnection sqlConnection)

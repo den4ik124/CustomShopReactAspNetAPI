@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using ORM_Repos_UoW.DataMapper;
+using System.Collections.Generic;
 
 namespace ORM_Repos_UoW.Interfaces
 {
     public interface IDataMapper<T> where T : class
     {
+        public List<MappedItem<T>> mappedItems { get; set; }
+
         void Add(T item);
 
         void Add(IEnumerable<T> items);

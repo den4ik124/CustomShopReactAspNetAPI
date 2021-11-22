@@ -21,7 +21,10 @@ namespace ORM_Repos_UoW.DataMapper
         public MappedItem()
         {
             assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
+            this.TableName = typeof(T).GetCustomAttribute<TableAttribute>().TableName;
         }
+
+        public string TableName { get; }
 
         public MappedItem(T item, State state) : this()
         {
@@ -152,7 +155,7 @@ namespace ORM_Repos_UoW.DataMapper
             return item;
         }
 
-        private DataRow ConvertObjectToRow(T item)
+        private DataRow ConvertObjectToRow(T item) //TODO: доделать корректное создание/заполнение строки
         {
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
             var columns = properties.Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName)
