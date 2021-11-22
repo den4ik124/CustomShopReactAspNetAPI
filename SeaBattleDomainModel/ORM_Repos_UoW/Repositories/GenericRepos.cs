@@ -45,7 +45,7 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Update(T item)
         {
-            throw new NotImplementedException();
+            dataMapper.Update(item);
         }
 
         public void Delete(int id)
@@ -55,7 +55,7 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Delete(T item)
         {
-            throw new NotImplementedException();
+            dataMapper.Delete(item);
         }
 
         public void Dispose()

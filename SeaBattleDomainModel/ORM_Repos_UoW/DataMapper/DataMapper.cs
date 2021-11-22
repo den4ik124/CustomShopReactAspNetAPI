@@ -1,5 +1,4 @@
 ﻿using ORM_Repos_UoW.Attributes;
-using ORM_Repos_UoW.Enums;
 using ORM_Repos_UoW.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -158,7 +157,9 @@ namespace ORM_Repos_UoW.DataMapper
 
         public void Update(T item)
         {
-            throw new NotImplementedException();
+            var updatedItem = this.mappedItems.Find(i => i == item);
+            updatedItem.Item = item;
+            updatedItem.State = State.Modified;
         }
 
         public void Delete(int id)
@@ -171,7 +172,8 @@ namespace ORM_Repos_UoW.DataMapper
 
         public void Delete(T item)
         {
-            throw new NotImplementedException();
+            var updatedItem = this.mappedItems.Find(i => i == item);
+            updatedItem.State = State.Deleted;
         }
 
         #endregion Methods

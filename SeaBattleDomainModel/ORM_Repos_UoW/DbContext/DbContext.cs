@@ -1,7 +1,6 @@
 ﻿using ORM_Repos_UoW.DataMapper;
 using ORM_Repos_UoW.Interfaces;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -190,11 +189,6 @@ namespace ORM_Repos_UoW
 
         private void Add(SqlConnection sqlConnection)
         {
-            var test = mappers.Values.First();
-
-            var res = ((IDataMapper<>)test).mappedItems.First();
-            var bla = res
-
             //for (int i = 0; i < mappers.Count; i++)
             //{
             //    IDataMapper mapper = mappers[i];
