@@ -152,13 +152,56 @@ namespace ORM_Repos_UoW.Repositories
                 return SelectFromSingleTableSqlQuery(tablePropetriesNames, tableName);
             }
 
+            childTables.OrderBy(i => i.PropertyType.GetCustomAttribute<TableAttribute>().IsRelatedTable); //TODO: выяснить нужна ли эта сортировка или можно придумать что получше?
+
             foreach (var childTable in childTables)
             {
                 DefineTableAndProperties(childTable.PropertyType, out tableName, out propertiesNames);
                 tablePropetriesNames.Add(tableName, propertiesNames);
             }
 
-            //tables.AddRange(type.GetProperties().Select(prop => prop.GetCustomAttribute<ChildAttribute>().Table).ToList());
+            StringBuilder sb = new StringBuilder("SELECT\n");
+            foreach (var table in tablePropetriesNames.Keys)
+            {
+                foreach (var property in tablePropetriesNames[table])
+                {
+                    if (property.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sb.Append($"[{table}].[{property}] AS [{table}{property}],\n");
+                        continue;
+                    }
+                    sb.Append($"[{table}].[{property}],\n");
+                }
+            }
+            Debug.WriteLine(sb.ToString());
+            var res = sb.ToString();
+
+            sb.Remove(sb.Length - 2, 1);
+
+            Debug.WriteLine(sb.ToString());
+
+            sb.Append($" FROM {tablePropetriesNames.First().Key}\n");
+
+            Debug.WriteLine(sb.ToString());
+            //SELECT
+            //  [table1].[id] AS [table1Id],
+            //  [table1].[prop2],
+            //  [table1].[...],
+
+            //  [table2].[Id] AS [table2Id],
+            //  [table2].[prop2],
+            //  [table2].[...],
+
+            //  [table3].[Id] AS [table3Id],
+            //  [table3].[prop2],
+            //  ... . ...
+            //  [tableN].[Id] AS [tableNId],
+            //  [tableN].[prop2]
+            // FROM [table1]
+            // LEFT JOIN [table2] ON [table2].[Id] = [table1].[FK_table2_Id]
+            // LEFT JOIN [table3] ON [table3].[Id] = [table1].[FK_table3_Id]
+            // ...
+            // LEFT JOIN [tableN] ON [tableN].[Id] = [table1].[FK_tableN_Id]
 
             //var columns =
             throw new NotImplementedException();
@@ -181,7 +224,7 @@ namespace ORM_Repos_UoW.Repositories
                     sb.Append($"[{tableName}].[{prop}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
                 }
             }
-            sb.Remove(sb.Length - 2, 1);
+            sb.Remove(sb.Length - 1, 1);
             sb.Append($" FROM [{tableName}];");
             Debug.WriteLine(sb.ToString());
 
@@ -189,6 +232,32 @@ namespace ORM_Repos_UoW.Repositories
         }
 
         private void DefineTableAndProperties(Type type, out string tableName, out List<string> propertiesNames)
+        {
+            tableName = "";
+            propertiesNames = new List<string>();
+
+            //TODO: подумать, как работать с типом List здесь!!! Вылетает исключение 
+
+            var test = type.GetCustomAttribute<ChildAttribute>();
+            if (type.GetCustomAttribute<ChildAttribute>() != null && type.GetCustomAttribute<ChildAttribute>().IsCollection)
+            {
+                if (type.IsGenericType)
+                {
+                    var genericTypes = type.GetGenericArguments();
+
+                    foreach (var genericType in genericTypes)
+                    {
+                        GetSinglePropertyData(genericType, out tableName, out propertiesNames);
+                    }
+                }
+            }
+            else
+            {
+                GetSinglePropertyData(type, out tableName, out propertiesNames);
+            }
+        }
+
+        private void GetSinglePropertyData(Type type, out string tableName, out List<string> propertiesNames)
         {
             tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             propertiesNames = type.GetProperties()
