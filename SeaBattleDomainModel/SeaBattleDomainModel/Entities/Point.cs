@@ -7,9 +7,6 @@ namespace SeaBattleDomainModel.Entities
     [Table("Points")]
     public struct Point : IEquatable<Point>
     {
-        [Column("Id", ReadWriteOption.Write)]
-        public int Id { get; set; }
-
         #region Fields
 
         private int x; //TODO: могу ли я поменять readonly на свойство {get; private set;} ?
@@ -41,6 +38,9 @@ namespace SeaBattleDomainModel.Entities
         #endregion Constructors
 
         #region Properties
+
+        [Column("Id", ReadWriteOption.Write)]
+        public int Id { get; set; }
 
         [Column("X")]
         public int X

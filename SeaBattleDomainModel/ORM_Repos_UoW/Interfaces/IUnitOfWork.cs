@@ -2,9 +2,11 @@
 
 namespace ORM_Repos_UoW.Interfaces
 {
-    internal interface IUnitOfWork : IDisposable
+    public interface IUnitOfWork : IDisposable
     {
         /*int*/
+
+        void Register(IBaseRepository repository);
 
         void Commit();
     }

@@ -88,7 +88,7 @@ namespace ORM_Repos_UoW.DataMapper
             if (type.IsAbstract)
             {
                 var derivedTypes = assembly.ExportedTypes.Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0)
-                                                         .Where(t => t.GetCustomAttribute<InheritanceRelationAttribute>().IsBase == false);
+                                                         .Where(t => t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false);
 
                 foreach (var derivedType in derivedTypes)
                 {
@@ -135,7 +135,7 @@ namespace ORM_Repos_UoW.DataMapper
                 }
 
                 if (childType.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
-                    && childType.GetCustomAttribute<InheritanceRelationAttribute>().IsBase) // TODO: подумать как сделать так, что условие выполнялось только если создаем корабль
+                    && childType.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass) // TODO: подумать как сделать так, что условие выполнялось только если создаем корабль
                 {
                     if (idType.ContainsKey((int)row["TypeId"]))
                     {

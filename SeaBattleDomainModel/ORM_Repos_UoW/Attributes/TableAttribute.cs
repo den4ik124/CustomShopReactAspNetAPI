@@ -5,11 +5,14 @@ namespace ORM_Repos_UoW.Attributes
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class TableAttribute : Attribute
     {
-        public TableAttribute(string tableName = "")
+        public string TableName { get; set; }
+
+        public bool IsRelatedTable { get; set; } = false;
+
+        public TableAttribute(string tableName = "", bool isRelated = false)
         {
             TableName = tableName;
+            IsRelatedTable = isRelated;
         }
-
-        public string TableName { get; }
     }
 }
