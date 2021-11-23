@@ -149,7 +149,7 @@ namespace ORM_Repos_UoW.Repositories
             var childTables = type.GetProperties().Where(prop => prop.GetCustomAttributes<ChildAttribute>().Count() > 0);
             if (childTables.Count() == 0)
             {
-                return SelectAllFromTableSqlQuery(tablePropetriesNames, tableName);
+                return SelectFromSingleTableSqlQuery(tablePropetriesNames, tableName);
             }
 
             foreach (var childTable in childTables)
@@ -164,7 +164,7 @@ namespace ORM_Repos_UoW.Repositories
             throw new NotImplementedException();
         }
 
-        private string SelectAllFromTableSqlQuery(Dictionary<string, List<string>> tablePropetriesNames, string tableName)
+        private string SelectFromSingleTableSqlQuery(Dictionary<string, List<string>> tablePropetriesNames, string tableName)
         {
             StringBuilder sb = new StringBuilder("SELECT \n");
 
