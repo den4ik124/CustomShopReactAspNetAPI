@@ -60,7 +60,7 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
-        public IEnumerable<T?> ReadItems<T>()
+        public IEnumerable<T> ReadItems<T>()
         {
             var result = new List<T?>();
             var type = typeof(T);
@@ -117,7 +117,9 @@ namespace ORM_Repos_UoW.Repositories
                 {
                     while (reader.Read())
                     {
-                        result.Add((T)MatchDataItem(type, reader));
+                        var test = MatchDataItem(type, reader);
+                        result.Add((T)test); //TODO: проверить почему всего одно поле боя создается
+                        //result.Add((T)MatchDataItem(type, reader));
                     }
                 }
             }
@@ -166,13 +168,23 @@ namespace ORM_Repos_UoW.Repositories
                 return item;
             }
 
+            FillChilds(reader, ref item, childs);
+
+            return item;
+        }
+
+        private void FillChilds(SqlDataReader reader, ref object item, IEnumerable<PropertyInfo> childs)
+        {
             foreach (var child in childs)
             {
                 var childType = child.GetCustomAttribute<ChildAttribute>().RelatedType;
                 var isCollection = child.GetCustomAttribute<ChildAttribute>().IsCollection;
                 if (isCollection)
                 {
-                    var test = FilledCollection(child, reader);
+                    //var test = FilledCollection(child, reader);
+                    //var listType = child.PropertyType;
+                    //var countTest = listType.GetProperty("Count").GetValue(test);
+
                     child.SetValue(item, FilledCollection(child, reader));
                 }
                 else
@@ -180,8 +192,6 @@ namespace ORM_Repos_UoW.Repositories
                     child.SetValue(item, MatchDataItem(childType, reader));
                 }
             }
-
-            return item;
         }
 
         private object? FilledCollection(PropertyInfo child, SqlDataReader reader)
@@ -196,9 +206,10 @@ namespace ORM_Repos_UoW.Repositories
                     while (reader.Read())
                     {
                         var item = MatchDataItem(generic, reader);
-                        var methodContains = child.PropertyType.GetMethod("Contains");
+                        //var methodContains = child.PropertyType.GetMethod("Contains");
+                        //if (item == null)// || (bool)methodContains.Invoke(collection, new object[] { item }))
 
-                        if (item == null || (bool)methodContains.Invoke(collection, new object[] { item }))
+                        if (item == null)
                         {
                             continue;
                         }

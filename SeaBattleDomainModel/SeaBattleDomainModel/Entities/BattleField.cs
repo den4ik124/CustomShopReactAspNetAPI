@@ -18,7 +18,7 @@ namespace SeaBattleDomainModel.Entities
         private const int expressionPower = 2;
         private const int battleFieldPointsIncreaser = 1;
 
-        private readonly List<Ship> ships;
+        private List<Ship> ships; //TODO: могу ли я убрать readonly
 
         private int battleFieldSideLength;
 
@@ -41,12 +41,16 @@ namespace SeaBattleDomainModel.Entities
         [Child(Table = "Ships",
                RelatedType = typeof(Ship),
                IsCollection = true)]
-        public List<Ship> Ships => ships;
+        public List<Ship> Ships { get; set; }
 
         [Child(Table = "Cells",
                RelatedType = typeof(Dictionary<Point, Cell>),
             IsCollection = true)]
-        public Dictionary<Point, Cell> Cells { get => this.cells; }
+        public Dictionary<Point, Cell> Cells
+        {
+            get => this.cells;
+            set => this.cells = value;
+        }
 
         #endregion Properties
 
