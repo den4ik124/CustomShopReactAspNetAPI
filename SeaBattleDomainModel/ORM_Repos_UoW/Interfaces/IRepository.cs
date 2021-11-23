@@ -1,7 +1,5 @@
-﻿using ORM_Repos_UoW.UoW_POC;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace ORM_Repos_UoW.Interfaces
 {
@@ -15,7 +13,7 @@ namespace ORM_Repos_UoW.Interfaces
 
         T ReadItemById(int id);
 
-        IEnumerable<T> ReadItems<T>();
+        IEnumerable<T> ReadItems();
 
         void Delete(int id);
 

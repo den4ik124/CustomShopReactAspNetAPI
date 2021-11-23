@@ -28,7 +28,7 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column("ShipsId", ReadWriteOption.Write)]
+        [Column("Id", ReadWriteOption.Write)]
         public int Id { get; set; }
 
         [Column("Velocity")]

@@ -1,11 +1,12 @@
 ﻿using ORM_Repos_UoW.Attributes;
-using ORM_Repos_UoW.Enums;
 using ORM_Repos_UoW.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace ORM_Repos_UoW.Repositories
 {
@@ -43,7 +44,7 @@ namespace ORM_Repos_UoW.Repositories
 
             //string sqlQuery = GetSqlQuery(type);
 
-            var sqlQuery = $"SELECT * FROM {tableName}"; //TODO: генерировать SQL запрос здесь
+            var sqlQuery = $"SELECT * FROM {tableName} WHERE {tableName}Id = {id}"; //TODO: генерировать SQL запрос здесь
             using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
             {
                 connection.Open();
@@ -60,15 +61,15 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
-        public IEnumerable<T> ReadItems<T>()
+        public IEnumerable<T> ReadItems()
         {
             var result = new List<T?>();
             var type = typeof(T);
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
 
-            //string sqlQuery = GetSqlQuery(type);
+            string sqlQuery = GetSqlQuery(type);
 
-            var sqlQuery = $"SELECT * FROM {tableName}"; //TODO: генерировать SQL запрос здесь
+            sqlQuery = $"SELECT * FROM {tableName}"; //TODO: генерировать SQL запрос здесь
 
             sqlQuery = $@"  SELECT
 	                        Cells.Id AS CellsId,
@@ -118,7 +119,10 @@ namespace ORM_Repos_UoW.Repositories
                     while (reader.Read())
                     {
                         var test = MatchDataItem(type, reader);
-                        result.Add((T)test); //TODO: проверить почему всего одно поле боя создается
+                        if (test != null)
+                        {
+                            result.Add((T)test); //TODO: проверить почему всего одно поле боя создается
+                        }
                         //result.Add((T)MatchDataItem(type, reader));
                     }
                 }
@@ -134,12 +138,73 @@ namespace ORM_Repos_UoW.Repositories
         /// <exception cref="NotImplementedException"></exception>
         private string GetSqlQuery(Type type)
         {
-            //List<string> tables = new List<string>();
-            //tables.Add(type.GetCustomAttribute<TableAttribute>().TableName);
+            var tablePropetriesNames = new Dictionary<string, List<string>>();
+
+            string tableName;
+            List<string> propertiesNames;
+            DefineTableAndProperties(type, out tableName, out propertiesNames);
+
+            tablePropetriesNames.Add(tableName, propertiesNames);
+
+            var childTables = type.GetProperties().Where(prop => prop.GetCustomAttributes<ChildAttribute>().Count() > 0);
+            if (childTables.Count() == 0)
+            {
+                return SelectAllFromTableSqlQuery(tablePropetriesNames, tableName);
+            }
+
+            foreach (var childTable in childTables)
+            {
+                DefineTableAndProperties(childTable.PropertyType, out tableName, out propertiesNames);
+                tablePropetriesNames.Add(tableName, propertiesNames);
+            }
+
             //tables.AddRange(type.GetProperties().Select(prop => prop.GetCustomAttribute<ChildAttribute>().Table).ToList());
 
             //var columns =
             throw new NotImplementedException();
+        }
+
+        private string SelectAllFromTableSqlQuery(Dictionary<string, List<string>> tablePropetriesNames, string tableName)
+        {
+            StringBuilder sb = new StringBuilder("SELECT \n");
+
+            var properties = tablePropetriesNames[tableName];// type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            foreach (var prop in properties)
+            {
+                if (prop.EndsWith("id", StringComparison.OrdinalIgnoreCase))
+                {
+                    string propAs = $"{prop}] AS [{tableName}{prop}";
+                    sb.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                }
+                else
+                {
+                    sb.Append($"[{tableName}].[{prop}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                }
+            }
+            sb.Remove(sb.Length - 2, 1);
+            sb.Append($" FROM [{tableName}];");
+            Debug.WriteLine(sb.ToString());
+
+            return sb.ToString();
+        }
+
+        private void DefineTableAndProperties(Type type, out string tableName, out List<string> propertiesNames)
+        {
+            tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            propertiesNames = type.GetProperties()
+                                    .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
+                                    .Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList();
+            if (type.IsAbstract)
+            {
+                var columnMatching = assembly.GetTypes()
+                                            .Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
+                                            && t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false)
+                                            .Select(a => a.GetCustomAttribute<InheritanceRelationAttribute>().ColumnMatching)
+                                            .First();
+                //string propertyName = $"{columnMatching} AS  {tableName}{columnMatching}";
+                string propertyName = $"{columnMatching}";
+                propertiesNames.Add(propertyName);
+            }
         }
 
         private object MatchDataItem(Type type, SqlDataReader reader)
@@ -240,6 +305,10 @@ namespace ORM_Repos_UoW.Repositories
             foreach (var prop in properties)
             {
                 string columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                if (columnName == "Id")
+                {
+                    columnName = $"{prop.ReflectedType.GetCustomAttribute<TableAttribute>().TableName}Id";
+                }
                 if (reader[columnName].GetType() != typeof(DBNull))
                     prop.SetValue(item, reader[columnName]);
                 else
