@@ -15,10 +15,12 @@ namespace ORM_Repos_UoW
         //public IBaseRepository Ships { get; set; }
 
         //public Dictionary<Type, object> Repositories { get; set; }
+        public string ConnectionString { get; set; }
 
         public UnitOfWork(DbContext dbContext)
         {
             this.dbContext = dbContext;
+
             _repositories = new Dictionary<string, IBaseRepository>();
         }
 
@@ -29,13 +31,13 @@ namespace ORM_Repos_UoW
 
         public void Commit()
         {
-            using (SqlConnection connection = new SqlConnection("connection string"))
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 _repositories.ToList().ForEach(x => x.Value.Submit(connection));
             }
         }
 
-        public IRepository<T> GetRepository<T>() where T : class //TODO: поменять GenericRepos на IRepository
+        public IRepository<T> GetRepository<T>()// where T : class, struct //TODO: поменять GenericRepos на IRepository
         {
             return new GenericRepos<T>(this);
         }

@@ -1,4 +1,5 @@
 ﻿using ORM_Repos_UoW.Attributes;
+using ORM_Repos_UoW.Enums;
 using ORM_Repos_UoW.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -8,14 +9,17 @@ using System.Reflection;
 
 namespace ORM_Repos_UoW.Repositories
 {
-    public class GenericRepos<T> : IRepository<T> where T : class
+    public class GenericRepos<T> : IRepository<T>// where T : class
     {
         private List<T> addedItems = new List<T>();
         private List<T> dirtyItems = new List<T>();
         private List<T> deletedItems = new List<T>();
 
+        private IUnitOfWork unitOfWork;
+
         public GenericRepos(IUnitOfWork uow)
         {
+            unitOfWork = uow;
             uow.Register(this);
         }
 
@@ -34,40 +38,55 @@ namespace ORM_Repos_UoW.Repositories
             throw new NotImplementedException();
         }
 
-        public IEnumerable<T> ReadItems<T>()
+        public IEnumerable<T?> ReadItems<T>()
         {
-            var result = new List<T>();
+            var result = new List<T?>();
             var type = typeof(T);
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+
+            //string sqlQuery = GetSqlQuery(type);
+
             var sqlQuery = $"SELECT * FROM {tableName}"; //TODO: генерировать SQL запрос здесь
-            using (SqlConnection connection = new SqlConnection())
+            using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
             {
+                connection.Open();
                 SqlCommand cmd = new SqlCommand(sqlQuery, connection);
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
                     while (reader.Read())
                     {
-                        result.Add(MatchDataItem(type, reader));
+                        result.Add((T)MatchDataItem(type, reader));
                     }
                 }
             }
             return result;
         }
 
-        private T MatchDataItem(Type type, SqlDataReader reader)
+        private string GetSqlQuery(Type type)
+        {
+            //List<string> tables = new List<string>();
+            //tables.Add(type.GetCustomAttribute<TableAttribute>().TableName);
+            //tables.AddRange(type.GetProperties().Select(prop => prop.GetCustomAttribute<ChildAttribute>().Table).ToList());
+
+            //var columns =
+            throw new NotImplementedException();
+        }
+
+        private object MatchDataItem(Type type, SqlDataReader reader)
         {
             var item = Activator.CreateInstance(type);
             var columns = type.GetProperties()
                                 .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
                                 .Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName);
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+
             foreach (var prop in properties)
             {
                 string columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                prop.SetValue(item, prop.GetValue(reader[columnName]));
+                prop.SetValue(item, reader[columnName]);
             }
-            return (T)item;
+            return item;
         }
 
         public void Update(T item)
@@ -77,7 +96,7 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Delete(int id)
         {
-            T item = null; //продумать алгоритм поиска сущности по Id
+            T item = default(T); //продумать алгоритм поиска сущности по Id
             deletedItems.Add(item);
         }
 

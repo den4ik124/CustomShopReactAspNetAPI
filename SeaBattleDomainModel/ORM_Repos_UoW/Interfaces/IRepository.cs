@@ -5,7 +5,7 @@ using System.ComponentModel;
 
 namespace ORM_Repos_UoW.Interfaces
 {
-    public interface IRepository<T> : IBaseRepository, IDisposable where T : class
+    public interface IRepository<T> : IBaseRepository, IDisposable// where T : class
     {
         void Create(T item);
 
