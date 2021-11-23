@@ -35,7 +35,26 @@ namespace ORM_Repos_UoW.Repositories
 
         public T ReadItemById(int id)
         {
-            throw new NotImplementedException();
+            var type = typeof(T);
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+
+            //string sqlQuery = GetSqlQuery(type);
+
+            var sqlQuery = $"SELECT * FROM {tableName}"; //TODO: генерировать SQL запрос здесь
+            using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+            {
+                connection.Open();
+                SqlCommand cmd = new SqlCommand(sqlQuery, connection);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    return (T)MatchDataItem(type, reader);
+                }
+                else
+                {
+                    return default(T);
+                }
+            }
         }
 
         public IEnumerable<T?> ReadItems<T>()
@@ -63,6 +82,12 @@ namespace ORM_Repos_UoW.Repositories
             return result;
         }
 
+        /// <summary>
+        /// Создает запрос SELECT ... JOIN на основании вложенных типов
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
         private string GetSqlQuery(Type type)
         {
             //List<string> tables = new List<string>();
@@ -75,18 +100,39 @@ namespace ORM_Repos_UoW.Repositories
 
         private object MatchDataItem(Type type, SqlDataReader reader)
         {
-            var item = Activator.CreateInstance(type);
+            var item = Activator.CreateInstance(type); //TODO: проверка для abstract Ship
             var columns = type.GetProperties()
                                 .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
                                 .Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName);
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            FillProperties(reader, ref item, properties);
 
+            var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<ChildAttribute>().Count() > 0);
+
+            if (childs.Count() == 0)
+            {
+                return item;
+            }
+
+            foreach (var child in childs)
+            {
+                var childType = child.GetCustomAttribute<ChildAttribute>().RelatedType;
+                child.SetValue(item, MatchDataItem(childType, reader));
+            }
+
+            return item;
+        }
+
+        private void FillProperties(SqlDataReader reader, ref object? item, IEnumerable<PropertyInfo> properties)
+        {
             foreach (var prop in properties)
             {
                 string columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                prop.SetValue(item, reader[columnName]);
+                if (reader[columnName].GetType() != typeof(DBNull))
+                    prop.SetValue(item, reader[columnName]);
+                else
+                    prop.SetValue(item, null);
             }
-            return item;
         }
 
         public void Update(T item)
@@ -112,22 +158,24 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Submit(SqlConnection connection)
         {
-            SubmitAddedItems(connection);
-            SubmitDirtyItems(connection);
-            SubmitDeletedItems(connection);
+            AddedItemsSubmition(connection);
+            DirtyItemsSubmition(connection);
+            DeletedItemsSubmition(connection);
         }
 
-        private static void SubmitAddedItems(SqlConnection connection)
+        private void AddedItemsSubmition(SqlConnection connection)
+        {
+            foreach (var item in addedItems)
+            {
+            }
+        }
+
+        private void DirtyItemsSubmition(SqlConnection connection)
         {
             throw new NotImplementedException();
         }
 
-        private static void SubmitDirtyItems(SqlConnection connection)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SubmitDeletedItems(SqlConnection connection)
+        private void DeletedItemsSubmition(SqlConnection connection)
         {
             throw new NotImplementedException();
         }

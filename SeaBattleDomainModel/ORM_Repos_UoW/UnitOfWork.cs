@@ -33,6 +33,7 @@ namespace ORM_Repos_UoW
         {
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
+                connection.Open();
                 _repositories.ToList().ForEach(x => x.Value.Submit(connection));
             }
         }
