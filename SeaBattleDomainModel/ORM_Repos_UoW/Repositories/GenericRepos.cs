@@ -14,6 +14,7 @@ namespace ORM_Repos_UoW.Repositories
         private List<T> addedItems = new List<T>();
         private List<T> dirtyItems = new List<T>();
         private List<T> deletedItems = new List<T>();
+        private Assembly assembly;
 
         private IUnitOfWork unitOfWork;
 
@@ -21,6 +22,8 @@ namespace ORM_Repos_UoW.Repositories
         {
             unitOfWork = uow;
             uow.Register(this);
+
+            assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
         }
 
         public void Create(T item)
@@ -66,6 +69,45 @@ namespace ORM_Repos_UoW.Repositories
             //string sqlQuery = GetSqlQuery(type);
 
             var sqlQuery = $"SELECT * FROM {tableName}"; //TODO: генерировать SQL запрос здесь
+
+            sqlQuery = $@"  SELECT
+	                        Cells.Id AS CellsId,
+	                        Cells.ShipID,
+	                        Cells.PointID,
+	                        Cells.BattleFieldID,
+	                        Ships.Id AS ShipsId,
+	                        Ships.TypeId,
+	                        Ships.[Range],
+	                        Ships.Velocity,
+	                        Ships.Size,
+	                        Points.Id AS PointsId,
+	                        Points.X,
+	                        Points.Y
+                          FROM Cells
+                          LEFT JOIN BattleFields ON Cells.BattleFieldID = BattleFields.Id
+                          LEFT JOIN Ships ON Cells.ShipID = Ships.Id
+                          LEFT JOIN Points ON Cells.PointID = Points.Id
+                          WHERE BattleFields.Id = 1;";
+
+            sqlQuery = $@"  SELECT
+                                BattleFields.Id AS BattleFieldsId,
+                                BattleFields.SideLength,
+	                            Cells.Id AS CellsId,
+	                            Cells.ShipID,
+	                            Cells.PointID,
+	                            Cells.BattleFieldID,
+	                            Ships.Id AS ShipsId,
+	                            Ships.TypeId,
+	                            Ships.[Range],
+	                            Ships.Velocity,
+	                            Ships.Size,
+	                            Points.Id AS PointsId,
+	                            Points.X,
+	                            Points.Y
+                              FROM Cells
+                              LEFT JOIN BattleFields ON Cells.BattleFieldID = BattleFields.Id
+                              LEFT JOIN Ships ON Cells.ShipID = Ships.Id
+                              LEFT JOIN Points ON Cells.PointID = Points.Id;";
             using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
             {
                 connection.Open();
@@ -100,7 +142,17 @@ namespace ORM_Repos_UoW.Repositories
 
         private object MatchDataItem(Type type, SqlDataReader reader)
         {
-            var item = Activator.CreateInstance(type); //TODO: проверка для abstract Ship
+            object item;
+            if (type.IsAbstract)
+            {
+                item = GetDerivedClass(reader);
+                if (item == null)
+                {
+                    return item;
+                }
+            }
+            else
+                item = Activator.CreateInstance(type); //TODO: проверка для abstract Ship
             var columns = type.GetProperties()
                                 .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
                                 .Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName);
@@ -117,10 +169,59 @@ namespace ORM_Repos_UoW.Repositories
             foreach (var child in childs)
             {
                 var childType = child.GetCustomAttribute<ChildAttribute>().RelatedType;
-                child.SetValue(item, MatchDataItem(childType, reader));
+                var isCollection = child.GetCustomAttribute<ChildAttribute>().IsCollection;
+                if (isCollection)
+                {
+                    var test = FilledCollection(child, reader);
+                    child.SetValue(item, FilledCollection(child, reader));
+                }
+                else
+                {
+                    child.SetValue(item, MatchDataItem(childType, reader));
+                }
             }
 
             return item;
+        }
+
+        private object? FilledCollection(PropertyInfo child, SqlDataReader reader)
+        {
+            var type = child.PropertyType;
+            var collection = Activator.CreateInstance(type);
+            var genericType = child.PropertyType.GenericTypeArguments;
+            foreach (var generic in genericType)
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        var item = MatchDataItem(generic, reader);
+                        var methodContains = child.PropertyType.GetMethod("Contains");
+
+                        if (item == null || (bool)methodContains.Invoke(collection, new object[] { item }))
+                        {
+                            continue;
+                        }
+                        var methodAdd = child.PropertyType.GetMethod("Add");
+                        methodAdd.Invoke(collection, new object[] { item });
+                    }
+                }
+            }
+            return collection;
+        }
+
+        private object GetDerivedClass(SqlDataReader reader)
+        {
+            var derivedTypes = assembly.GetTypes().Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
+                                                        && t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false);
+
+            var matchingColumnName = derivedTypes.FirstOrDefault().GetCustomAttribute<ShipTypeAttribute>().ColumnMatching;
+            if (reader[matchingColumnName].GetType() == typeof(DBNull))
+            {
+                return null;
+            }
+            var type = derivedTypes.FirstOrDefault(t => t.GetCustomAttribute<ShipTypeAttribute>().ShipTypeID == (int)reader[matchingColumnName]);
+            return Activator.CreateInstance(type);
         }
 
         private void FillProperties(SqlDataReader reader, ref object? item, IEnumerable<PropertyInfo> properties)

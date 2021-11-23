@@ -28,7 +28,7 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column("Id", /*KeyType.Primary, */ReadWriteOption.Write)]
+        [Column("BattleFieldsId", /*KeyType.Primary, */ReadWriteOption.Write)]
         public int Id { get; set; }
 
         [Column("SideLength")]

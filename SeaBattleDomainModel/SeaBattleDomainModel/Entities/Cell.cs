@@ -17,7 +17,7 @@ namespace SeaBattleDomainModel.Entities
 
         #endregion Fields
 
-        [Column("Id", ReadWriteOption.Write)]
+        [Column("CellsId", ReadWriteOption.Write)]
         public int Id { get; set; }
 
         [Column("BattleFieldID")]

@@ -39,7 +39,7 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column("Id", ReadWriteOption.Write)]
+        [Column("PointsId", ReadWriteOption.Write)]
         public int Id { get; set; }
 
         [Column("X")]
