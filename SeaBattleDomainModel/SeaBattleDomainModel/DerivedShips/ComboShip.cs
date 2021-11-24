@@ -7,7 +7,7 @@ namespace SeaBattleDomainModel.DerivedShips
 {
     [Table("Ships")]
     [InheritanceRelation(ColumnMatching = "TypeId")]
-    [ShipType(ShipTypeID = 3, ShipType = typeof(BattleShip), BaseType = typeof(Ship), ColumnMatching = "TypeId")]
+    [Type(TypeID = 3, Type = typeof(BattleShip), BaseType = typeof(Ship), ColumnMatching = "TypeId")]
     public class ComboShip : Ship, ICanShot, ICanRepair
     {
         /// <summary>

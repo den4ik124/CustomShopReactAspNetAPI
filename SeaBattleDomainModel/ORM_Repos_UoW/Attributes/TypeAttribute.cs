@@ -3,18 +3,18 @@ using System.Linq;
 
 namespace ORM_Repos_UoW.Attributes
 {
-    public class ShipTypeAttribute : Attribute
+    public class TypeAttribute : Attribute
     {
         private Type baseType;
 
-        public int ShipTypeID { get; set; }
-        public Type ShipType { get; set; }
+        public int TypeID { get; set; }
+        public Type Type { get; set; }
         public Type BaseType { get => baseType; set => baseType = value; }
         public string BaseTypeName { get => this.baseType.Name; }
 
         public string ColumnMatching { get; set; }
 
-        public ShipTypeAttribute()
+        public TypeAttribute()
         {
         }
     }

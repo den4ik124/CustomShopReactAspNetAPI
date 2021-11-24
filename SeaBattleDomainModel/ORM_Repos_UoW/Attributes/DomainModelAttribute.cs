@@ -1,6 +1,9 @@
 ﻿using System;
 
-[AttributeUsage(AttributeTargets.Assembly)]
-public class DomainModelAttribute : Attribute
+namespace ORM_Repos_UoW.Attributes
 {
+    [AttributeUsage(AttributeTargets.Assembly)]
+    public class DomainModelAttribute : Attribute
+    {
+    }
 }

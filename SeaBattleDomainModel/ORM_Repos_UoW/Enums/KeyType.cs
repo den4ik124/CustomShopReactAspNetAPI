@@ -4,6 +4,6 @@
     {
         Primary,
         Foreign,
-        None
+        None,
     }
 }

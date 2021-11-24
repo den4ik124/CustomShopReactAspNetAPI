@@ -6,11 +6,13 @@ namespace ORM_Repos_UoW.Attributes
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class ColumnAttribute : Attribute
     {
-        public string ColumnName { get; }
-        public ReadWriteOption ReadWriteOption { get; }
-        public KeyType KeyType { get; }
+        public string ColumnName { get; set; }
+        public ReadWriteOption ReadWriteOption { get; set; }
+        public KeyType KeyType { get; set; }
 
-        public ColumnAttribute(string columnName = "", /*KeyType keyType = KeyType.None,*/ ReadWriteOption readWriteOption = ReadWriteOption.Read | ReadWriteOption.Write)
+        public Type BaseType { get; set; } = typeof(object);
+
+        public ColumnAttribute(string columnName = "", KeyType keyType = KeyType.None, ReadWriteOption readWriteOption = ReadWriteOption.Read | ReadWriteOption.Write)
         {
             ColumnName = columnName;
             ReadWriteOption = readWriteOption;

@@ -1,11 +1,8 @@
-﻿namespace ORM_Repos_UoW
+﻿namespace ORM_Repos_UoW.Enums
 {
-    public static partial class SqlGenerator
+    public enum ConditionStatement
     {
-        public enum ConditionStatement
-        {
-            AND,
-            OR
-        }
+        AND,
+        OR
     }
 }

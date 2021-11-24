@@ -17,13 +17,13 @@ namespace SeaBattleDomainModel.Entities
 
         #endregion Fields
 
-        [Column("Id", ReadWriteOption.Write)]
+        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
         public int Id { get; set; }
 
-        [Column("BattleFieldID")]
+        [Column(ColumnName = "BattleFieldID")]
         public int BattleFieldId { get; set; }
 
-        [Column("ShipID")]
+        [Column(ColumnName = "ShipID", KeyType = KeyType.Foreign, BaseType = typeof(Ship))]
         public int? ShipId
         {
             get
@@ -36,7 +36,7 @@ namespace SeaBattleDomainModel.Entities
             set => this.shipId = value;
         }
 
-        [Column("PointID")]
+        [Column(ColumnName = "PointID", KeyType = KeyType.Foreign, BaseType = typeof(Point))]
         public int PointId
         {
             get => this.pointId;
@@ -67,10 +67,10 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Child(Table = "Ships", RelatedType = typeof(Ship))]
+        [RelatedEntity(Table = "Ships", RelatedType = typeof(Ship))]
         public Ship Ship { get; set; }
 
-        [Child(Table = "Points", RelatedType = typeof(Point))]
+        [RelatedEntity(Table = "Points", RelatedType = typeof(Point))]
         public Point Point
         {
             get => this.point;

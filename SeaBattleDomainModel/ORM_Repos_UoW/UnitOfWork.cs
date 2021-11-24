@@ -9,18 +9,12 @@ namespace ORM_Repos_UoW
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private DbContext dbContext;
         private Dictionary<string, IBaseRepository> _repositories;
 
-        //public IBaseRepository Ships { get; set; }
-
-        //public Dictionary<Type, object> Repositories { get; set; }
         public string ConnectionString { get; set; }
 
-        public UnitOfWork(DbContext dbContext)
+        public UnitOfWork()
         {
-            this.dbContext = dbContext;
-
             _repositories = new Dictionary<string, IBaseRepository>();
         }
 

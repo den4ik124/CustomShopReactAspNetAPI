@@ -28,22 +28,22 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column("Id", /*KeyType.Primary, */ReadWriteOption.Write)]
+        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
         public int Id { get; set; }
 
-        [Column("SideLength")]
+        [Column(ColumnName = "SideLength")]
         public int BattleFieldSideLength
         {
             get => battleFieldSideLength - battleFieldPointsIncreaser;
             set => this.battleFieldSideLength = value + battleFieldPointsIncreaser;
         }
 
-        [Child(Table = "Ships",
+        [RelatedEntity(Table = "Ships",
                RelatedType = typeof(Ship),
                IsCollection = true)]
         public List<Ship> Ships { get; set; }
 
-        [Child(Table = "Cells",
+        [RelatedEntity(Table = "Cells",
                RelatedType = typeof(Dictionary<Point, Cell>),
             IsCollection = true)]
         public Dictionary<Point, Cell> Cells
