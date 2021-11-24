@@ -24,6 +24,41 @@ namespace ORM_Repos_UoW
             _repositories = new Dictionary<string, IBaseRepository>();
         }
 
+        public void Create<T>(T item)
+        {
+            GetRepository<T>().Create(item);
+        }
+
+        public void Create<T>(IEnumerable<T> items)
+        {
+            GetRepository<T>().Create(items);
+        }
+
+        public T ReadItem<T>(int id)
+        {
+            return GetRepository<T>().ReadItemById(id);
+        }
+
+        public IEnumerable<T> ReadItems<T>()
+        {
+            return GetRepository<T>().ReadItems();
+        }
+
+        public void Update<T>(T item)
+        {
+            GetRepository<T>().Update(item);
+        }
+
+        public void Delete<T>(T item)
+        {
+            GetRepository<T>().Delete(item);
+        }
+
+        public void Delete<T>(int id)
+        {
+            GetRepository<T>().Delete(id);
+        }
+
         public void Register(IBaseRepository repository)
         {
             _repositories.Add(repository.GetType().Name, repository);
@@ -38,24 +73,24 @@ namespace ORM_Repos_UoW
             }
         }
 
-        public IRepository<T> GetRepository<T>()// where T : class, struct //TODO: поменять GenericRepos на IRepository
-        {
-            return new GenericRepos<T>(this);
-        }
-
-        //public GenericRepos<T> GetRepository<T>() where T : class //TODO: поменять GenericRepos на IRepository
+        //public IRepository<T> GetRepository<T>()// where T : class, struct //TODO: поменять GenericRepos на IRepository
         //{
-        //    var type = typeof(T);
-        //    if (Repositories == null)
-        //    {
-        //        Repositories = new Dictionary<Type, object>();
-        //    }
-        //    if (!Repositories.ContainsKey(typeof(T)))
-        //    {
-        //        Repositories[type] = new Repositories.GenericRepos<T>(dbContext);
-        //    }
-        //    return (GenericRepos<T>)Repositories[type];
+        //    return new GenericRepos<T>(this);
         //}
+
+        private GenericRepos<T> GetRepository<T>()
+        {
+            var type = typeof(T);
+            if (_repositories == null)
+            {
+                _repositories = new Dictionary<string, IBaseRepository>();
+            }
+            if (!_repositories.ContainsKey(typeof(T).Name))
+            {
+                _repositories[type.Name] = new GenericRepos<T>(this);
+            }
+            return (GenericRepos<T>)_repositories[type.Name];
+        }
 
         public void Dispose()
         {
