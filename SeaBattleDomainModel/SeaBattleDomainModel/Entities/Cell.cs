@@ -20,7 +20,7 @@ namespace SeaBattleDomainModel.Entities
         [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
         public int Id { get; set; }
 
-        [Column(ColumnName = "BattleFieldID")]
+        [Column(ColumnName = "BattleFieldID", KeyType = KeyType.Foreign, BaseType = typeof(BattleField))]
         public int BattleFieldId { get; set; }
 
         [Column(ColumnName = "ShipID", KeyType = KeyType.Foreign, BaseType = typeof(Ship))]

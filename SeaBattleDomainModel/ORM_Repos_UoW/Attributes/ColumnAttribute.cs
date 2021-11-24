@@ -8,7 +8,7 @@ namespace ORM_Repos_UoW.Attributes
     {
         public string ColumnName { get; set; }
         public ReadWriteOption ReadWriteOption { get; set; }
-        public KeyType KeyType { get; set; }
+        public KeyType KeyType { get; set; } = KeyType.None;
 
         public Type BaseType { get; set; } = typeof(object);
 

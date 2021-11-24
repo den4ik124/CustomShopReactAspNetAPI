@@ -53,10 +53,10 @@ namespace ORM_Repos_UoW
             GetRepository<T>().Delete(id);
         }
 
-        public void Register(IBaseRepository repository)
-        {
-            _repositories.Add(repository.GetType().Name, repository);
-        }
+        //public void Register(IBaseRepository repository)
+        //{
+        //    _repositories.Add(repository.GetType().Name, repository);
+        //}
 
         public void Commit()
         {

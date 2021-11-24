@@ -6,7 +6,7 @@ namespace ORM_Repos_UoW.Interfaces
     {
         /*int*/
         string ConnectionString { get; set; }
-        void Register(IBaseRepository repository);
+        //void Register(IBaseRepository repository);
 
         void Commit();
     }
