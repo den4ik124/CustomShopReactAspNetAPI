@@ -8,6 +8,7 @@ namespace ORM_Repos_UoW.Attributes
         public string TableName { get; set; }
 
         public bool IsRelatedTable { get; set; } = false;
+        public bool IsStaticDataTable { get; set; } = false;
 
         public TableAttribute(string tableName = "", bool isRelated = false)
         {

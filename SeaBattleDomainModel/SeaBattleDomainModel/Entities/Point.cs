@@ -4,7 +4,7 @@ using System;
 
 namespace SeaBattleDomainModel.Entities
 {
-    [Table("Points")]
+    [Table("Points", IsStaticDataTable = true)]
     public struct Point : IEquatable<Point>
     {
         #region Fields

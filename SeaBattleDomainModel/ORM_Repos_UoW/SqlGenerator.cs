@@ -220,9 +220,15 @@ namespace ORM_Repos_UoW
         public string GetInsertIntoSqlQuery<T>(T item)
         {
             var type = typeof(T);
-            var test = item.GetType().GetCustomAttribute<TableAttribute>().TableName;
 
-            var result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
+            string prefix = "";
+            string result = "";
+            string postfix = "";
+
+            //var test = item.GetType().GetCustomAttribute<TableAttribute>().TableName;
+
+            /*var*/
+            result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
             var childs = type.GetProperties().Where(p => p.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
             if (childs.Count() == 0)
             {
@@ -230,30 +236,57 @@ namespace ORM_Repos_UoW
             }
             foreach (var child in childs)
             {
-                var childInstance = child.GetValue(item);
-                result += GetInsertIntoSqlQuery(childInstance) + Environment.NewLine;
+                var childInstance = child.GetValue(item); //получение значения свойства
+                /*string*/
+                prefix = "";
+                /*string*/
+                postfix = "";
+                if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection) //если свойство - коллекция, то для каждого элемента нужно получить имя колонки и значение
+                {
+                    int collectionCount = (int)child.PropertyType.GetProperty("Count").GetValue(childInstance);
+                    for (int i = 0; i < collectionCount; i++)
+                    {
+                        var test = child.PropertyType.GetProperty("this[{i}]");
+                        //определение обощенных параметров коллекции
+                        var generics = child.PropertyType.GetGenericArguments();
+                        foreach (var genericItem in generics)
+                        {
+                            result += prefix + GetInsertIntoSqlQuery(genericItem) + postfix + Environment.NewLine;
+                        }
+                        //определение обощенных параметров коллекции
+
+                    }
+                }
+                if (child.PropertyType.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
+                {
+                    prefix = "IF NOT EXISTS (\n";
+                    prefix += GetSelectJoinString(child.PropertyType) + ")\nBEGIN\n";
+                    postfix = "END";
+                }
+                result += prefix + GetInsertIntoSqlQuery(childInstance) + postfix + Environment.NewLine;
             }
             return result;
         }
 
+        //IF NOT EXISTS
+        //     (SELECT * FROM [Points]
+        //     WHERE[Points].[X] = 99
+        //                AND[Points].[Y] = 99)
+        //BEGIN
+        //     INSERT INTO[Points]
+        //     ([Points].[X],[Points].[Y]) VALUES(99,99);
+        //END
+
         private static string GetInsertConcreteItemSqlQuery<T>(T item)
         {
-            //var type = typeof(T);
             var type = item.GetType();
             string columnMatching = "";
             int typeId = 0;
             var propertyValue = new Dictionary<string, object>();
-            //var typeAbstract = item.GetType();
-            //if (typeAbstract.IsAbstract)
-            //{
-            //    type = typeAbstract.GetCustomAttribute<TypeAttribute>().Type;
-            //}
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                             && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
 
-            //var primaryColumnName = properties.Where(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-            //var primaryColumnValue = properties.FirstOrDefault(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
             var sb = new StringBuilder($"INSERT INTO [{tableName}]\n");
             var columnNameStringBuilder = new StringBuilder();
             var columnValueStringBuilder = new StringBuilder();
