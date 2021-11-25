@@ -4,10 +4,8 @@ using ORM_Repos_UoW.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace ORM_Repos_UoW.Repositories
 {
@@ -38,6 +36,8 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Create(T item)
         {
+            var sqlQuery = sqlGenerator.GetInsertIntoSqlQuery(item);
+            sqlQueries.Add(sqlQuery);
             //addedItems.Add(item);
         }
 

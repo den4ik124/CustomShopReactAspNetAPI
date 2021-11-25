@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ORM_Repos_UoW", "ORM_Repos_
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReflectionExtensions", "ReflectionExtensions\ReflectionExtensions.csproj", "{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ORM_Repos_UoWTests", "ORM_Repos_UoWTests\ORM_Repos_UoWTests.csproj", "{631CDD9A-8E0A-4930-A682-DC1FEB65667E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{631CDD9A-8E0A-4930-A682-DC1FEB65667E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{631CDD9A-8E0A-4930-A682-DC1FEB65667E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{631CDD9A-8E0A-4930-A682-DC1FEB65667E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{631CDD9A-8E0A-4930-A682-DC1FEB65667E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

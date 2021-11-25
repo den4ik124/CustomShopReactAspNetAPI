@@ -220,10 +220,34 @@ namespace ORM_Repos_UoW
         public string GetInsertIntoSqlQuery<T>(T item)
         {
             var type = typeof(T);
+            var test = item.GetType().GetCustomAttribute<TableAttribute>().TableName;
+
+            var result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
+            var childs = type.GetProperties().Where(p => p.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            if (childs.Count() == 0)
+            {
+                return result;
+            }
+            foreach (var child in childs)
+            {
+                var childInstance = child.GetValue(item);
+                result += GetInsertIntoSqlQuery(childInstance) + Environment.NewLine;
+            }
+            return result;
+        }
+
+        private static string GetInsertConcreteItemSqlQuery<T>(T item)
+        {
+            //var type = typeof(T);
+            var type = item.GetType();
             string columnMatching = "";
             int typeId = 0;
             var propertyValue = new Dictionary<string, object>();
-
+            //var typeAbstract = item.GetType();
+            //if (typeAbstract.IsAbstract)
+            //{
+            //    type = typeAbstract.GetCustomAttribute<TypeAttribute>().Type;
+            //}
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                             && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
@@ -250,7 +274,7 @@ namespace ORM_Repos_UoW
 
             columnNameStringBuilder.Remove(columnNameStringBuilder.Length - 1, 1);
             columnValueStringBuilder.Remove(columnValueStringBuilder.Length - 1, 1);
-            sb.Append($"({columnNameStringBuilder}) VALUES ({columnValueStringBuilder})");
+            sb.Append($"({columnNameStringBuilder}) VALUES ({columnValueStringBuilder});");
             return sb.ToString();
         }
 

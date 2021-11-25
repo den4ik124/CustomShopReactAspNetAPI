@@ -14,6 +14,7 @@ namespace SeaBattleDomainModel.Entities
         private int pointId;
 
         private Point point;
+        private Ship ship;
 
         #endregion Fields
 
@@ -68,7 +69,11 @@ namespace SeaBattleDomainModel.Entities
         #region Properties
 
         [RelatedEntity(Table = "Ships", RelatedType = typeof(Ship))]
-        public Ship Ship { get; set; }
+        public Ship Ship
+        {
+            get => this.ship;
+            set => this.ship = value;
+        }
 
         [RelatedEntity(Table = "Points", RelatedType = typeof(Point))]
         public Point Point
