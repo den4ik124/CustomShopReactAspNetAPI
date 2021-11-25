@@ -38,10 +38,10 @@ namespace SeaBattleDomainModel.Entities
             set => this.battleFieldSideLength = value + battleFieldPointsIncreaser;
         }
 
-        [RelatedEntity(Table = "Ships",
-               RelatedType = typeof(Ship),
-               IsCollection = true)]
-        public List<Ship> Ships { get; set; }
+        //[RelatedEntity(Table = "Ships",
+        //       RelatedType = typeof(Ship),
+        //       IsCollection = true)]
+        public List<Ship> Ships { get => this.ships; set => this.ships = value; }
 
         [RelatedEntity(Table = "Cells",
                RelatedType = typeof(Dictionary<Point, Cell>),
@@ -49,7 +49,11 @@ namespace SeaBattleDomainModel.Entities
         public Dictionary<Point, Cell> Cells
         {
             get => this.cells;
-            set => this.cells = value;
+            set
+            {
+                this.cells = value;
+                Ships = cells.Select(cell => cell.Value.Ship).Where(ship => ship != null).Distinct().ToList();
+            }
         }
 
         #endregion Properties
@@ -61,6 +65,7 @@ namespace SeaBattleDomainModel.Entities
         /// </summary>
         public BattleField()
         {
+            this.ships = new List<Ship>();
         }
 
         public BattleField(int fieldSideLength)

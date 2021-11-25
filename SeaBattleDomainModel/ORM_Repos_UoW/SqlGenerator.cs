@@ -100,17 +100,10 @@ namespace ORM_Repos_UoW
         private void DefineRelatedEntities(ref Dictionary<Type, List<string>> tablePropetriesNames, ref string tableName, ref List<string> propertiesNames, IEnumerable<PropertyInfo> childTables)
         {
             childTables.OrderBy(i => i.PropertyType.GetCustomAttribute<TableAttribute>().IsRelatedTable); //TODO: выяснить нужна ли эта сортировка или можно придумать что получше?
-            //TODO продумать как прикрутить рекурсию для доступа к свойствам Cell
-            //if (childTables.Count() == 0)
-            //{
-            //    return;
-            //}
+                                                                                                          //TODO продумать как прикрутить рекурсию для доступа к свойствам Cell
 
-            //DefineRelatedEntities(ref tablePropetriesNames, ref tableName, ref propertiesNames, childTables);
             foreach (var childTable in childTables)
             {
-                //DefineTableAndProperties(childTable.PropertyType, out tableName, out propertiesNames);
-                var test = childTable.GetCustomAttribute<RelatedEntityAttribute>().IsCollection;
                 if (childTable.PropertyType.IsGenericType)
                 {
                     var genericTypes = childTable.PropertyType.GetGenericArguments();
@@ -118,15 +111,20 @@ namespace ORM_Repos_UoW
                     {
                         DefineTableAndProperties(genericType, out tableName, out propertiesNames);
                         tablePropetriesNames.Add(genericType, propertiesNames);
+
+                        var genericChildTables = genericType.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+                        DefineRelatedEntities(ref tablePropetriesNames, ref tableName, ref propertiesNames, genericChildTables);
                     }
-                    return;
+                    continue;
                 }
                 DefineTableAndProperties(childTable.PropertyType, out tableName, out propertiesNames);
-                tablePropetriesNames.Add(childTable.PropertyType, propertiesNames);
+                if (!tablePropetriesNames.ContainsKey(childTable.PropertyType))
+                {
+                    tablePropetriesNames.Add(childTable.PropertyType, propertiesNames);
+                }
             }
         }
 
-        //private string SelectFromSingleTableSqlQuery(Dictionary<string, List<string>> tablePropetriesNames, string tableName)
         private string SelectFromSingleTableSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string tableName, int id = -1)
         {
             StringBuilder sb = new StringBuilder("SELECT \n");
@@ -310,7 +308,7 @@ namespace ORM_Repos_UoW
             return SelectJoinSqlQuery(tablePropetriesNames);
         }
 
-        public string GetUpdateSqlQuery<T>(T item)
+        public string GetUpdateSqlQuery<T>(T item, string columnName = "", object value = default)
         {
             var type = typeof(T);
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
@@ -322,12 +320,19 @@ namespace ORM_Repos_UoW
             StringBuilder sb = new StringBuilder($"UPDATE [{tableName}]\nSET\n");
             foreach (var property in properties)
             {
-                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var currentColumnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var columnValue = property.GetValue(item);
-                sb.Append($"[{tableName}].[{columnName}] = {columnValue},\n");
+                sb.Append($"[{tableName}].[{currentColumnName}] = {columnValue},\n");
             }
             sb.Remove(sb.Length - 2, 1);
-            sb.Append($"WHERE [{tableName}].[{primaryColumnName}] = {primaryColumnValue}");
+            if (columnName == "")
+            {
+                sb.Append($"WHERE [{tableName}].[{primaryColumnName}] = {primaryColumnValue}");
+            }
+            else
+            {
+                sb.Append($"WHERE [{tableName}].[{columnName}] = {value}");
+            }
             //UPDATE [tableName]
             //SET
             //[prop1] = [item.value1],
@@ -363,11 +368,16 @@ namespace ORM_Repos_UoW
             return $"DELETE [{tableName}] WHERE [{tableName}].[Id] = {id}"; //TODO: подумать как убрать "id" из строки
         }
 
+        public string GetDeleteSqlQuery(string tableName, string columnName, object value)
+        {
+            return $"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}"; //TODO: подумать как убрать "id" из строки
+        }
+
         public string GetDeleteSqlQuery<T>(T item)
         {
             var type = typeof(T);
             var primaryColumnProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-            int id = (int)primaryColumnProperty.GetValue(item);
+            int id = (int)primaryColumnProperty.GetValue(item); // только для элементов, где есть ID
 
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             var primaryColumn = type.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name;

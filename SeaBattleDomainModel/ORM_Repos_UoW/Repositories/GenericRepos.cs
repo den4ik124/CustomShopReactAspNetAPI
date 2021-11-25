@@ -13,10 +13,6 @@ namespace ORM_Repos_UoW.Repositories
 {
     public class GenericRepos<T> : IRepository<T>// where T : class
     {
-        //private List<T> addedItems = new List<T>();
-        //private List<T> dirtyItems = new List<T>();
-        //private List<T> deletedItems = new List<T>();
-
         private List<string> sqlQueries = new List<string>();
         private readonly string typeTableName;
 
@@ -40,182 +36,29 @@ namespace ORM_Repos_UoW.Repositories
 
         #region Methods.Private
 
-        /// <summary>
-        /// Создает запрос SELECT ... JOIN на основании вложенных типов
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        //private string GetSqlQuery(Type type)
+        //private void GetSinglePropertyData(Type type, out string tableName, out List<string> propertiesNames)
         //{
-        //    //var tablePropetriesNames = new Dictionary<string, List<string>>();
-        //    var tablePropetriesNames = new Dictionary<Type, List<string>>();
-
-        //    string tableName;
-        //    List<string> propertiesNames;
-        //    DefineTableAndProperties(type, out tableName, out propertiesNames);
-
-        //    //tablePropetriesNames.Add(tableName, propertiesNames);
-        //    tablePropetriesNames.Add(type, propertiesNames);
-
-        //    var childTables = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
-        //    if (childTables.Count() == 0)
+        //    var attribute = type.GetCustomAttribute<TableAttribute>();
+        //    tableName = attribute.TableName;
+        //    if (attribute.IsRelatedTable)
         //    {
-        //        return SelectFromSingleTableSqlQuery(tablePropetriesNames, tableName);
+        //        tableName += $".rel";
         //    }
-
-        //    DefineRelatedEntities(ref tablePropetriesNames, ref tableName, ref propertiesNames, childTables);
-
-        //    StringBuilder sb = new StringBuilder("SELECT\n");
-        //    foreach (var table in tablePropetriesNames)
+        //    propertiesNames = type.GetProperties()
+        //                            .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
+        //                            .Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList();
+        //    if (type.IsAbstract)
         //    {
-        //        string currentTableName = table.Key.GetCustomAttribute<TableAttribute>().TableName;
-        //        foreach (var property in tablePropetriesNames[table.Key])
-        //        {
-        //            if (property.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
-        //            {
-        //                sb.Append($"[{currentTableName}].[{property}] AS [{currentTableName}{property}],\n");
-        //                continue;
-        //            }
-        //            sb.Append($"[{currentTableName}].[{property}],\n");
-        //        }
-        //    }
-        //    Debug.WriteLine(sb.ToString());
-        //    var res = sb.ToString();
-
-        //    sb.Remove(sb.Length - 2, 1);
-
-        //    Debug.WriteLine(sb.ToString());
-
-        //    string relatedTableName = tablePropetriesNames.First(type => type.Key.GetCustomAttribute<TableAttribute>().IsRelatedTable).Key.GetCustomAttribute<TableAttribute>().TableName;
-        //    sb.Append($" FROM [{relatedTableName}]\n");
-
-        //    Debug.WriteLine(sb.ToString());
-
-        //    //SELECT
-        //    //  [table1].[id] AS [table1Id],
-        //    //  [table1].[prop2],
-        //    //  [table1].[...],
-
-        //    //  [table2].[Id] AS [table2Id],
-        //    //  [table2].[prop2],
-        //    //  [table2].[...],
-
-        //    //  [table3].[Id] AS [table3Id],
-        //    //  [table3].[prop2],
-        //    //  ... . ...
-        //    //  [tableN].[Id] AS [tableNId],
-        //    //  [tableN].[prop2]
-        //    // FROM [table1]
-        //    // LEFT JOIN [table2] ON [table2].[Id] = [table1].[FK_table2_Id]
-        //    // LEFT JOIN [table3] ON [table3].[Id] = [table1].[FK_table3_Id]
-        //    // ...
-        //    // LEFT JOIN [tableN] ON [tableN].[Id] = [table1].[FK_tableN_Id]
-
-        //    //var columns =
-        //    return sb.ToString();
-        //    throw new NotImplementedException();
-        //}
-
-        //private void DefineRelatedEntities(ref Dictionary<Type, List<string>> tablePropetriesNames, ref string tableName, ref List<string> propertiesNames, IEnumerable<PropertyInfo> childTables)
-        //{
-        //    childTables.OrderBy(i => i.PropertyType.GetCustomAttribute<TableAttribute>().IsRelatedTable); //TODO: выяснить нужна ли эта сортировка или можно придумать что получше?
-        //    //if (childTables.Count() == 0)
-        //    //{
-        //    //    return;
-        //    //}
-
-        //    //DefineRelatedEntities(ref tablePropetriesNames, ref tableName, ref propertiesNames, childTables);
-        //    foreach (var childTable in childTables)
-        //    {
-        //        //DefineTableAndProperties(childTable.PropertyType, out tableName, out propertiesNames);
-        //        var test = childTable.GetCustomAttribute<RelatedEntityAttribute>().IsCollection;
-        //        if (childTable.PropertyType.IsGenericType)
-        //        {
-        //            var genericTypes = childTable.PropertyType.GetGenericArguments();
-        //            foreach (var genericType in genericTypes)
-        //            {
-        //                DefineTableAndProperties(genericType, out tableName, out propertiesNames);
-        //                tablePropetriesNames.Add(genericType, propertiesNames);
-        //            }
-        //        }
+        //        var columnMatching = assembly.GetTypes()
+        //                                    .Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
+        //                                    && t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false)
+        //                                    .Select(a => a.GetCustomAttribute<InheritanceRelationAttribute>().ColumnMatching)
+        //                                    .First();
+        //        //string propertyName = $"{columnMatching} AS  {tableName}{columnMatching}";
+        //        string propertyName = $"{columnMatching}";
+        //        propertiesNames.Add(propertyName);
         //    }
         //}
-
-        ////private string SelectFromSingleTableSqlQuery(Dictionary<string, List<string>> tablePropetriesNames, string tableName)
-        //private string SelectFromSingleTableSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string tableName)
-        //{
-        //    StringBuilder sb = new StringBuilder("SELECT \n");
-
-        //    var type = tablePropetriesNames.First(t => t.Key.GetCustomAttribute<TableAttribute>().TableName == tableName).Key;
-
-        //    var properties = tablePropetriesNames[type];// type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
-        //    foreach (var prop in properties)
-        //    {
-        //        if (prop.EndsWith("id", StringComparison.OrdinalIgnoreCase))
-        //        {
-        //            string propAs = $"{prop}] AS [{tableName}{prop}";
-        //            sb.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
-        //        }
-        //        else
-        //        {
-        //            sb.Append($"[{tableName}].[{prop}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
-        //        }
-        //    }
-        //    sb.Remove(sb.Length - 1, 1);
-        //    sb.Append($" FROM [{tableName}];");
-        //    Debug.WriteLine(sb.ToString());
-
-        //    return sb.ToString();
-        //}
-
-        //private void DefineTableAndProperties(Type type, out string tableName, out List<string> propertiesNames)
-        //{
-        //    tableName = "";
-        //    propertiesNames = new List<string>();
-
-        //    var test = type.GetCustomAttribute<RelatedEntityAttribute>();
-        //    if (type.GetCustomAttribute<RelatedEntityAttribute>() != null && type.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
-        //    {
-        //        if (type.IsGenericType)
-        //        {
-        //            var genericTypes = type.GetGenericArguments();
-
-        //            foreach (var genericType in genericTypes)
-        //            {
-        //                GetSinglePropertyData(genericType, out tableName, out propertiesNames);
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        GetSinglePropertyData(type, out tableName, out propertiesNames);
-        //    }
-        //}
-
-        private void GetSinglePropertyData(Type type, out string tableName, out List<string> propertiesNames)
-        {
-            var attribute = type.GetCustomAttribute<TableAttribute>();
-            tableName = attribute.TableName;
-            if (attribute.IsRelatedTable)
-            {
-                tableName += $".rel";
-            }
-            propertiesNames = type.GetProperties()
-                                    .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
-                                    .Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList();
-            if (type.IsAbstract)
-            {
-                var columnMatching = assembly.GetTypes()
-                                            .Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
-                                            && t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false)
-                                            .Select(a => a.GetCustomAttribute<InheritanceRelationAttribute>().ColumnMatching)
-                                            .First();
-                //string propertyName = $"{columnMatching} AS  {tableName}{columnMatching}";
-                string propertyName = $"{columnMatching}";
-                propertiesNames.Add(propertyName);
-            }
-        }
 
         private object MatchDataItem(Type type, SqlDataReader reader)
         {
@@ -259,8 +102,8 @@ namespace ORM_Repos_UoW.Repositories
                     //var test = FilledCollection(child, reader);
                     //var listType = child.PropertyType;
                     //var countTest = listType.GetProperty("Count").GetValue(test);
-
-                    child.SetValue(item, FilledCollection(child, reader));
+                    var itemId = (int)child.ReflectedType.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
+                    child.SetValue(item, GetFilledCollection(child, itemId, reader));
                 }
                 else
                 {
@@ -269,29 +112,44 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
-        private object? FilledCollection(PropertyInfo child, SqlDataReader reader)
+        private object? GetFilledCollection(PropertyInfo child, int id, SqlDataReader reader)
         {
+            var baseType = child.ReflectedType;
+            var baseTypePrimaryColumnName = $"{baseType.GetCustomAttribute<TableAttribute>().TableName}" +
+                                            $"{baseType.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name}";
+
+            //var baseTypeId = baseType.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+            var baseTypeId = id;
             var type = child.PropertyType;
             var collection = Activator.CreateInstance(type);
-            var genericType = child.PropertyType.GenericTypeArguments;
-            foreach (var generic in genericType)
-            {
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        var item = MatchDataItem(generic, reader);
-                        //var methodContains = child.PropertyType.GetMethod("Contains");
-                        //if (item == null)// || (bool)methodContains.Invoke(collection, new object[] { item }))
+            var genericTypes = child.PropertyType.GenericTypeArguments;
+            var itemsCollection = new List<object>();
 
+            object item;
+            if (reader.HasRows)
+            {
+                do
+                {
+                    if ((int)reader[baseTypePrimaryColumnName] != baseTypeId)
+                    {
+                        break;
+                    }
+                    foreach (var generic in genericTypes)
+                    {
+                        item = MatchDataItem(generic, reader);
                         if (item == null)
                         {
                             continue;
                         }
-                        var methodAdd = child.PropertyType.GetMethod("Add");
-                        methodAdd.Invoke(collection, new object[] { item });
+                        itemsCollection.Add(item);
                     }
-                }
+                    if (itemsCollection.Count != 0)
+                    {
+                        var methodAdd = child.PropertyType.GetMethod("Add");
+                        methodAdd.Invoke(collection, itemsCollection.ToArray());
+                        itemsCollection.Clear();
+                    }
+                } while (reader.Read()); //TODO: сжирает строку следующего BF. Подумать как исправить (Только при ReadItems)
             }
             return collection;
         }
@@ -334,23 +192,6 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
-        private void AddedItemsSubmition(SqlConnection connection)
-        {
-            //foreach (var item in addedItems)
-            //{
-            //}
-        }
-
-        private void DirtyItemsSubmition(SqlConnection connection)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void DeletedItemsSubmition(SqlConnection connection)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion Methods.Private
 
         #region Methods.Public
@@ -362,7 +203,11 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Create(IEnumerable<T> items)
         {
-            //addedItems.AddRange(items);
+            foreach (var item in items)
+            {
+                var sqlQuery = sqlGenerator.GetInsertIntoSqlQuery(item);
+                sqlQueries.Add(sqlQuery);
+            }
         }
 
         public T ReadItemById(int id)
@@ -394,53 +239,6 @@ namespace ORM_Repos_UoW.Repositories
 
             var sqlQuery = sqlGenerator.GetSelectJoinString(type);
 
-            #region OLD SqlQueries
-
-            //string sqlQuery = GetSqlQuery(type);
-
-            //sqlQuery = $"SELECT * FROM {tableName}"; //TODO: генерировать SQL запрос здесь
-
-            //sqlQuery = $@"  SELECT
-            //             Cells.Id AS CellsId,
-            //             Cells.ShipID,
-            //             Cells.PointID,
-            //             Cells.BattleFieldID,
-            //             Ships.Id AS ShipsId,
-            //             Ships.TypeId,
-            //             Ships.[Range],
-            //             Ships.Velocity,
-            //             Ships.Size,
-            //             Points.Id AS PointsId,
-            //             Points.X,
-            //             Points.Y
-            //              FROM Cells
-            //              LEFT JOIN BattleFields ON Cells.BattleFieldID = BattleFields.Id
-            //              LEFT JOIN Ships ON Cells.ShipID = Ships.Id
-            //              LEFT JOIN Points ON Cells.PointID = Points.Id
-            //              WHERE BattleFields.Id = 1;";
-
-            //sqlQuery = $@"  SELECT
-            //                    BattleFields.Id AS BattleFieldsId,
-            //                    BattleFields.SideLength,
-            //                 Cells.Id AS CellsId,
-            //                 Cells.ShipID,
-            //                 Cells.PointID,
-            //                 Cells.BattleFieldID,
-            //                 Ships.Id AS ShipsId,
-            //                 Ships.TypeId,
-            //                 Ships.[Range],
-            //                 Ships.Velocity,
-            //                 Ships.Size,
-            //                 Points.Id AS PointsId,
-            //                 Points.X,
-            //                 Points.Y
-            //                  FROM Cells
-            //                  LEFT JOIN BattleFields ON Cells.BattleFieldID = BattleFields.Id
-            //                  LEFT JOIN Ships ON Cells.ShipID = Ships.Id
-            //                  LEFT JOIN Points ON Cells.PointID = Points.Id;";
-
-            #endregion OLD SqlQueries
-
             using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
             {
                 connection.Open();
@@ -450,7 +248,6 @@ namespace ORM_Repos_UoW.Repositories
                 {
                     while (reader.Read())
                     {
-                        Console.WriteLine(reader);
                         var resultItem = MatchDataItem(type, reader);
                         if (resultItem != null)
                         {
@@ -466,6 +263,16 @@ namespace ORM_Repos_UoW.Repositories
         {
             var sqlUpdateQuery = sqlGenerator.GetUpdateSqlQuery(item);
             sqlQueries.Add(sqlUpdateQuery);
+            //TODO: пройтись по всем вложенным сущностям и обновить их тоже.
+            //TODO: при изменении размера поля боя должны ли быть добавлены новые ячейки ?
+        }
+
+        public void UpdateBy(T item, string columnName, object value)
+        {
+            var sqlUpdateQuery = sqlGenerator.GetUpdateSqlQuery(item, columnName, value);
+            sqlQueries.Add(sqlUpdateQuery);
+            //TODO: пройтись по всем вложенным сущностям и обновить их тоже.
+            //TODO: при изменении размера поля боя должны ли быть добавлены новые ячейки ?
         }
 
         public void Delete(int id)
@@ -482,8 +289,19 @@ namespace ORM_Repos_UoW.Repositories
             //item -> type -> attribute [Table] -> TableName
             //DELETE [TableName]
             //WHERE [TableName].Id = item.id
+            var type = typeof(T);
+            var primaryColumnProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+            int id = (int)primaryColumnProperty.GetValue(item); // только для элементов, где есть ID
+            if (id > 0)
+            {
+                var sqlQuery = sqlGenerator.GetDeleteSqlQuery(item);
+                sqlQueries.Add(sqlQuery);
+            }
+        }
 
-            var sqlQuery = sqlGenerator.GetDeleteSqlQuery(item);
+        public void Delete(string columnName, object value)
+        {
+            var sqlQuery = sqlGenerator.GetDeleteSqlQuery(this.typeTableName, columnName, value);
             sqlQueries.Add(sqlQuery);
         }
 
@@ -492,16 +310,14 @@ namespace ORM_Repos_UoW.Repositories
             throw new NotImplementedException();
         }
 
-        public void Submit(SqlConnection connection)
+        public void Submit(SqlConnection connection, SqlTransaction transaction)
         {
             foreach (var command in sqlQueries)
             {
                 SqlCommand sqlCommand = new SqlCommand(command, connection);
+                sqlCommand.Transaction = transaction;
                 sqlCommand.ExecuteNonQuery();
             }
-            //AddedItemsSubmition(connection);
-            //DirtyItemsSubmition(connection);
-            //DeletedItemsSubmition(connection);
         }
 
         #endregion Methods.Public

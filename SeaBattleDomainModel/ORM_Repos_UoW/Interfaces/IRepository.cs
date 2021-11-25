@@ -11,6 +11,8 @@ namespace ORM_Repos_UoW.Interfaces
 
         void Update(T item);
 
+        void UpdateBy(T item, string columnName, object value);
+
         T ReadItemById(int id);
 
         IEnumerable<T> ReadItems();
@@ -18,5 +20,7 @@ namespace ORM_Repos_UoW.Interfaces
         void Delete(int id);
 
         void Delete(T item);
+
+        void Delete(string columnName, object value);
     }
 }

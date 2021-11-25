@@ -3,6 +3,7 @@ using ORM_Repos_UoW.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ORM_Repos_UoW
@@ -60,10 +61,30 @@ namespace ORM_Repos_UoW
 
         public void Commit()
         {
-            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            SqlTransaction transaction;
+            try
             {
-                connection.Open();
-                _repositories.ToList().ForEach(x => x.Value.Submit(connection));
+                using (SqlConnection connection = new SqlConnection(ConnectionString))
+                {
+                    connection.Open();
+                    transaction = connection.BeginTransaction();
+
+                    try
+                    {
+                        _repositories.ToList().ForEach(x => x.Value.Submit(connection, transaction));
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                        transaction.Rollback();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
             }
         }
 
