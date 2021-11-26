@@ -54,21 +54,28 @@ namespace ORM_Repos_UoW.Repositories
         {
             var type = typeof(T);
             var sqlQuery = sqlGenerator.GetSelectJoinString(type, id);
-
-            using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+            try
             {
-                connection.Open();
-                SqlCommand cmd = new SqlCommand(sqlQuery, connection);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+                using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
                 {
-                    while (reader.Read())
+                    connection.Open();
+                    SqlCommand cmd = new SqlCommand(sqlQuery, connection);
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
                     {
-                        return (T)MatchDataItem(type, reader);
+                        while (reader.Read())
+                        {
+                            return (T)MatchDataItem(type, reader);
+                        }
                     }
+                    return default(T);
                 }
-                return default(T);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return default(T);
         }
 
         public IEnumerable<T> ReadItems()

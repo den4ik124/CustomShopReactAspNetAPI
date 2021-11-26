@@ -221,6 +221,7 @@ namespace ORM_Repos_UoW
 
         public string GetInsertIntoSqlQuery<T>(T item)
         {
+            //TODO: Resolve conflict on home laptop
             var type = typeof(T);
             var test = item.GetType().GetCustomAttribute<TableAttribute>().TableName;
 
@@ -410,6 +411,10 @@ namespace ORM_Repos_UoW
 
         public string GetDeleteSqlQuery<T>(T item)
         {
+            if (item == null)
+            {
+                return Environment.NewLine;
+            }
             var type = item.GetType();
 
             if (DeleteSqlQueries == null)
