@@ -197,7 +197,7 @@ namespace ORM_Repos_UoW
             tableName = attribute.TableName;
             if (attribute.IsRelatedTable)
             {
-                tableName += $".rel";
+                //   tableName += $".rel";
             }
             propertiesNames = type.GetProperties()
                                     .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
@@ -427,7 +427,7 @@ namespace ORM_Repos_UoW
                 {
                     if (child.GetValue(item) == default)
                     {
-                        return Environment.NewLine;
+                        continue;
                     }
                     dynamic propertyObject = child.GetValue(item);
                     if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
@@ -439,6 +439,13 @@ namespace ORM_Repos_UoW
                             {
                                 DeleteSqlQueries.Push(GetDeleteSqlQuery(key));
                                 DeleteSqlQueries.Push(GetDeleteSqlQuery(propertyObject[key]));
+                            }
+                        }
+                        else
+                        {
+                            foreach (var collectionItem in propertyObject)
+                            {
+                                DeleteSqlQueries.Push(GetDeleteSqlQuery(collectionItem));
                             }
                         }
                     }
@@ -460,6 +467,10 @@ namespace ORM_Repos_UoW
 
         private string GetDeleteConcreteItemSqlQuery<T>(T item)
         {
+            if (item.GetType().GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
+            {
+                return Environment.NewLine;
+            }
             var type = item.GetType();
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
