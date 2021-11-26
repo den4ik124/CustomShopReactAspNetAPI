@@ -62,7 +62,7 @@ namespace ORM_Repos_UoW.Repositories
                 SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
-                    if (reader.Read())
+                    while (reader.Read())
                     {
                         return (T)MatchDataItem(type, reader);
                     }
@@ -308,6 +308,7 @@ namespace ORM_Repos_UoW.Repositories
                 {
                     if ((int)reader[baseTypePrimaryColumnName] != baseTypeID)
                     {
+                        //reader.Close();
                         break;
                     }
                     foreach (var generic in genericTypes)

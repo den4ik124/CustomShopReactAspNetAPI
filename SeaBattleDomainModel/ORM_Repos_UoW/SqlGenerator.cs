@@ -13,6 +13,8 @@ namespace ORM_Repos_UoW
     {
         private Assembly assembly;
 
+        public Stack<string> DeleteSqlQueries { get; set; }
+
         public SqlGenerator()
         {
             assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
@@ -230,6 +232,11 @@ namespace ORM_Repos_UoW
             }
             foreach (var child in childs)
             {
+                var childType = child.PropertyType;
+                if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
+                {
+                    throw new NotImplementedException();
+                }
                 var childInstance = child.GetValue(item);
                 result += GetInsertIntoSqlQuery(childInstance) + Environment.NewLine;
             }
@@ -394,18 +401,84 @@ namespace ORM_Repos_UoW
 
         public string GetDeleteSqlQuery(string tableName, string columnName, object value)
         {
+            //1. получаем тип, где [Table(TableName)] = tableName;
+            //2. создаем запрос за удаление
+            //3. проходим рекурсивно по вложенным сущностям
+            //4. создаем запрос за удаление
             return $"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}"; //TODO: подумать как убрать "id" из строки
         }
 
         public string GetDeleteSqlQuery<T>(T item)
         {
-            var type = typeof(T);
-            var primaryColumnProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-            int id = (int)primaryColumnProperty.GetValue(item); // только для элементов, где есть ID
+            var type = item.GetType();
 
+            if (DeleteSqlQueries == null)
+            {
+                DeleteSqlQueries = new Stack<string>();
+            }
+
+            DeleteSqlQueries.Push(GetDeleteConcreteItemSqlQuery(item)); //TODO: подумать как удалить строку из БД по всем свойствам ITEM-а
+
+            var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+
+            if (childs.Count() > 0)
+            {
+                foreach (var child in childs)
+                {
+                    if (child.GetValue(item) == default)
+                    {
+                        return Environment.NewLine;
+                    }
+                    dynamic propertyObject = child.GetValue(item);
+                    if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
+                    {
+                        if (child.PropertyType.GetInterface("IDictionary") != null)
+                        {
+                            var keys = propertyObject.Keys;
+                            foreach (var key in keys)
+                            {
+                                DeleteSqlQueries.Push(GetDeleteSqlQuery(key));
+                                DeleteSqlQueries.Push(GetDeleteSqlQuery(propertyObject[key]));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        DeleteSqlQueries.Push(GetDeleteSqlQuery(propertyObject));
+                    }
+                }
+            }
+
+            var stackStringBuilder = new StringBuilder();
+            do
+            {
+                stackStringBuilder.Append(DeleteSqlQueries.Pop() + Environment.NewLine);
+            } while (DeleteSqlQueries.Count > 0);
+
+            return stackStringBuilder.ToString();
+        }
+
+        private string GetDeleteConcreteItemSqlQuery<T>(T item)
+        {
+            var type = item.GetType();
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            var primaryColumn = type.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name;
-            return $"DELETE [{tableName}] WHERE [{tableName}].[{primaryColumn}] = {id}";
+            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                        && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+
+            var deleteQueryStringBuilder = new StringBuilder($"DELETE [{tableName}] WHERE\n");
+            //var deleteQuery = $"DELETE [{tableName}] WHERE\n";
+            foreach (var prop in properties)
+            {
+                var columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var value = prop.GetValue(item);
+                deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] = {value} AND\n");
+                //deleteQuery += $"[{tableName}].[{columnName}] = {value} AND\n";
+            }
+            Debug.WriteLine(deleteQueryStringBuilder);
+            deleteQueryStringBuilder.Remove(deleteQueryStringBuilder.Length - 5, 5);
+            Debug.WriteLine(deleteQueryStringBuilder);
+
+            return deleteQueryStringBuilder.ToString() + Environment.NewLine;
         }
 
         //public string GetDeleteString(string tableName, Dictionary<string, object> columnsValues, ConditionStatement conditionStatement)
