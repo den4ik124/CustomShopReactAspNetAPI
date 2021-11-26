@@ -381,7 +381,7 @@ namespace ORM_Repos_UoW
             var stackStringBuilder = new StringBuilder();
             do
             {
-                stackStringBuilder.Append(stack.Pop() + Environment.NewLine);
+                stackStringBuilder.Append(stack.Pop()/* + Environment.NewLine*/);
             } while (stack.Count > 0);
 
             return stackStringBuilder.ToString();
@@ -521,7 +521,7 @@ namespace ORM_Repos_UoW
         {
             if (item.GetType().GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
             {
-                return Environment.NewLine;
+                return string.Empty;
             }
             var type = item.GetType();
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
@@ -533,6 +533,10 @@ namespace ORM_Repos_UoW
             {
                 var columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var value = prop.GetValue(item);
+                if (value == null)
+                {
+                    value = "NULL";
+                }
                 deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] = {value} AND\n");
             }
             Debug.WriteLine(deleteQueryStringBuilder);

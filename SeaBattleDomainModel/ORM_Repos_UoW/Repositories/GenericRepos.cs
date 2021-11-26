@@ -266,7 +266,7 @@ namespace ORM_Repos_UoW.Repositories
         //    }
         //    return item;
         //}
-        private dynamic FillChilds(dynamic item, Type type, SqlDataReader reader)  //TODO: object -> dynamic ... если что, вернуть обратно
+        private dynamic FillChilds(object item, Type type, SqlDataReader reader)
         {
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
 
@@ -375,7 +375,7 @@ namespace ORM_Repos_UoW.Repositories
         //            prop.SetValue(item, null);
         //    }
         //}
-        private dynamic FillProperties(dynamic item, Type type, SqlDataReader reader) //TODO: object -> dynamic ... если что, вернуть обратно
+        private dynamic FillProperties(object item, Type type, SqlDataReader reader)
         {
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
 
@@ -384,7 +384,7 @@ namespace ORM_Repos_UoW.Repositories
                 string columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 if (columnName.EndsWith("id", StringComparison.OrdinalIgnoreCase))
                 {
-                    columnName = $"{prop.ReflectedType.GetCustomAttribute<TableAttribute>().TableName}Id";
+                    columnName = $"{prop.ReflectedType.GetCustomAttribute<TableAttribute>().TableName}{columnName}";
                 }
 
                 if (reader[columnName].GetType() != typeof(DBNull))
