@@ -146,9 +146,9 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
-        public void Delete(string columnName, object value)
+        public void Delete(string columnName, dynamic value)
         {
-            var sqlQuery = sqlGenerator.GetDeleteSqlQuery(this.typeTableName, columnName, value);
+            var sqlQuery = sqlGenerator.GetDeleteSqlQuery(columnName, value);
             sqlQueries.Add(sqlQuery);
         }
 
@@ -266,7 +266,7 @@ namespace ORM_Repos_UoW.Repositories
         //    }
         //    return item;
         //}
-        private object FillChilds(object item, Type type, SqlDataReader reader)
+        private dynamic FillChilds(dynamic item, Type type, SqlDataReader reader)  //TODO: object -> dynamic ... если что, вернуть обратно
         {
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
 
@@ -375,7 +375,7 @@ namespace ORM_Repos_UoW.Repositories
         //            prop.SetValue(item, null);
         //    }
         //}
-        private object FillProperties(object item, Type type, SqlDataReader reader)
+        private dynamic FillProperties(dynamic item, Type type, SqlDataReader reader) //TODO: object -> dynamic ... если что, вернуть обратно
         {
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
 
