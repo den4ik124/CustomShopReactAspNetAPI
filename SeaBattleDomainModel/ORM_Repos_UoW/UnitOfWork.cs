@@ -19,39 +19,39 @@ namespace ORM_Repos_UoW
             _repositories = new Dictionary<string, IBaseRepository>();
         }
 
-        public void Create<T>(T item)
+        public void Create<TInsert>(TInsert item)
         {
-            GetRepository<T>().Create(item);
+            GetRepository<TInsert>().Create(item);
         }
 
-        public void Create<T>(IEnumerable<T> items)
+        public void Create<TInsert>(IEnumerable<TInsert> items)
         {
-            GetRepository<T>().Create(items);
+            GetRepository<TInsert>().Create(items);
         }
 
-        public T ReadItem<T>(int id)
+        public TRead ReadItem<TRead>(int id)
         {
-            return GetRepository<T>().ReadItemById(id);
+            return GetRepository<TRead>().ReadItemById(id);
         }
 
-        public IEnumerable<T> ReadItems<T>()
+        public IEnumerable<TRead> ReadItems<TRead>()
         {
-            return GetRepository<T>().ReadItems();
+            return GetRepository<TRead>().ReadItems();
         }
 
-        public void Update<T>(T item)
+        public void Update<TUpdate>(TUpdate item)
         {
-            GetRepository<T>().Update(item);
+            GetRepository<TUpdate>().Update(item);
         }
 
-        public void Delete<T>(T item)
+        public void Delete<TDelete>(TDelete item)
         {
-            GetRepository<T>().Delete(item);
+            GetRepository<TDelete>().Delete(item);
         }
 
-        public void Delete<T>(int id)
+        public void Delete<TDelete>(int id)
         {
-            GetRepository<T>().Delete(id);
+            GetRepository<TDelete>().Delete(id);
         }
 
         //public void Register(IBaseRepository repository)

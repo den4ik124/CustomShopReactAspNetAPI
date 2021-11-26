@@ -54,21 +54,28 @@ namespace ORM_Repos_UoW.Repositories
         {
             var type = typeof(T);
             var sqlQuery = sqlGenerator.GetSelectJoinString(type, id);
-
-            using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+            try
             {
-                connection.Open();
-                SqlCommand cmd = new SqlCommand(sqlQuery, connection);
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+                using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
                 {
-                    if (reader.Read())
+                    connection.Open();
+                    SqlCommand cmd = new SqlCommand(sqlQuery, connection);
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    if (reader.HasRows)
                     {
-                        return (T)MatchDataItem(type, reader);
+                        while (reader.Read())
+                        {
+                            return (T)MatchDataItem(type, reader);
+                        }
                     }
+                    return default(T);
                 }
-                return default(T);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return default(T);
         }
 
         public IEnumerable<T> ReadItems()
@@ -139,9 +146,9 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
-        public void Delete(string columnName, object value)
+        public void Delete(string columnName, dynamic value)
         {
-            var sqlQuery = sqlGenerator.GetDeleteSqlQuery(this.typeTableName, columnName, value);
+            var sqlQuery = sqlGenerator.GetDeleteSqlQuery(columnName, value);
             sqlQueries.Add(sqlQuery);
         }
 
@@ -259,7 +266,7 @@ namespace ORM_Repos_UoW.Repositories
         //    }
         //    return item;
         //}
-        private object FillChilds(object item, Type type, SqlDataReader reader)
+        private dynamic FillChilds(object item, Type type, SqlDataReader reader)
         {
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
 
@@ -308,6 +315,7 @@ namespace ORM_Repos_UoW.Repositories
                 {
                     if ((int)reader[baseTypePrimaryColumnName] != baseTypeID)
                     {
+                        //reader.Close();
                         break;
                     }
                     foreach (var generic in genericTypes)
@@ -367,7 +375,7 @@ namespace ORM_Repos_UoW.Repositories
         //            prop.SetValue(item, null);
         //    }
         //}
-        private object FillProperties(object item, Type type, SqlDataReader reader)
+        private dynamic FillProperties(object item, Type type, SqlDataReader reader)
         {
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
 
@@ -376,7 +384,7 @@ namespace ORM_Repos_UoW.Repositories
                 string columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 if (columnName.EndsWith("id", StringComparison.OrdinalIgnoreCase))
                 {
-                    columnName = $"{prop.ReflectedType.GetCustomAttribute<TableAttribute>().TableName}Id";
+                    columnName = $"{prop.ReflectedType.GetCustomAttribute<TableAttribute>().TableName}{columnName}";
                 }
 
                 if (reader[columnName].GetType() != typeof(DBNull))
