@@ -264,22 +264,21 @@ namespace ORM_Repos_UoW
                     for (int i = 0; i < collectionCount; i++)
                     {
                         var test = child.PropertyType.GetProperty("this[{i}]");
-                        //определение обощенных параметров коллекции
+                        //определение обобщенных параметров коллекции
                         var generics = child.PropertyType.GetGenericArguments();
                         foreach (var genericItem in generics)
                         {
                             result += prefix + GetInsertIntoSqlQuery(genericItem) + postfix + Environment.NewLine;
                         }
-                        //определение обощенных параметров коллекции
-
+                        //определение обобщенных параметров коллекции
                     }
                 }
-                if (child.PropertyType.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
-                {
-                    prefix = "IF NOT EXISTS (\n";
-                    prefix += GetSelectJoinString(child.PropertyType) + ")\nBEGIN\n";
-                    postfix = "END";
-                }
+                //if (child.PropertyType.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
+                //{
+                //    prefix = "IF NOT EXISTS (\n";
+                //    prefix += GetSelectJoinString(child.PropertyType) + ")\nBEGIN\n";
+                //    postfix = "END";
+                //}
                 result += prefix + GetInsertIntoSqlQuery(childInstance) + postfix + Environment.NewLine;
             }
             return result;
@@ -294,9 +293,19 @@ namespace ORM_Repos_UoW
         //     ([Points].[X],[Points].[Y]) VALUES(99,99);
         //END
 
-        private static string GetInsertConcreteItemSqlQuery<T>(T item)
+        private string GetInsertConcreteItemSqlQuery<T>(T item)
         {
             var type = item.GetType();
+            string prefix = "";
+            string postfix = "";
+
+            if (type.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
+            {
+                //prefix = "IF NOT EXISTS (\n";
+                //prefix += GetSelectJoinString(type) + ")\nBEGIN\n";
+                prefix = $"IF NOT EXISTS (\n{GetSqlIfNotExists(item)})\nBEGIN\n";
+                postfix = "\nEND";
+            }
             string columnMatching = "";
             int typeId = 0;
             var propertyValue = new Dictionary<string, object>();
@@ -324,7 +333,29 @@ namespace ORM_Repos_UoW
 
             columnNameStringBuilder.Remove(columnNameStringBuilder.Length - 1, 1);
             columnValueStringBuilder.Remove(columnValueStringBuilder.Length - 1, 1);
-            sb.Append($"({columnNameStringBuilder}) VALUES ({columnValueStringBuilder});");
+            sb.Append($"({columnNameStringBuilder}) VALUES ({columnValueStringBuilder})");
+
+            var test = prefix + sb.ToString() + postfix;
+            return prefix + sb.ToString() + postfix;
+        }
+
+        private string GetSqlIfNotExists<T>(T item)
+        {
+            var type = typeof(T);
+            StringBuilder sb = new StringBuilder($"{GetSelectJoinString(type)} \n WHERE ");
+
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                            && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+
+            foreach (var property in properties)
+            {
+                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var columnValue = property.GetValue(item);
+                sb.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
+            }
+            sb.Remove(sb.Length - 4, 3);
+
             return sb.ToString();
         }
 

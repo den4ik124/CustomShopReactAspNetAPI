@@ -376,3 +376,4 @@ FodyWeavers.xsd
 /SeaBattleDomainModel/testCodeHereTests/testCodeHereTests.csproj
 /SeaBattleDomainModel/ORM_Repos_UoW/UoW_POC
 /SeaBattleDomainModel/ORM_Repos_UoWTests
+/SQLScripts
