@@ -281,14 +281,7 @@ namespace ORM_Repos_UoW
             //TODO: Resolve conflict on home laptop
             var type = typeof(T);
 
-            string prefix = "";
-            string result = "";
-            string postfix = "";
-
-            //var test = item.GetType().GetCustomAttribute<TableAttribute>().TableName;
-
-            /*var*/
-            result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
+            string result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
             var childs = type.GetProperties().Where(p => p.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
             if (childs.Count() == 0)
             {
@@ -296,33 +289,34 @@ namespace ORM_Repos_UoW
             }
             foreach (var child in childs)
             {
-                var childInstance = child.GetValue(item); //получение значения свойства
-                /*string*/
-                prefix = "";
-                /*string*/
-                postfix = "";
+                if (child.GetValue(item) == null)
+                {
+                    continue;
+                }
+                //Dictionary<object,object> childInstance = (Dictionary<object, object>)child.GetValue(item); //получение значения свойства
+                dynamic childInstance = child.GetValue(item); //получение значения свойства
                 if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection) //если свойство - коллекция, то для каждого элемента нужно получить имя колонки и значение
                 {
-                    int collectionCount = (int)child.PropertyType.GetProperty("Count").GetValue(childInstance);
-                    for (int i = 0; i < collectionCount; i++)
+                    if (childInstance.GetType().GetInterface("IDictionary") != null)
                     {
-                        var test = child.PropertyType.GetProperty("this[{i}]");
-                        //определение обобщенных параметров коллекции
-                        var generics = child.PropertyType.GetGenericArguments();
-                        foreach (var genericItem in generics)
+                        foreach (var element in childInstance)
                         {
-                            result += prefix + GetInsertIntoSqlQuery(genericItem) + postfix + Environment.NewLine;
+                            result += GetInsertIntoSqlQuery(element.Key) + Environment.NewLine;
+                            result += GetInsertIntoSqlQuery(element.Value) + Environment.NewLine;
                         }
-                        //определение обобщенных параметров коллекции
+                    }
+                    else
+                    {
+                        foreach (var element in childInstance)
+                        {
+                            result += GetInsertIntoSqlQuery(element) + Environment.NewLine;
+                        }
                     }
                 }
-                //if (child.PropertyType.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
-                //{
-                //    prefix = "IF NOT EXISTS (\n";
-                //    prefix += GetSelectJoinString(child.PropertyType) + ")\nBEGIN\n";
-                //    postfix = "END";
-                //}
-                result += prefix + GetInsertIntoSqlQuery(childInstance) + postfix + Environment.NewLine;
+                else
+                {
+                    result += GetInsertIntoSqlQuery(childInstance) + Environment.NewLine; //TODO: тут креш когда прилетатет NULL
+                }
             }
             return result;
         }
@@ -344,8 +338,6 @@ namespace ORM_Repos_UoW
 
             if (type.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
             {
-                //prefix = "IF NOT EXISTS (\n";
-                //prefix += GetSelectJoinString(type) + ")\nBEGIN\n";
                 prefix = $"IF NOT EXISTS (\n{GetSqlIfNotExists(item)})\nBEGIN\n";
                 postfix = "\nEND";
             }
@@ -363,8 +355,16 @@ namespace ORM_Repos_UoW
             {
                 var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var columnValue = property.GetValue(item);
+
                 columnNameStringBuilder.Append($"[{tableName}].[{columnName}],");
-                columnValueStringBuilder.Append($"{columnValue},");
+                if (columnValue == null)
+                {
+                    columnValueStringBuilder.Append("NULL,");
+                }
+                else
+                {
+                    columnValueStringBuilder.Append($"{columnValue},");
+                }
             }
             if (type.GetCustomAttribute<InheritanceRelationAttribute>() != null)
             {
@@ -525,27 +525,10 @@ namespace ORM_Repos_UoW
             return sb.ToString();
         }
 
-        //public string GetInsertIntoString(Dictionary<string, object> columnsValues, string table)
-        //{
-        //    StringBuilder insertIntoSql = new StringBuilder($"INSERT INTO {table} (");
-        //    StringBuilder columns = new StringBuilder();
-        //    StringBuilder values = new StringBuilder();
-
-        //    foreach (var columnValue in columnsValues)
-        //    {
-        //        columns.Append(columnValue.Key + ", ");
-        //        values.Append(columnValue.Value + ", ");
-        //    }
-        //    columns.Remove(columns.Length - 2, 2);
-        //    values.Remove(values.Length - 2, 2);
-
-        //    insertIntoSql.Append(columns.ToString() + ") VALUES (" + values.ToString() + ")");
-        //    return insertIntoSql.ToString();
-        //}
-
         //DELETE {tableName} WHERE {parameter} = {value} [AND {parameter2} = {value}]
         public string GetDeleteSqlQuery(string tableName, int id)
         {
+            //TODO: продумать удаление связанных сущностей
             return $"DELETE [{tableName}] WHERE [{tableName}].[Id] = {id}"; //TODO: подумать как убрать "id" из строки
         }
 
@@ -627,8 +610,7 @@ namespace ORM_Repos_UoW
             }
             var type = item.GetType();
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                        && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+            IEnumerable<PropertyInfo> properties = GetTypeProperties(item, type);
 
             var deleteQueryStringBuilder = new StringBuilder($"DELETE [{tableName}] WHERE\n");
             foreach (var prop in properties)
@@ -648,39 +630,21 @@ namespace ORM_Repos_UoW
             return deleteQueryStringBuilder.ToString() + Environment.NewLine;
         }
 
-        //public string GetDeleteString(string tableName, Dictionary<string, object> columnsValues, ConditionStatement conditionStatement)
-        //{
-        //    StringBuilder deleteSQL = new StringBuilder($"DELETE {tableName} WHERE ");
-        //    deleteSQL.Append($"{columnsValues.First().Key} = {columnsValues.First().Value}");
-        //    columnsValues.Remove(columnsValues.First().Key);
-        //    if (columnsValues.Count > 1)
-        //    {
-        //        string conditionText;
-        //        switch (conditionStatement)
-        //        {
-        //            case ConditionStatement.AND:
-        //                conditionText = " AND ";
-        //                break;
+        private static IEnumerable<PropertyInfo> GetTypeProperties<T>(T item, Type type)
+        {
+            IEnumerable<PropertyInfo> properties;
+            if ((int)type.GetProperties().FirstOrDefault(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item) > 0)
+            {
+                properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            }
+            else
+            {
+                properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+              && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+            }
 
-        //            case ConditionStatement.OR:
-        //                conditionText = " OR ";
-        //                break;
-
-        //            default:
-        //                conditionText = " ";
-        //                break;
-        //        }
-        //        foreach (var columnValue in columnsValues)
-        //        {
-        //            deleteSQL.Append($"{conditionText}{columnValue.Key} = {columnValue.Value}");
-        //        }
-        //        return deleteSQL.ToString();
-        //    }
-        //    else
-        //    {
-        //        return deleteSQL.ToString();
-        //    }
-        //}
+            return properties;
+        }
 
         //MERGE {TargetTableName} AS TargetTable
         //Using {SourceTableName} AS Source

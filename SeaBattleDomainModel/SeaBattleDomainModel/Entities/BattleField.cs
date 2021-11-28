@@ -52,7 +52,7 @@ namespace SeaBattleDomainModel.Entities
             set
             {
                 this.cells = value;
-                Ships = cells.Select(cell => cell.Value.Ship).Where(ship => ship != null).Distinct().ToList();
+                Ships = cells.Select(cell => cell.Value.Ship).Where(ship => ship != null).Distinct().ToList(); //TODO: заполнение коллекции кораблей из коллекции ячеек. уточнить
             }
         }
 

@@ -12,10 +12,11 @@ namespace ORM_Repos_UoW
     {
         private Dictionary<string, IBaseRepository> _repositories;
 
-        public string ConnectionString { get; set; }
+        public string ConnectionString { get; }
 
-        public UnitOfWork()
+        public UnitOfWork(string connectionString)
         {
+            ConnectionString = connectionString;
             _repositories = new Dictionary<string, IBaseRepository>();
         }
 
@@ -54,11 +55,6 @@ namespace ORM_Repos_UoW
             GetRepository<TDelete>().Delete(id);
         }
 
-        //public void Register(IBaseRepository repository)
-        //{
-        //    _repositories.Add(repository.GetType().Name, repository);
-        //}
-
         public void Commit()
         {
             SqlTransaction transaction;
@@ -84,14 +80,10 @@ namespace ORM_Repos_UoW
             }
             catch (Exception ex)
             {
+                //TODO: use some logger instead of Debug
                 Debug.WriteLine(ex.Message);
             }
         }
-
-        //public IRepository<T> GetRepository<T>()// where T : class, struct //TODO: поменять GenericRepos на IRepository
-        //{
-        //    return new GenericRepos<T>(this);
-        //}
 
         private GenericRepos<T> GetRepository<T>()
         {
