@@ -94,7 +94,7 @@ namespace ORM_Repos_UoW
             }
             if (id > 0)
             {
-                string whereResult = $"WHERE [{whereFilterTable}].[Id] = {id}"; //TODO : ибавиться от "Id"
+                string whereResult = $"WHERE [{whereFilterTable}].[Id] = {id}"; //TODO : избавиться от "Id"
                 sb.Append(whereResult);
             }
             return sb.ToString();
@@ -158,6 +158,40 @@ namespace ORM_Repos_UoW
                                                                        .KeyType == KeyType.Primary).Name;
                 sb.Append($" WHERE [{tableName}].[{primaryColumnName}] = {id}");
             }
+            return sb.ToString();
+        }
+
+        public string SelectFromSingleTableSqlQuery(Type type, int id = -1)
+        {
+            StringBuilder sb = new StringBuilder("SELECT \n");
+
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+
+            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
+                                .Select(prop => prop.GetCustomAttribute<ColumnAttribute>().ColumnName); //tablePropetriesNames[type];// type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            foreach (var prop in properties)
+            {
+                if (prop.EndsWith("id", StringComparison.OrdinalIgnoreCase))
+                {
+                    string propAs = $"{prop}] AS [{tableName}{prop}";
+                    sb.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                }
+                else
+                {
+                    sb.Append($"[{tableName}].[{prop}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                }
+            }
+
+            sb.Remove(sb.Length - 2, 1);
+
+            sb.Append($" FROM [{tableName}]\n");
+            //if (id > 0)
+            //{
+            //    var primaryColumnName = type.GetProperties()
+            //                                 .FirstOrDefault(atr => atr.GetCustomAttribute<ColumnAttribute>()
+            //                                                           .KeyType == KeyType.Primary).Name;
+            //    sb.Append($" WHERE [{tableName}].[{primaryColumnName}] = {id}");
+            //}
             return sb.ToString();
         }
 
@@ -227,6 +261,15 @@ namespace ORM_Repos_UoW
             var usefulTypes = types.Where(t => t.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0).Count() > 0);
             return usefulTypes.Where(t => t.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                         && prop.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType).Count() > 0);
+            //return AppDomain.CurrentDomain.GetAssemblies()
+            //                                .First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0)
+            //                                    .GetTypes()
+            //                                    .Where(t => t.GetProperties()
+            //                                        .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
+            //                                    .Count() > 0)
+            //                                .Where(t => t.GetProperties()
+            //                                    .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+            //                                                && prop.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType).Count() > 0);
         }
 
         #endregion Methods.Private

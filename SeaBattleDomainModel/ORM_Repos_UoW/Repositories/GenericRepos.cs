@@ -3,6 +3,7 @@ using ORM_Repos_UoW.Enums;
 using ORM_Repos_UoW.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
@@ -84,26 +85,128 @@ namespace ORM_Repos_UoW.Repositories
             var type = typeof(T);
             //var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
 
-            var sqlQuery = sqlGenerator.GetSelectJoinString(type);
-
             using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
             {
                 connection.Open();
-                SqlCommand cmd = new SqlCommand(sqlQuery, connection); //вылетает исключение, т.к. SQL запрос еще не доделан
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.HasRows)
+                var primaryKeys = SelectPrimaryKeyValues(type, connection);
+
+                foreach (var primaryKey in primaryKeys)
                 {
-                    while (reader.Read())
+                    var testSql = sqlGenerator.GetSelectJoinString(type, primaryKey);
+                    SqlCommand command = new SqlCommand(sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
+                    using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        var resultItem = MatchDataItem(type, reader);
-                        if (resultItem != null)
+                        if (reader.HasRows)
                         {
-                            result.Add((T)resultItem); //TODO: проверить почему всего одно поле боя создается
+                            while (reader.Read())
+                            {
+                                var resultItem = MatchDataItem(type, reader);
+                                if (resultItem != null)
+                                {
+                                    result.Add((T)resultItem);
+                                }
+                            }
                         }
                     }
                 }
             }
             return result;
+        }
+
+        //public IEnumerable<T> ReadItems()
+        //{
+        //    var result = new List<T>();
+        //    var type = typeof(T);
+        //    //var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+
+        //    var sqlQuery = sqlGenerator.GetSelectJoinString(type);
+        //    Dictionary<int, DataTable> dataTables;
+        //    using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+        //    {
+        //        connection.Open();
+        //        List<int> primaryKeyValues = SelectPrimaryKeyValues(type, connection);
+
+        //        dataTables = GetDataTables(type, connection, primaryKeyValues);
+        //    }
+
+        //    foreach (var dataTable in dataTables)
+        //    {
+        //        var test = dataTable.Value.Rows;
+        //        result.Add(GetItemFromDataTable(dataTable.Value.Rows, type));
+        //    }
+
+        //    return null;
+        //    //using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+        //    //{
+        //    //    connection.Open();
+        //    //    SqlCommand cmd = new SqlCommand(sqlQuery, connection);
+        //    //    SqlDataReader reader = cmd.ExecuteReader();
+        //    //    if (reader.HasRows)
+        //    //    {
+        //    //        while (reader.Read())
+        //    //        {
+        //    //            var resultItem = MatchDataItem(type, reader);
+        //    //            if (resultItem != null)
+        //    //            {
+        //    //                result.Add((T)resultItem);
+        //    //            }
+        //    //        }
+        //    //    }
+        //    //}
+        //    //return result;
+        //}
+
+        //private T GetItemFromDataTable(DataRowCollection dataRows, Type parentType)
+        //{
+        //    var item = GetItemInstance(parentType, dataRows[0]); //TODO: подумать какую строку сюда нужно передавать
+        //    if (item == null)
+        //    {
+        //        return default(T);
+        //    }
+        //    item = FillProperties(item, parentType, dataRows[0]);
+        //    item = FillChilds(item, parentType, dataRows);
+
+        //    return item;
+        //}
+
+        private Dictionary<int, DataTable> GetDataTables(Type type, SqlConnection con, List<int> primaryKeyValues)
+        {
+            var dataTables = new Dictionary<int, DataTable>();
+
+            SqlDataAdapter adapter = new SqlDataAdapter();
+            DataSet ds = new DataSet();
+
+            foreach (var primaryKey in primaryKeyValues)
+            {
+                var sqlSelectQuery = sqlGenerator.GetSelectJoinString(type, primaryKey);
+                adapter.SelectCommand = new SqlCommand(sqlSelectQuery, con);
+                var dt = new DataTable();
+                adapter.Fill(dt);
+                dataTables.Add(primaryKey, dt);
+            }
+            return dataTables;
+        }
+
+        private List<int> SelectPrimaryKeyValues(Type type, SqlConnection con)
+        {
+            string selectPrimaryKeyValues = sqlGenerator.SelectFromSingleTableSqlQuery(type);
+            var primaryColumnName = type.GetProperties()
+                                                       .First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
+            primaryColumnName = $"{this.typeTableName}{primaryColumnName}";
+            var primaryKeyValues = new List<int>();
+            SqlCommand cmd = new SqlCommand(selectPrimaryKeyValues, con);
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        primaryKeyValues.Add((int)reader[primaryColumnName]);
+                    }
+                }
+            }
+            return primaryKeyValues;
         }
 
         public void Update(T item)
@@ -284,8 +387,8 @@ namespace ORM_Repos_UoW.Repositories
                     //var test = FilledCollection(child, reader);
                     //var listType = child.PropertyType;
                     //var countTest = listType.GetProperty("Count").GetValue(test);
-                    var itemId = (int)child.ReflectedType.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
-                    child.SetValue(item, GetFilledCollection(child, itemId, reader));
+                    var itemPrimaryKeyValue = (int)child.ReflectedType.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
+                    child.SetValue(item, GetFilledCollection(child, itemPrimaryKeyValue, reader));
                 }
                 else
                 {
@@ -340,7 +443,6 @@ namespace ORM_Repos_UoW.Repositories
 
         private object GetDerivedClass(SqlDataReader reader)
         {
-            Type type = typeof(object);
             var derivedTypes = assembly.GetTypes().Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
                                                         && t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false);
             var tableName = derivedTypes.First().GetCustomAttribute<TableAttribute>().TableName;
@@ -355,7 +457,7 @@ namespace ORM_Repos_UoW.Repositories
                 return null;
             }
 
-            type = derivedTypes.FirstOrDefault(t => t.GetCustomAttribute<TypeAttribute>().TypeID == (int)reader[matchingColumnName]);
+            var type = derivedTypes.FirstOrDefault(t => t.GetCustomAttribute<TypeAttribute>().TypeID == (int)reader[matchingColumnName]);
             return Activator.CreateInstance(type);
         }
 
@@ -375,7 +477,7 @@ namespace ORM_Repos_UoW.Repositories
         //            prop.SetValue(item, null);
         //    }
         //}
-        private dynamic FillProperties(object item, Type type, SqlDataReader reader)
+        private object FillProperties(object item, Type type, SqlDataReader reader)
         {
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
 
