@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Linq;
+using System.Reflection;
 
 namespace ReflectionExtensions
 {
@@ -14,6 +16,11 @@ namespace ReflectionExtensions
         {
             var type = typeof(T);
             return type.GetProperties();
+        }
+        public static PropertyInfo[] Columns<T>(this T item, Type attributeType)
+        {
+            var type = typeof(T);
+            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0).ToArray();
         }
     }
 }

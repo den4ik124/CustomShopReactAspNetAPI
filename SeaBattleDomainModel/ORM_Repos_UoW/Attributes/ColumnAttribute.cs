@@ -12,6 +12,8 @@ namespace ORM_Repos_UoW.Attributes
 
         public Type BaseType { get; set; } = typeof(object);
 
+        public bool AllowNull { get; set; } = false;
+
         public ColumnAttribute(string columnName = "", KeyType keyType = KeyType.None, ReadWriteOption readWriteOption = ReadWriteOption.Read | ReadWriteOption.Write)
         {
             ColumnName = columnName;

@@ -1,5 +1,6 @@
 ﻿using ORM_Repos_UoW.Attributes;
 using ORM_Repos_UoW.Enums;
+using ReflectionExtensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -229,6 +230,7 @@ namespace ORM_Repos_UoW
             {
                 //   tableName += $".rel";
             }
+            //propertiesNames = type.Columns(typeof(ColumnAttribute)).Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList(); //просто тест extension метода
             propertiesNames = type.GetProperties()
                                     .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
                                     .Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList();
@@ -242,15 +244,6 @@ namespace ORM_Repos_UoW
                 //string propertyName = $"{columnMatching} AS  {tableName}{columnMatching}";
                 string propertyName = $"{columnMatching}";
                 propertiesNames.Add(propertyName);
-            }
-        }
-
-        private static void SetForeignKeyNull(IEnumerable<Type> types, dynamic item)
-        {
-            var sqlGenerator = new SqlGenerator();
-            foreach (var dependentType in types)
-            {
-                sqlGenerator.GetUpdateSqlQuery(dependentType, item); //TODO: подумать в какой Stack запихивать этот запрос
             }
         }
 
@@ -272,16 +265,27 @@ namespace ORM_Repos_UoW
             //                                                && prop.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType).Count() > 0);
         }
 
+        private string GetStringFromStack(Stack<string> stack)
+        {
+            var stackStringBuilder = new StringBuilder();
+            do
+            {
+                stackStringBuilder.Append(stack.Pop()/* + Environment.NewLine*/);
+            } while (stack.Count > 0);
+
+            return stackStringBuilder.ToString();
+        }
+
         #endregion Methods.Private
 
         #region Methods.Public
 
         public string GetInsertIntoSqlQuery<T>(T item)
         {
-            //TODO: Resolve conflict on home laptop
             var type = typeof(T);
 
             string result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
+
             var childs = type.GetProperties().Where(p => p.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
             if (childs.Count() == 0)
             {
@@ -293,16 +297,16 @@ namespace ORM_Repos_UoW
                 {
                     continue;
                 }
-                //Dictionary<object,object> childInstance = (Dictionary<object, object>)child.GetValue(item); //получение значения свойства
+                //Dictionary<object, object> childInstance = (Dictionary<object, object>)child.GetValue(item); //получение значения свойства
                 dynamic childInstance = child.GetValue(item); //получение значения свойства
                 if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection) //если свойство - коллекция, то для каждого элемента нужно получить имя колонки и значение
                 {
                     if (childInstance.GetType().GetInterface("IDictionary") != null)
                     {
-                        foreach (var element in childInstance)
+                        foreach (var key in childInstance.Keys)
                         {
-                            result += GetInsertIntoSqlQuery(element.Key) + Environment.NewLine;
-                            result += GetInsertIntoSqlQuery(element.Value) + Environment.NewLine;
+                            result += GetInsertIntoSqlQuery(key) + Environment.NewLine;
+                            result += GetInsertIntoSqlQuery(childInstance[key]) + Environment.NewLine;
                         }
                     }
                     else
@@ -330,7 +334,7 @@ namespace ORM_Repos_UoW
         //     ([Points].[X],[Points].[Y]) VALUES(99,99);
         //END
 
-        private string GetInsertConcreteItemSqlQuery<T>(T item)
+        public string GetInsertConcreteItemSqlQuery<T>(T item) //TODO: был private
         {
             var type = item.GetType();
             string prefix = "";
@@ -378,6 +382,8 @@ namespace ORM_Repos_UoW
             columnValueStringBuilder.Remove(columnValueStringBuilder.Length - 1, 1);
             sb.Append($"({columnNameStringBuilder}) VALUES ({columnValueStringBuilder})");
 
+            sb.Append("\nSELECT CAST(scope_identity() AS int)");
+
             var test = prefix + sb.ToString() + postfix;
             return prefix + sb.ToString() + postfix;
         }
@@ -402,10 +408,10 @@ namespace ORM_Repos_UoW
             return sb.ToString();
         }
 
-        public string GetSelectAllString(string table)
-        {
-            return $"SELECT * FROM {table}";
-        }
+        //public string GetSelectAllString(string table)
+        //{
+        //    return $"SELECT * FROM {table}";
+        //}
 
         //SELECT
         // BattleFields.Id AS BF_ID,
@@ -461,8 +467,7 @@ namespace ORM_Repos_UoW
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             Type itemType = item.GetType();
             var id = itemType.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
-            var columnName = itemType.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name;
-
+            var columnName = itemType.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name; //TODO: .Name или [Attribute].ColumnName
             var test = $"UPDATE [{tableName}] SET\n[{tableName}].[{columnName}] = NULL\nWHERE [{tableName}].[{columnName}] = {id}";
             //UPDATE Cells SET
             //Cells.ShipID = NULL
@@ -471,22 +476,24 @@ namespace ORM_Repos_UoW
             return "";
         }
 
+        private string SetNullOnForeignKey(string tableName, string columnName = "", object value = default)
+        {
+            //UPDATE [{tableName}]
+            //SET [{tableName}].[{columnName}] = NULL
+            //WHERE[{tableName}].[{columnName}] = {value}"
+
+            return $"UPDATE [{tableName}]\nSET [{tableName}].[{columnName}] = NULL\nWHERE [{tableName}].[{columnName}] = {value}\n";
+        }
+
         public string GetUpdateSqlQuery<T>(T item, string columnName = "", object value = default)
         {
+            if (updateSqlQueries == null)
+            {
+                updateSqlQueries = new Stack<string>();
+            }
             updateSqlQueries.Push(GetUpdateConcreteItemSqlQuery<T>(item, columnName, value));
 
             return GetStringFromStack(updateSqlQueries);
-        }
-
-        private string GetStringFromStack(Stack<string> stack)
-        {
-            var stackStringBuilder = new StringBuilder();
-            do
-            {
-                stackStringBuilder.Append(stack.Pop()/* + Environment.NewLine*/);
-            } while (stack.Count > 0);
-
-            return stackStringBuilder.ToString();
         }
 
         private string GetUpdateConcreteItemSqlQuery<T>(T item, string columnName = "", object value = default)
@@ -528,8 +535,48 @@ namespace ORM_Repos_UoW
         //DELETE {tableName} WHERE {parameter} = {value} [AND {parameter2} = {value}]
         public string GetDeleteSqlQuery(string tableName, int id)
         {
-            //TODO: продумать удаление связанных сущностей
-            return $"DELETE [{tableName}] WHERE [{tableName}].[Id] = {id}"; //TODO: подумать как убрать "id" из строки
+            if (deleteSqlQueries == null)
+            {
+                deleteSqlQueries = new Stack<string>();
+            }
+            //UPDATE {RelatedTable}
+            //SET {RelatedTable}.{ForeignKey} = NULL
+            //WHERE {RelatedTable}.{ForeignKey} = {id}
+
+            //DELETE FROM Ships WHERE Ships.Id = 9
+            var type = assembly.GetTypes().First(t => t.GetCustomAttributes<TableAttribute>().Count() > 0 && t.GetCustomAttribute<TableAttribute>().TableName == tableName);
+            var primaryKeyColumnName = type.GetProperties()
+                                            .First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                            && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                            .GetCustomAttribute<ColumnAttribute>().ColumnName;
+
+            if (type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
+            {
+                return $"DELETE [{tableName}] WHERE [{tableName}].[{primaryKeyColumnName}] = {id}";
+            }
+            else if (type.GetCustomAttribute<TableAttribute>().IsStaticDataTable)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{primaryKeyColumnName}] = {id}\n");
+            }
+
+            //var relatedTypes = assembly.GetTypes().Where(t => t.GetCustomAttributes<TableAttribute>().Count() > 0 && t.GetCustomAttribute<TableAttribute>().IsRelatedTable);
+            var relatedTypes = GetDependentTypes(type);
+            foreach (var relatedType in relatedTypes)
+            {
+                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>().TableName;
+                var foreignKeyColumnName = relatedType.GetProperties()
+                                                      .First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                                        && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
+                                                                        && prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
+                                                      .GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var updateQuery = SetNullOnForeignKey(relatedTablename, foreignKeyColumnName, id);
+                deleteSqlQueries.Push(updateQuery);
+            }
+            return GetStringFromStack(deleteSqlQueries);
         }
 
         public string GetDeleteSqlQuery<T>(string columnName, object value)
@@ -561,6 +608,37 @@ namespace ORM_Repos_UoW
             }
 
             deleteSqlQueries.Push(GetDeleteConcreteItemSqlQuery(item)); //TODO: подумать как удалить строку из БД по всем свойствам ITEM-а
+
+            int primaryKeyValue = (int)type.GetProperties().FirstOrDefault(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                                              && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                            .GetValue(item);
+            IEnumerable<Type> relatedTypes;
+            if (type.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0 && !type.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass)
+            {
+                type = type.BaseType;
+            }
+            if (type.GetCustomAttribute<TableAttribute>().IsStaticDataTable)
+            {
+                return string.Empty;
+            }
+            relatedTypes = GetDependentTypes(type);
+
+            foreach (var relatedType in relatedTypes)
+            {
+                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>().TableName;
+
+                var foreignKeyColumnName = relatedType.GetProperties()
+                                                      .First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                                        && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
+                                                                        && prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
+                                                      .GetCustomAttribute<ColumnAttribute>().ColumnName;
+                //.First(prop => prop.GetCustomAttribute<ColumnAttribute>().BaseType == type);
+                //.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                //&& prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
+
+                var updateQuery = SetNullOnForeignKey(relatedTablename, foreignKeyColumnName, primaryKeyValue);
+                deleteSqlQueries.Push(updateQuery);
+            }
 
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
 
@@ -612,24 +690,44 @@ namespace ORM_Repos_UoW
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             IEnumerable<PropertyInfo> properties = GetTypeProperties(item, type);
 
-            var deleteQueryStringBuilder = new StringBuilder($"DELETE [{tableName}] WHERE\n");
+            var deleteQueryStringBuilder = new StringBuilder($"DELETE FROM [{tableName}] WHERE\n");
+            var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+            var primaryKeyColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>().ColumnName;
+            var primaryKeyValue = primaryKeyProperty.GetValue(item);
+
+            //if (primaryKeyColumnName != null)
+            //deleteQueryStringBuilder.Append($"[{tableName}].[{primaryKeyColumnName}] = {primaryKeyValue}\n");
+
+            //#region DELETE using all properties (not works)
+
             foreach (var prop in properties)
             {
                 var columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var value = prop.GetValue(item);
                 if (value == null)
                 {
-                    value = "NULL";
+                    deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] IS NULL AND\n");
                 }
-                deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] = {value} AND\n");
+                else
+                {
+                    deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] = {value} AND\n");
+                }
             }
-            Debug.WriteLine(deleteQueryStringBuilder);
+
             deleteQueryStringBuilder.Remove(deleteQueryStringBuilder.Length - 5, 5);
-            Debug.WriteLine(deleteQueryStringBuilder);
+
+            //#endregion DELETE using all properties (not works)
 
             return deleteQueryStringBuilder.ToString() + Environment.NewLine;
         }
 
+        /// <summary>
+        /// Selection properties with or without primary key property
+        /// </summary>
+        /// <typeparam name="T">type of item</typeparam>
+        /// <param name="item"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private static IEnumerable<PropertyInfo> GetTypeProperties<T>(T item, Type type)
         {
             IEnumerable<PropertyInfo> properties;

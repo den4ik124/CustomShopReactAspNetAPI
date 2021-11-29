@@ -24,7 +24,7 @@ namespace SeaBattleDomainModel.Entities
         [Column(ColumnName = "BattleFieldID", KeyType = KeyType.Foreign, BaseType = typeof(BattleField))]
         public int BattleFieldId { get; set; }
 
-        [Column(ColumnName = "ShipID", KeyType = KeyType.Foreign, BaseType = typeof(Ship))]
+        [Column(ColumnName = "ShipID", KeyType = KeyType.Foreign, BaseType = typeof(Ship), AllowNull = true)]
         public int? ShipId
         {
             get

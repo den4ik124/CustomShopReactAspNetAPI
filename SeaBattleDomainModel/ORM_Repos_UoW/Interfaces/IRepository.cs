@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 
 namespace ORM_Repos_UoW.Interfaces
 {
     public interface IRepository<T> : IBaseRepository
     {
-        void Create(T item);
+        //void Create(T item);
+        void Create<TItem>(TItem item, SqlConnection connection);
 
         void Create(IEnumerable<T> items);
 

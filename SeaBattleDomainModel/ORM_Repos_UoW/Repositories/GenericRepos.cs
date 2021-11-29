@@ -34,9 +34,64 @@ namespace ORM_Repos_UoW.Repositories
 
         #region Methods.Public
 
-        public void Create(T item)
+        //public void Create(T item)
+        //{
+        //    var sqlQuery = sqlGenerator.GetInsertIntoSqlQuery(item);  //TODO: почему-то корабли вставляются 7 раз !!! Проблема в INSERT команде. Добавляется новый корабль с каждой ячейкой
+        //    sqlQueries.Add(sqlQuery);
+        //    //addedItems.Add(item);
+        //}
+
+        public void Create<TItem>(TItem item, SqlConnection connection)
         {
-            var sqlQuery = sqlGenerator.GetInsertIntoSqlQuery(item);  //TODO: почему-то корабли вставляются 7 раз !!! Проблема в INSERT команде. Добавляется новый корабль с каждой ячейкой
+            throw new NotImplementedException();
+            var type = item.GetType();
+            var properties = type.GetProperties();
+            var sqlQuery = sqlGenerator.GetInsertConcreteItemSqlQuery(item);  //TODO: почему-то корабли вставляются 7 раз !!! Проблема в INSERT команде. Добавляется новый корабль с каждой ячейкой
+
+            var sqlCommand = new SqlCommand(sqlQuery, connection);
+            var itemPrimaryKeyValue = sqlCommand.ExecuteScalar();
+
+            properties.First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).SetValue(item, itemPrimaryKeyValue);
+
+            var childs = properties.Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            if (childs.Count() > 0)
+            {
+                foreach (var child in childs)
+                {
+                    if (child.GetValue(item) == null)
+                    {
+                        continue;
+                    }
+                    //Dictionary<object, object> childInstance = (Dictionary<object, object>)child.GetValue(item); //получение значения свойства
+                    dynamic childInstance = child.GetValue(item); //получение значения свойства
+                    if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection) //если свойство - коллекция, то для каждого элемента нужно получить имя колонки и значение
+                    {
+                        if (childInstance.GetType().GetInterface("IDictionary") != null)
+                        {
+                            foreach (var key in childInstance.Keys)
+                            {
+                                Create(key, connection);
+                                Create(childInstance[key], connection);
+                                //result += GetInsertIntoSqlQuery(key) + Environment.NewLine;
+                                //result += GetInsertIntoSqlQuery(childInstance[key]) + Environment.NewLine;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var element in childInstance)
+                            {
+                                Create(element, connection);
+                                //result += GetInsertIntoSqlQuery(element) + Environment.NewLine;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Create(childInstance, connection);
+                        //result += GetInsertIntoSqlQuery(childInstance) + Environment.NewLine; //TODO: тут креш когда прилетатет NULL
+                    }
+                }
+            }
             sqlQueries.Add(sqlQuery);
             //addedItems.Add(item);
         }
@@ -54,27 +109,56 @@ namespace ORM_Repos_UoW.Repositories
         {
             var type = typeof(T);
             var sqlQuery = sqlGenerator.GetSelectJoinString(type, id);
-            try
+            //var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+
+            bool hasCollectionInside = IsCollectionsInsideType(properties);
+
+            if (hasCollectionInside)
             {
                 using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
                 {
                     connection.Open();
-                    SqlCommand cmd = new SqlCommand(sqlQuery, connection);
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    if (reader.HasRows)
+
+                    var test = sqlGenerator.GetSelectJoinString(type, id);
+                    SqlCommand command = new SqlCommand(sqlGenerator.GetSelectJoinString(type, id), connection);
+                    using (SqlDataReader reader = command.ExecuteReader())
                     {
-                        while (reader.Read())
+                        if (reader.HasRows)
                         {
-                            return (T)MatchDataItem(type, reader);
+                            while (reader.Read())
+                            {
+                                return (T)MatchDataItem(type, reader);
+                            }
                         }
                     }
-                    return default(T);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine(ex.Message);
+                try
+                {
+                    using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+                    {
+                        connection.Open();
+                        SqlCommand cmd = new SqlCommand(sqlQuery, connection);
+                        SqlDataReader reader = cmd.ExecuteReader();
+                        if (reader.HasRows)
+                        {
+                            while (reader.Read())
+                            {
+                                return (T)MatchDataItem(type, reader);
+                            }
+                        }
+                        return default(T);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
+
             return default(T);
         }
 
@@ -83,18 +167,10 @@ namespace ORM_Repos_UoW.Repositories
             var result = new List<T>();
             var type = typeof(T);
             //var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
-            bool hasCollection = false;
-            foreach (var prop in properties)
-            {
-                if (prop.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
-                {
-                    hasCollection = true;
-                    break;
-                }
-            }
-            if (hasCollection)
+
+            bool hasCollectionInside = IsCollectionsInsideType(properties);
+            if (hasCollectionInside)
             {
                 using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
                 {
@@ -146,6 +222,21 @@ namespace ORM_Repos_UoW.Repositories
             return result;
         }
 
+        private bool IsCollectionsInsideType(IEnumerable<PropertyInfo> properties)
+        {
+            bool hasCollectionInside = false;
+            foreach (var prop in properties)
+            {
+                if (prop.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
+                {
+                    hasCollectionInside = true;
+                    break;
+                }
+            }
+
+            return hasCollectionInside;
+        }
+
         private List<int> SelectPrimaryKeyValues(Type type, SqlConnection con)
         {
             string selectPrimaryKeyValues = sqlGenerator.SelectFromSingleTableSqlQuery(type);
@@ -170,8 +261,15 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Update(T item)
         {
-            var sqlUpdateQuery = sqlGenerator.GetUpdateSqlQuery(item);
-            sqlQueries.Add(sqlUpdateQuery);
+            var type = item.GetType();
+            var primaryKeyColumn = (int)type.GetProperties().FirstOrDefault(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
+            if (primaryKeyColumn > 0)
+            {
+                var sqlUpdateQuery = sqlGenerator.GetUpdateSqlQuery(item);
+                sqlQueries.Add(sqlUpdateQuery);
+            }
+            throw new Exception("Primary key value was not set");
+
             //TODO: пройтись по всем вложенным сущностям и обновить их тоже.
             //TODO: при изменении размера поля боя должны ли быть добавлены новые ячейки ?
         }
