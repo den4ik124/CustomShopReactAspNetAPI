@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -301,7 +302,15 @@ namespace ORM_Repos_UoW.Repositories
             int id = (int)primaryColumnProperty.GetValue(item); // только для элементов, где есть ID
             if (id > 0)
             {
-                var sqlQuery = sqlGenerator.GetDeleteSqlQuery(item);
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+
+                var sqlQuery = sqlGenerator.GetDeleteSqlQuery(item); //TODO: почему-то удаляются не все CELLS
+
+                stopwatch.Stop();
+                Console.WriteLine($"SQL DELETE Battlefield creation: {stopwatch.ElapsedMilliseconds} ms." +
+                    $"\n{sqlQuery.Length} symbols");
+
                 sqlQueries.Add(sqlQuery);
             }
         }
