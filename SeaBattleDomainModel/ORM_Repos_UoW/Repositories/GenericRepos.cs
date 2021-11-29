@@ -84,26 +84,60 @@ namespace ORM_Repos_UoW.Repositories
             var type = typeof(T);
             //var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
 
-            using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            bool hasCollection = false;
+            foreach (var prop in properties)
             {
-                connection.Open();
-                var primaryKeys = SelectPrimaryKeyValues(type, connection);
-
-                foreach (var primaryKey in primaryKeys)
+                if (prop.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                 {
-                    var testSql = sqlGenerator.GetSelectJoinString(type, primaryKey);
-                    SqlCommand command = new SqlCommand(sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
-                    using (SqlDataReader reader = command.ExecuteReader())
+                    hasCollection = true;
+                    break;
+                }
+            }
+            if (hasCollection)
+            {
+                using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+                {
+                    connection.Open();
+                    var primaryKeys = SelectPrimaryKeyValues(type, connection);
+
+                    foreach (var primaryKey in primaryKeys)
                     {
-                        if (reader.HasRows)
+                        var testSql = sqlGenerator.GetSelectJoinString(type, primaryKey);
+                        SqlCommand command = new SqlCommand(sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
+                        using (SqlDataReader reader = command.ExecuteReader())
                         {
-                            while (reader.Read())
+                            if (reader.HasRows)
                             {
-                                var resultItem = MatchDataItem(type, reader);
-                                if (resultItem != null)
+                                while (reader.Read())
                                 {
-                                    result.Add((T)resultItem);
+                                    var resultItem = MatchDataItem(type, reader);
+                                    if (resultItem != null)
+                                    {
+                                        result.Add((T)resultItem);
+                                    }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+                {
+                    connection.Open();
+                    var testSql = sqlGenerator.GetSelectJoinString(type);
+                    SqlCommand command = new SqlCommand(sqlGenerator.GetSelectJoinString(type), connection);
+                    var reader = command.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            var resultItem = MatchDataItem(type, reader);
+                            if (resultItem != null)
+                            {
+                                result.Add((T)resultItem);
                             }
                         }
                     }
