@@ -462,19 +462,19 @@ namespace ORM_Repos_UoW
             return SelectJoinSqlQuery(tablePropetriesNames);
         }
 
-        public string GetUpdateSqlQuery(Type type, dynamic item)
-        {
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            Type itemType = item.GetType();
-            var id = itemType.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
-            var columnName = itemType.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name; //TODO: .Name или [Attribute].ColumnName
-            var test = $"UPDATE [{tableName}] SET\n[{tableName}].[{columnName}] = NULL\nWHERE [{tableName}].[{columnName}] = {id}";
-            //UPDATE Cells SET
-            //Cells.ShipID = NULL
-            //WHERE Cells.ShipID = 24
+        //public string GetUpdateSqlQuery(Type type, dynamic item)
+        //{
+        //    var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+        //    Type itemType = item.GetType();
+        //    var id = itemType.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
+        //    var columnName = itemType.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name; //TODO: .Name или [Attribute].ColumnName
+        //    var test = $"UPDATE [{tableName}] SET\n[{tableName}].[{columnName}] = NULL\nWHERE [{tableName}].[{columnName}] = {id}";
+        //    //UPDATE Cells SET
+        //    //Cells.ShipID = NULL
+        //    //WHERE Cells.ShipID = 24
 
-            return "";
-        }
+        //    return "";
+        //}
 
         private string SetNullOnForeignKey(string tableName, string columnName = "", object value = default)
         {
@@ -591,7 +591,7 @@ namespace ORM_Repos_UoW
 
             var tableName = typeof(T).GetCustomAttribute<TableAttribute>().TableName;
 
-            return $"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}"; //TODO: подумать как убрать "id" из строки
+            return $"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}";
         }
 
         public string GetDeleteSqlQuery<T>(T item)
@@ -632,9 +632,6 @@ namespace ORM_Repos_UoW
                                                                         && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
                                                                         && prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
-                //.First(prop => prop.GetCustomAttribute<ColumnAttribute>().BaseType == type);
-                //.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                //&& prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
 
                 var updateQuery = SetNullOnForeignKey(relatedTablename, foreignKeyColumnName, primaryKeyValue);
                 deleteSqlQueries.Push(updateQuery);

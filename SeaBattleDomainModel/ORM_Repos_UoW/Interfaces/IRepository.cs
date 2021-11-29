@@ -6,7 +6,7 @@ namespace ORM_Repos_UoW.Interfaces
 {
     public interface IRepository<T> : IBaseRepository
     {
-        //void Create(T item);
+        //void Create(T item); //TODO: вернуть этот метод, перед слиянием
         void Create<TItem>(TItem item, SqlConnection connection);
 
         void Create(IEnumerable<T> items);
