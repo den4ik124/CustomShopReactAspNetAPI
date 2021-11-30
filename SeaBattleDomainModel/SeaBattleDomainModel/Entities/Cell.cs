@@ -77,7 +77,7 @@ namespace SeaBattleDomainModel.Entities
                 this.ship = value;
                 if (this.ship != null)
                 {
-                    this.shipId = null;
+                    this.shipId = this.ship.Id;
                 }
             }
         }

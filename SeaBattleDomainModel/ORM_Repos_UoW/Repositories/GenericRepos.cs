@@ -47,13 +47,13 @@ namespace ORM_Repos_UoW.Repositories
             InsertAlgorithm(ref item, connection);
 
             var baseType = item.GetType();
-
             int itemPrimaryKeyValue = (int)item.GetType().GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
 
+            //if (baseType.GetCustomAttribute<TableAttribute>().IsRelatedTable)
+            //{
+            //    return;
+            //}
             InsertRelatedDataOnly(ref item, connection, itemPrimaryKeyValue, baseType);
-            //InsertNonRelatedData(ref item, connection);
-            //Console.WriteLine();
-            //InsertRelatedDataOnly(ref item, connection);
         }
 
         private void InsertRelatedDataOnly<TItem>(ref TItem? item, SqlConnection connection, int baseTypeId, Type baseType)
@@ -62,11 +62,17 @@ namespace ORM_Repos_UoW.Repositories
 
             if (type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
             {
-                var testProperties = type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0);
-                var concreteProperty = testProperties.First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType);
+                //var testProperties = type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+                //var concreteProperty = testProperties.First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType);
 
-                type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0).First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType).SetValue(item, baseTypeId);
-
+                if (type == baseType)
+                {
+                    type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0).First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).SetValue(item, baseTypeId);
+                }
+                else
+                {
+                    type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0).First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType).SetValue(item, baseTypeId);
+                }
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
 
@@ -206,7 +212,7 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
-        private void InsertAlgorithm<TItem>(ref TItem? item, SqlConnection connection, int parentItemId = -1)
+        private void InsertAlgorithm<TItem>(ref TItem? item, SqlConnection connection)
         {
             var type = item.GetType();
             if (!type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
@@ -470,7 +476,10 @@ namespace ORM_Repos_UoW.Repositories
                 var sqlUpdateQuery = sqlGenerator.GetUpdateSqlQuery(item);
                 sqlQueries.Add(sqlUpdateQuery);
             }
-            throw new Exception("Primary key value was not set");
+            else
+            {
+                throw new Exception("Primary key value was not set");
+            }
 
             //TODO: пройтись по всем вложенным сущностям и обновить их тоже.
             //TODO: при изменении размера поля боя должны ли быть добавлены новые ячейки ?
