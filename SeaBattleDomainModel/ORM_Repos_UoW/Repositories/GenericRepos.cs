@@ -150,7 +150,7 @@ namespace ORM_Repos_UoW.Repositories
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
 
                 //get itemID from DB
-                int itemId = (int)sqlCommand.ExecuteScalar(); //TODO: каким будет ID BattleField ???
+                int itemId = (int)sqlCommand.ExecuteScalar();
                 if (itemId == null)
                 {
                     itemId = GetIdFromDB(connection);
@@ -498,6 +498,8 @@ namespace ORM_Repos_UoW.Repositories
             //type -> attribute [Table] -> TableName
             //DELETE [TableName]
             //WHERE [TableName].Id = id
+
+            //TODO: вложенное удаление слабо реализовано. Нужно удалить и корабли так же
             var sqlQuery = sqlGenerator.GetDeleteSqlQuery(this.typeTableName, id);
             sqlQueries.Add(sqlQuery);
         }
