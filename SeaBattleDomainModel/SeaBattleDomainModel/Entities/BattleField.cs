@@ -44,7 +44,7 @@ namespace SeaBattleDomainModel.Entities
         public List<Ship> Ships { get => this.ships; set => this.ships = value; }
 
         [RelatedEntity(Table = "Cells",
-               RelatedType = typeof(Dictionary<Point, Cell>),
+               RelatedType = typeof(Cell),
             IsCollection = true)]
         public Dictionary<Point, Cell> Cells
         {

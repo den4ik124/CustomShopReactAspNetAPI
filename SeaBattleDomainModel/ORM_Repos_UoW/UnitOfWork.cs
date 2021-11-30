@@ -22,7 +22,7 @@ namespace ORM_Repos_UoW
 
         public void Create<TInsert>(TInsert item)
         {
-            //GetRepository<TInsert>().Create(item);
+            // GetRepository<TInsert>().Create(item);
             using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();

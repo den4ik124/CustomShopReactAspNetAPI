@@ -247,7 +247,7 @@ namespace ORM_Repos_UoW
             }
         }
 
-        private static IEnumerable<Type> GetDependentTypes(Type deletedType)
+        public IEnumerable<Type> GetDependentTypes(Type deletedType)
         {
             Assembly assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
             var types = assembly.GetTypes();
@@ -343,8 +343,24 @@ namespace ORM_Repos_UoW
             if (type.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
             {
                 prefix = $"IF NOT EXISTS (\n{GetSqlIfNotExists(item)})\nBEGIN\n";
-                postfix = "\nEND";
+                postfix = $"\nEND\nELSE\nBEGIN\n{GetSqlIfExists(item)}\nEND";
             }
+
+            //IF NOT EXISTS
+            //     (SELECT [Points].[Id] FROM [Points]
+            //     WHERE[Points].[X] = 99 AND
+            //          [Points].[Y] = 99)
+            //BEGIN
+            //     INSERT INTO[Points]
+            //     ([Points].[X],[Points].[Y]) VALUES(99, 99);
+            //END
+            //ELSE
+            //BEGIN
+            //    (SELECT [Points].[Id] FROM[Points]
+            //     WHERE[Points].[X] = 99 AND
+            //           [Points].[Y] = 99)
+            //END
+
             string columnMatching = "";
             int typeId = 0;
             var propertyValue = new Dictionary<string, object>();
@@ -397,6 +413,28 @@ namespace ORM_Repos_UoW
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                             && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
 
+            foreach (var property in properties)
+            {
+                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var columnValue = property.GetValue(item);
+                sb.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
+            }
+            sb.Remove(sb.Length - 4, 3);
+
+            return sb.ToString();
+        }
+
+        private string GetSqlIfExists<T>(T item)
+        {
+            var type = typeof(T);
+
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                            && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+            var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                             && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetCustomAttribute<ColumnAttribute>().ColumnName;
+
+            StringBuilder sb = new StringBuilder($"SELECT [{tableName}].[{primaryKeyProperty}] FROM [{tableName}] WHERE\n");
             foreach (var property in properties)
             {
                 var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;

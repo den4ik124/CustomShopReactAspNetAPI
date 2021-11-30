@@ -44,57 +44,46 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Create<TItem>(TItem item, SqlConnection connection)
         {
-            throw new NotImplementedException();
             var type = item.GetType();
-            var properties = type.GetProperties();
-            var sqlQuery = sqlGenerator.GetInsertConcreteItemSqlQuery(item);  //TODO: почему-то корабли вставляются 7 раз !!! Проблема в INSERT команде. Добавляется новый корабль с каждой ячейкой
+            var sqlInsert = sqlGenerator.GetInsertIntoSqlQuery(item);
 
-            var sqlCommand = new SqlCommand(sqlQuery, connection);
-            var itemPrimaryKeyValue = sqlCommand.ExecuteScalar();
-
-            properties.First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).SetValue(item, itemPrimaryKeyValue);
-
-            var childs = properties.Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
-            if (childs.Count() > 0)
+            var sqlCommand = new SqlCommand(sqlInsert, connection);
+            var itemId = sqlCommand.ExecuteScalar();
+            if (itemId == null)
             {
-                foreach (var child in childs)
+                itemId = GetIdFromDB();
+            }
+            //TODO: если INSERT-а не было, то нужно получить ID  по заданным координатам
+
+            //get item ID
+            type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).SetValue(item, itemId);
+            //Update ForeignKeys
+            var updateTypes = sqlGenerator.GetDependentTypes(type);
+
+            //получить все типы Cell из BF
+
+            foreach (var updateType in updateTypes)
+            {
+                //var types = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0 && prop.GetCustomAttribute<RelatedEntityAttribute>().RelatedType == updateType);
+                var cellType = type.GetProperties().FirstOrDefault(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0 && prop.GetCustomAttribute<RelatedEntityAttribute>().RelatedType == updateType);
+                if (cellType.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                 {
-                    if (child.GetValue(item) == null)
+                    var collection = (Dictionary<object, object>)cellType.GetValue(item);
+                    if (cellType.PropertyType.GetInterface("IDictionary") != null)
                     {
-                        continue;
-                    }
-                    //Dictionary<object, object> childInstance = (Dictionary<object, object>)child.GetValue(item); //получение значения свойства
-                    dynamic childInstance = child.GetValue(item); //получение значения свойства
-                    if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection) //если свойство - коллекция, то для каждого элемента нужно получить имя колонки и значение
-                    {
-                        if (childInstance.GetType().GetInterface("IDictionary") != null)
+                        var generic = cellType.PropertyType.GetGenericArguments().First(t => t == updateType);
+                        foreach (var element in collection)
                         {
-                            foreach (var key in childInstance.Keys)
-                            {
-                                Create(key, connection);
-                                Create(childInstance[key], connection);
-                                //result += GetInsertIntoSqlQuery(key) + Environment.NewLine;
-                                //result += GetInsertIntoSqlQuery(childInstance[key]) + Environment.NewLine;
-                            }
                         }
-                        else
-                        {
-                            foreach (var element in childInstance)
-                            {
-                                Create(element, connection);
-                                //result += GetInsertIntoSqlQuery(element) + Environment.NewLine;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Create(childInstance, connection);
-                        //result += GetInsertIntoSqlQuery(childInstance) + Environment.NewLine; //TODO: тут креш когда прилетатет NULL
                     }
                 }
+                //var updatedForeignKey
             }
-            sqlQueries.Add(sqlQuery);
-            //addedItems.Add(item);
+        }
+
+        private object? GetIdFromDB()
+        {
+            throw new NotImplementedException();
         }
 
         public void Create(IEnumerable<T> items)
