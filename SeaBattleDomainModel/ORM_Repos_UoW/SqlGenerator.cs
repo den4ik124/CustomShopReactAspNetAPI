@@ -515,13 +515,21 @@ namespace ORM_Repos_UoW
         //    return "";
         //}
 
-        private string SetNullOnForeignKey(string tableName, string columnName = "", object value = default)
+        private string SetNullOnForeignKeyOrDelete(string tableName, string columnName = "", object value = default)
         {
             //UPDATE [{tableName}]
             //SET [{tableName}].[{columnName}] = NULL
             //WHERE[{tableName}].[{columnName}] = {value}"
-
-            return $"UPDATE [{tableName}]\nSET [{tableName}].[{columnName}] = NULL\nWHERE [{tableName}].[{columnName}] = {value}\n";
+            var type = assembly.GetTypes().First(t => t.GetCustomAttributes<TableAttribute>().Count() > 0 && t.GetCustomAttribute<TableAttribute>().TableName == tableName);
+            var isPropertyAllowNull = type.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().ColumnName == columnName).GetCustomAttribute<ColumnAttribute>().AllowNull;
+            if (isPropertyAllowNull)
+            {
+                return $"UPDATE [{tableName}]\nSET [{tableName}].[{columnName}] = NULL\nWHERE [{tableName}].[{columnName}] = {value}\n";
+            }
+            else
+            {
+                return $"DELETE FROM [{tableName}]\nWHERE [{tableName}].[{columnName}] = {value}\n";
+            }
         }
 
         public string GetUpdateSqlQuery<T>(T item, string columnName = "", object value = default)
@@ -603,6 +611,9 @@ namespace ORM_Repos_UoW
             }
 
             //var relatedTypes = assembly.GetTypes().Where(t => t.GetCustomAttributes<TableAttribute>().Count() > 0 && t.GetCustomAttribute<TableAttribute>().IsRelatedTable);
+
+            //TODO: !!! продумать каскадное удаление !!! Почему нет?
+
             var relatedTypes = GetDependentTypes(type);
             foreach (var relatedType in relatedTypes)
             {
@@ -612,7 +623,7 @@ namespace ORM_Repos_UoW
                                                                         && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
                                                                         && prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
-                var updateQuery = SetNullOnForeignKey(relatedTablename, foreignKeyColumnName, id);
+                var updateQuery = SetNullOnForeignKeyOrDelete(relatedTablename, foreignKeyColumnName, id);
                 deleteSqlQueries.Push(updateQuery);
             }
             return GetStringFromStack(deleteSqlQueries);
@@ -672,7 +683,7 @@ namespace ORM_Repos_UoW
                                                                         && prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
 
-                var updateQuery = SetNullOnForeignKey(relatedTablename, foreignKeyColumnName, primaryKeyValue);
+                var updateQuery = SetNullOnForeignKeyOrDelete(relatedTablename, foreignKeyColumnName, primaryKeyValue);
                 deleteSqlQueries.Push(updateQuery);
             }
 
