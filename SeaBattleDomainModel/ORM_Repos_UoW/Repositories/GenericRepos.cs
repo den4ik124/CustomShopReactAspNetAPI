@@ -46,39 +46,38 @@ namespace ORM_Repos_UoW.Repositories
         {
             InsertAlgorithm(ref item, connection);
 
+            var baseType = item.GetType();
+
+            int itemPrimaryKeyValue = (int)item.GetType().GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
+
+            InsertRelatedDataOnly(ref item, connection, itemPrimaryKeyValue, baseType);
             //InsertNonRelatedData(ref item, connection);
             //Console.WriteLine();
             //InsertRelatedDataOnly(ref item, connection);
         }
 
-        private void InsertRelatedDataOnly<TItem>(ref TItem? item, SqlConnection connection)
+        private void InsertRelatedDataOnly<TItem>(ref TItem? item, SqlConnection connection, int baseTypeId, Type baseType)
         {
             var type = item.GetType();
+
             if (type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
             {
+                var testProperties = type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+                var concreteProperty = testProperties.First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType);
+
+                type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0).First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType).SetValue(item, baseTypeId);
+
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
 
                 //get itemID from DB
-                int itemId = (int)sqlCommand.ExecuteScalar(); //TODO: каким будет ID BattleField ???
+                int itemId = (int)sqlCommand.ExecuteScalar();
                 if (itemId == null)
                 {
                     itemId = GetIdFromDB(connection);
                 }
-
-                //set item ID to ENTITY
-                var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-                if (type.IsValueType)
-                {
-                    object boxedItem = item;
-                    primaryKeyProperty.SetValue(boxedItem, itemId);
-                    item = (TItem)boxedItem;
-                }
-                else
-                {
-                    primaryKeyProperty.SetValue(item, itemId);
-                }
             }
+
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
             if (childs.Count() > 0)
             {
@@ -86,40 +85,54 @@ namespace ORM_Repos_UoW.Repositories
                 {
                     if (child.GetValue(item) == null)
                         continue;
+
                     dynamic childInstance = child.GetValue(item);
                     if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                     {
                         if (child.PropertyType.GetInterface("IDictionary") != null)
                         {
-                            //ЕСЛИ КОЛЕКЦИЯ СЛОВАРЬ
+                            //ЕСЛИ КОЛЛЕКЦИЯ СЛОВАРЬ
                             var keys = childInstance.Keys;
                             foreach (var key in keys)
                             {
                                 var keyInstance = key;
-                                InsertRelatedDataOnly(ref keyInstance, connection);
-                                InsertRelatedDataOnly(ref childInstance[key], connection);
+                                var valueInstance = childInstance[key];
+                                InsertRelatedDataOnly(ref keyInstance, connection, baseTypeId, baseType);
+                                InsertRelatedDataOnly(ref valueInstance, connection, baseTypeId, baseType);
                             }
                         }
                         else
                         {
                             //ЕСЛИ КОЛЕКЦИЯ, НО НЕ СЛОВАРЬ
-                            for (int i = 0; i < childInstance.Count; i++)
+                            foreach (var element in childInstance)
                             {
-                                InsertRelatedDataOnly(childInstance[i], connection);
+                                var elementInstance = element;
+                                InsertRelatedDataOnly(ref elementInstance, connection, baseTypeId, baseType);
                             }
-                            //foreach (var element in childInstance)
-                            //{
-                            //    Create(element, connection);
-                            //}
                         }
                     }
                     else
                     {
                         //ЕСЛИ НЕ КОЛЕКЦИЯ
-                        InsertRelatedDataOnly(ref childInstance, connection);
+                        InsertRelatedDataOnly(ref childInstance, connection, baseTypeId, baseType);
                     }
+                    SetValueIntoProperty(ref item, childInstance, child);
                 }
             }
+            //var testProperties = type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            //var concreteProperty = testProperties.First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType);
+
+            //type.GetProperties().Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0).First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType).SetValue(item, baseTypeId);
+
+            //var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
+            //var sqlCommand = new SqlCommand(sqlInsert, connection);
+
+            ////get itemID from DB
+            //int itemId = (int)sqlCommand.ExecuteScalar();
+            //if (itemId == null)
+            //{
+            //    itemId = GetIdFromDB(connection);
+            //}
         }
 
         private void InsertNonRelatedData<TItem>(ref TItem? item, SqlConnection connection)
@@ -193,7 +206,7 @@ namespace ORM_Repos_UoW.Repositories
             }
         }
 
-        private void InsertAlgorithm<TItem>(ref TItem? item, SqlConnection connection)
+        private void InsertAlgorithm<TItem>(ref TItem? item, SqlConnection connection, int parentItemId = -1)
         {
             var type = item.GetType();
             if (!type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
@@ -212,6 +225,11 @@ namespace ORM_Repos_UoW.Repositories
                 var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
                 SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
             }
+            WorkingWithRelatedEntities(ref item, connection, type);
+        }
+
+        private void WorkingWithRelatedEntities<TItem>(ref TItem? item, SqlConnection connection, Type type)
+        {
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
             if (childs.Count() > 0)
             {
@@ -219,31 +237,11 @@ namespace ORM_Repos_UoW.Repositories
                 {
                     if (child.GetValue(item) == null)
                         continue;
+
                     dynamic childInstance = child.GetValue(item);
                     if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                     {
-                        if (child.PropertyType.GetInterface("IDictionary") != null)
-                        {
-                            //ЕСЛИ КОЛЛЕКЦИЯ СЛОВАРЬ
-                            var keys = childInstance.Keys;
-                            foreach (var key in keys)
-                            {
-                                var keyInstance = key;
-                                var valueInstance = childInstance[key];
-                                //TODO: как-то передать в childInstance новые значения
-
-                                InsertAlgorithm(ref keyInstance, connection);
-                                InsertAlgorithm(ref childInstance[key], connection);
-                            }
-                        }
-                        else
-                        {
-                            //ЕСЛИ КОЛЕКЦИЯ, НО НЕ СЛОВАРЬ
-                            foreach (var element in childInstance)
-                            {
-                                InsertAlgorithm(element, connection);
-                            }
-                        }
+                        WorkingWithRelatedEntityCollection(connection, child, childInstance);
                     }
                     else
                     {
@@ -251,6 +249,31 @@ namespace ORM_Repos_UoW.Repositories
                         InsertAlgorithm(ref childInstance, connection);
                     }
                     SetValueIntoProperty(ref item, childInstance, child);
+                }
+            }
+        }
+
+        private void WorkingWithRelatedEntityCollection(SqlConnection connection, PropertyInfo child, dynamic childInstance)
+        {
+            if (child.PropertyType.GetInterface("IDictionary") != null)
+            {
+                //ЕСЛИ КОЛЛЕКЦИЯ СЛОВАРЬ
+                var keys = childInstance.Keys;
+                foreach (var key in keys)
+                {
+                    var keyInstance = key;
+                    var valueInstance = childInstance[key];
+                    InsertAlgorithm(ref keyInstance, connection);
+                    InsertAlgorithm(ref valueInstance, connection);
+                }
+            }
+            else
+            {
+                //ЕСЛИ КОЛЕКЦИЯ, НО НЕ СЛОВАРЬ
+                foreach (var element in childInstance)
+                {
+                    var elementInstance = element;
+                    InsertAlgorithm(ref elementInstance, connection);
                 }
             }
         }
