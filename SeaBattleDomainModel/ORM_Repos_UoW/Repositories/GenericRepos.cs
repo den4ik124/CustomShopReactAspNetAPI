@@ -42,46 +42,235 @@ namespace ORM_Repos_UoW.Repositories
         //    //addedItems.Add(item);
         //}
 
-        public void Create<TItem>(TItem item, SqlConnection connection)
+        public void Create<TItem>(ref TItem item, SqlConnection connection)
+        {
+            InsertAlgorithm(ref item, connection);
+
+            //InsertNonRelatedData(ref item, connection);
+            //Console.WriteLine();
+            //InsertRelatedDataOnly(ref item, connection);
+        }
+
+        private void InsertRelatedDataOnly<TItem>(ref TItem? item, SqlConnection connection)
         {
             var type = item.GetType();
-            var sqlInsert = sqlGenerator.GetInsertIntoSqlQuery(item);
-
-            var sqlCommand = new SqlCommand(sqlInsert, connection);
-            var itemId = sqlCommand.ExecuteScalar();
-            if (itemId == null)
+            if (type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
             {
-                itemId = GetIdFromDB();
-            }
-            //TODO: если INSERT-а не было, то нужно получить ID  по заданным координатам
+                var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
+                var sqlCommand = new SqlCommand(sqlInsert, connection);
 
-            //get item ID
-            type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).SetValue(item, itemId);
-            //Update ForeignKeys
-            var updateTypes = sqlGenerator.GetDependentTypes(type);
-
-            //получить все типы Cell из BF
-
-            foreach (var updateType in updateTypes)
-            {
-                //var types = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0 && prop.GetCustomAttribute<RelatedEntityAttribute>().RelatedType == updateType);
-                var cellType = type.GetProperties().FirstOrDefault(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0 && prop.GetCustomAttribute<RelatedEntityAttribute>().RelatedType == updateType);
-                if (cellType.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
+                //get itemID from DB
+                int itemId = (int)sqlCommand.ExecuteScalar(); //TODO: каким будет ID BattleField ???
+                if (itemId == null)
                 {
-                    var collection = (Dictionary<object, object>)cellType.GetValue(item);
-                    if (cellType.PropertyType.GetInterface("IDictionary") != null)
+                    itemId = GetIdFromDB(connection);
+                }
+
+                //set item ID to ENTITY
+                var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+                if (type.IsValueType)
+                {
+                    object boxedItem = item;
+                    primaryKeyProperty.SetValue(boxedItem, itemId);
+                    item = (TItem)boxedItem;
+                }
+                else
+                {
+                    primaryKeyProperty.SetValue(item, itemId);
+                }
+            }
+            var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            if (childs.Count() > 0)
+            {
+                foreach (var child in childs)
+                {
+                    if (child.GetValue(item) == null)
+                        continue;
+                    dynamic childInstance = child.GetValue(item);
+                    if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                     {
-                        var generic = cellType.PropertyType.GetGenericArguments().First(t => t == updateType);
-                        foreach (var element in collection)
+                        if (child.PropertyType.GetInterface("IDictionary") != null)
                         {
+                            //ЕСЛИ КОЛЕКЦИЯ СЛОВАРЬ
+                            var keys = childInstance.Keys;
+                            foreach (var key in keys)
+                            {
+                                var keyInstance = key;
+                                InsertRelatedDataOnly(ref keyInstance, connection);
+                                InsertRelatedDataOnly(ref childInstance[key], connection);
+                            }
+                        }
+                        else
+                        {
+                            //ЕСЛИ КОЛЕКЦИЯ, НО НЕ СЛОВАРЬ
+                            for (int i = 0; i < childInstance.Count; i++)
+                            {
+                                InsertRelatedDataOnly(childInstance[i], connection);
+                            }
+                            //foreach (var element in childInstance)
+                            //{
+                            //    Create(element, connection);
+                            //}
                         }
                     }
+                    else
+                    {
+                        //ЕСЛИ НЕ КОЛЕКЦИЯ
+                        InsertRelatedDataOnly(ref childInstance, connection);
+                    }
                 }
-                //var updatedForeignKey
             }
         }
 
-        private object? GetIdFromDB()
+        private void InsertNonRelatedData<TItem>(ref TItem? item, SqlConnection connection)
+        {
+            var type = item.GetType();
+            if (!type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
+            {
+                var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
+                var sqlCommand = new SqlCommand(sqlInsert, connection);
+
+                //get itemID from DB
+                int itemId = (int)sqlCommand.ExecuteScalar(); //TODO: каким будет ID BattleField ???
+                if (itemId == null)
+                {
+                    itemId = GetIdFromDB(connection);
+                }
+
+                //set item ID to ENTITY
+                var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+                if (type.IsValueType)
+                {
+                    object boxedItem = item;
+                    primaryKeyProperty.SetValue(boxedItem, itemId);
+                    item = (TItem)boxedItem;
+                }
+                else
+                {
+                    primaryKeyProperty.SetValue(item, itemId);
+                }
+            }
+            var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            if (childs.Count() > 0)
+            {
+                foreach (var child in childs)
+                {
+                    if (child.GetValue(item) == null)
+                        continue;
+                    dynamic childInstance = child.GetValue(item);
+                    if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
+                    {
+                        if (child.PropertyType.GetInterface("IDictionary") != null)
+                        {
+                            //ЕСЛИ КОЛЕКЦИЯ СЛОВАРЬ
+                            var keys = childInstance.Keys;
+                            foreach (var key in keys)
+                            {
+                                var keyInstance = key;
+                                InsertNonRelatedData(ref keyInstance, connection);
+                                InsertNonRelatedData(ref childInstance[key], connection);
+                            }
+                        }
+                        else
+                        {
+                            //ЕСЛИ КОЛЕКЦИЯ, НО НЕ СЛОВАРЬ
+                            for (int i = 0; i < childInstance.Count; i++)
+                            {
+                                InsertNonRelatedData(childInstance[i], connection);
+                            }
+                            //foreach (var element in childInstance)
+                            //{
+                            //    Create(element, connection);
+                            //}
+                        }
+                    }
+                    else
+                    {
+                        //ЕСЛИ НЕ КОЛЕКЦИЯ
+                        InsertNonRelatedData(ref childInstance, connection);
+                    }
+                }
+            }
+        }
+
+        private void InsertAlgorithm<TItem>(ref TItem? item, SqlConnection connection)
+        {
+            var type = item.GetType();
+            if (!type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
+            {
+                var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
+                var sqlCommand = new SqlCommand(sqlInsert, connection);
+
+                //get itemID from DB
+                int itemId = (int)sqlCommand.ExecuteScalar();
+                if (itemId == null)
+                {
+                    itemId = GetIdFromDB(connection);
+                }
+
+                //set item ID to ENTITY
+                var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+                SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
+            }
+            var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            if (childs.Count() > 0)
+            {
+                foreach (var child in childs)
+                {
+                    if (child.GetValue(item) == null)
+                        continue;
+                    dynamic childInstance = child.GetValue(item);
+                    if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
+                    {
+                        if (child.PropertyType.GetInterface("IDictionary") != null)
+                        {
+                            //ЕСЛИ КОЛЛЕКЦИЯ СЛОВАРЬ
+                            var keys = childInstance.Keys;
+                            foreach (var key in keys)
+                            {
+                                var keyInstance = key;
+                                var valueInstance = childInstance[key];
+                                //TODO: как-то передать в childInstance новые значения
+
+                                InsertAlgorithm(ref keyInstance, connection);
+                                InsertAlgorithm(ref childInstance[key], connection);
+                            }
+                        }
+                        else
+                        {
+                            //ЕСЛИ КОЛЕКЦИЯ, НО НЕ СЛОВАРЬ
+                            foreach (var element in childInstance)
+                            {
+                                InsertAlgorithm(element, connection);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //ЕСЛИ НЕ КОЛЕКЦИЯ
+                        InsertAlgorithm(ref childInstance, connection);
+                    }
+                    SetValueIntoProperty(ref item, childInstance, child);
+                }
+            }
+        }
+
+        private void SetValueIntoProperty<TItem>(ref TItem? item, object value, PropertyInfo property)
+        {
+            var type = item.GetType();
+            if (type.IsValueType)
+            {
+                object boxedItem = item;
+                property.SetValue(boxedItem, value);
+                item = (TItem)boxedItem;
+            }
+            else
+            {
+                property.SetValue(item, value);
+            }
+        }
+
+        private int GetIdFromDB(SqlConnection connection)
         {
             throw new NotImplementedException();
         }

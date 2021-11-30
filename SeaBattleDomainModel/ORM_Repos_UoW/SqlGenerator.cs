@@ -406,7 +406,8 @@ namespace ORM_Repos_UoW
 
         private string GetSqlIfNotExists<T>(T item)
         {
-            var type = typeof(T);
+            //var type = typeof(T);
+            var type = item.GetType();
             StringBuilder sb = new StringBuilder($"{GetSelectJoinString(type)} \n WHERE ");
 
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
@@ -426,7 +427,7 @@ namespace ORM_Repos_UoW
 
         private string GetSqlIfExists<T>(T item)
         {
-            var type = typeof(T);
+            var type = item.GetType();// typeof(T);
 
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0

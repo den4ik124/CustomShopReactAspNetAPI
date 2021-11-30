@@ -26,7 +26,7 @@ namespace ORM_Repos_UoW
             using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-                GetRepository<TInsert>().Create(item, connection);
+                GetRepository<TInsert>().Create(ref item, connection);
             }
         }
 

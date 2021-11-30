@@ -8,7 +8,7 @@ namespace ORM_Repos_UoW.Interfaces
     {
         //void Create(T item); //TODO: вернуть этот метод, перед слиянием
 
-        void Create<TItem>(TItem item, SqlConnection connection);
+        void Create<TItem>(ref TItem item, SqlConnection connection);
 
         void Create(IEnumerable<T> items);
 

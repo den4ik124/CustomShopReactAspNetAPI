@@ -72,7 +72,14 @@ namespace SeaBattleDomainModel.Entities
         public Ship Ship
         {
             get => this.ship;
-            set => this.ship = value;
+            set
+            {
+                this.ship = value;
+                if (this.ship != null)
+                {
+                    this.shipId = null;
+                }
+            }
         }
 
         [RelatedEntity(Table = "Points", RelatedType = typeof(Point))]
@@ -82,6 +89,7 @@ namespace SeaBattleDomainModel.Entities
             set
             {
                 this.point = value;
+                this.pointId = this.point.Id;
                 DistanceToOrigin = GetDistanceToOrigin(this.point);
             }
         }
