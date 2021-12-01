@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -7,6 +8,14 @@ namespace ReflectionExtensions
     /// <summary>
     /// Clarify, can I use extensions instead of long LINQ queries
     /// </summary>
+    public enum PropertyKeyType
+    {
+        Primary,
+        Foreign,
+        None,
+        All,
+    }
+
     public static class TypeExtensions
     {
         public static MethodInfo[] Methods<T>(this T item)
@@ -21,15 +30,15 @@ namespace ReflectionExtensions
             return type.GetProperties();
         }
 
-        public static PropertyInfo[] Columns<T>(this T item, Type attributeType)
+        public static IEnumerable<PropertyInfo> Columns<T>(this T item, Type attributeType)
         {
             var type = typeof(T);
-            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0).ToArray();
+            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0);
         }
 
-        public static PropertyInfo[] Columns(this Type type, Type attributeType)
+        public static IEnumerable<PropertyInfo> Columns(this Type type, Type attributeType)
         {
-            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0).ToArray();
+            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0);
         }
     }
 }

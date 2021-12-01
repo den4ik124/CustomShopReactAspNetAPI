@@ -3,6 +3,9 @@ using System;
 
 namespace ORM_Repos_UoW.Attributes
 {
+    /// <summary>
+    /// Mark property to match the data with corresponding column in table
+    /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class ColumnAttribute : Attribute
     {

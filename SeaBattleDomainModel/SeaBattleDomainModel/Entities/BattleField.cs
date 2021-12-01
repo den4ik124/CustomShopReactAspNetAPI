@@ -3,6 +3,7 @@ using ORM_Repos_UoW.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 [assembly: DomainModel]
 
@@ -312,20 +313,14 @@ namespace SeaBattleDomainModel.Entities
             ships.AddRange(sortedShips);
         }
 
-        //public override string ToString()
-        //{
-        //    StringBuilder battleFieldState = new StringBuilder();
-        //    foreach (var cell in cells.Where(item => item.Value.Ship != null))
-        //    {
-        //        battleFieldState.Append(cell.ToString());
-        //    }
-        //    return battleFieldState.ToString();
-        //}
-
-        //для теста DataMapper-а
         public override string ToString()
         {
-            return $"ID: {this.Id} \t Length: {this.BattleFieldSideLength}";
+            var battleFieldState = new StringBuilder();
+            foreach (var cell in cells.Where(item => item.Value.Ship != null))
+            {
+                battleFieldState.Append(cell.ToString());
+            }
+            return battleFieldState.ToString();
         }
 
         #endregion Methods

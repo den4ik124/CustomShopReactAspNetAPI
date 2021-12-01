@@ -118,12 +118,9 @@ namespace SeaBattleDomainModel.Entities
 
         public override string ToString()
         {
-            //return $"\tId:\n{Id}\n" +
-            //       $"\tShip:\n{Ship}\n" +
-            //       $"\tPoint:\n{Point}";
-            return $"Id:\t{Id}\n" +
-                   $"Ship:\t{ShipId}\n" +
-                   $"Point:\t{PointId}";
+            return $"\tId:\n{Id}\n" +
+                   $"\tShip:\n{Ship}\n" +
+                   $"\tPoint:\n{Point}";
         }
 
         #endregion Methods.public

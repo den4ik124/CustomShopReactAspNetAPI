@@ -59,7 +59,7 @@ namespace ORM_Repos_UoW.Repositories
         {
             var type = typeof(T);
             var sqlQuery = sqlGenerator.GetSelectJoinString(type, id);
-            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            var properties = type.Columns(typeof(RelatedEntityAttribute));
             bool hasCollectionInside = IsCollectionsInsideType(properties);
             if (hasCollectionInside)
             {
