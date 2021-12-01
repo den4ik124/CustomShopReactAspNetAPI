@@ -57,54 +57,41 @@ namespace OrmRepositoryUnitOfWork.Repositories
         public T ReadItemById(int id)
         {
             var type = typeof(T);
-            var sqlQuery = this.sqlGenerator.GetSelectJoinString(type, id);
-            var properties = type.Columns(typeof(RelatedEntityAttribute));
-            bool hasCollectionInside = IsTypeHasCollectionsInside(properties);
-            if (hasCollectionInside)
+
+            using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
             {
-                using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
+                connection.Open();
+                SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), connection);
+                using (SqlDataReader sqlReader = command.ExecuteReader())
                 {
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), connection);
-                    using (SqlDataReader sqlReader = command.ExecuteReader())
+                    if (sqlReader.HasRows)
                     {
-                        if (sqlReader.HasRows)
+                        while (sqlReader.Read())
                         {
-                            while (sqlReader.Read())
-                            {
-                                return (T)MatchDataItem(type, sqlReader);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                try
-                {
-                    using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
-                    {
-                        connection.Open();
-                        SqlCommand command = new SqlCommand(sqlQuery, connection);
-                        SqlDataReader sqlReader = command.ExecuteReader();
-                        if (sqlReader.HasRows)
-                        {
-                            while (sqlReader.Read())
-                            {
-                                return (T)MatchDataItem(type, sqlReader);
-                            }
+                            return (T)MatchDataItem(type, sqlReader);
                         }
                         return default(T);
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
                 }
             }
 
             return default(T);
         }
+
+        //private T GetItem()
+        //{
+        //    //using (SqlDataReader sqlReader = command.ExecuteReader())
+        //    //{
+        //    //    if (sqlReader.HasRows)
+        //    //    {
+        //    //        while (sqlReader.Read())
+        //    //        {
+        //    //            return (T)MatchDataItem(type, sqlReader);
+        //    //        }
+        //    //        return default(T);
+        //    //    }
+        //    //}
+        //}
 
         public IEnumerable<T> ReadItems()
         {
@@ -123,20 +110,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                     foreach (var primaryKey in primaryKeysValues)
                     {
                         var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
-                        using (var sqlReader = command.ExecuteReader())
-                        {
-                            if (sqlReader.HasRows)
-                            {
-                                while (sqlReader.Read())
-                                {
-                                    var resultItem = MatchDataItem(type, sqlReader);
-                                    if (resultItem != null)
-                                    {
-                                        readedItems.Add((T)resultItem);
-                                    }
-                                }
-                            }
-                        }
+                        readedItems = GetReadedItems(readedItems, type, command);
                     }
                 }
             }
@@ -146,18 +120,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 {
                     connection.Open();
                     var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);
-                    var reader = command.ExecuteReader();
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            var resultItem = MatchDataItem(type, reader);
-                            if (resultItem != null)
-                            {
-                                readedItems.Add((T)resultItem);
-                            }
-                        }
-                    }
+                    readedItems = GetReadedItems(readedItems, type, command);
                 }
             }
             return readedItems;
@@ -212,7 +175,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             foreach (var command in this.sqlQueries)
             {
-                SqlCommand sqlCommand = new SqlCommand(command, connection);
+                var sqlCommand = new SqlCommand(command, connection);
                 sqlCommand.Transaction = transaction;
                 sqlCommand.ExecuteNonQuery();
             }
@@ -393,7 +356,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
                 int itemId = (int)sqlCommand.ExecuteScalar();
 
-                var primaryKeyProperty = type.GetProperties().First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+                var primaryKeyProperty = type.GetProperties().FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
                 SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
             }
             WorkingWithRelatedEntities(ref item, connection, type);
@@ -502,8 +465,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
             foreach (var relatedEintity in relatedEntities)
             {
                 var relatedEintityType = relatedEintity.GetCustomAttribute<RelatedEntityAttribute>()?.RelatedType;
-                var isCollection = relatedEintity.GetCustomAttribute<RelatedEntityAttribute>().IsCollection;
-                if (isCollection)
+                var isCollection = relatedEintity.GetCustomAttribute<RelatedEntityAttribute>()?.IsCollection;
+                if ((bool)isCollection)
                 {
                     relatedEintity.SetValue(item, GetFilledCollection(relatedEintity, sqlReader));
                 }
@@ -551,8 +514,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             var derivedTypes = this.assembly.GetTypes().Where(assemblyType => assemblyType.GetCustomAttributes<InheritanceRelationAttribute>().Any()
                                                         && !assemblyType.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass);
-            var tableName = derivedTypes.First().GetCustomAttribute<TableAttribute>().TableName;
-            var matchingColumnName = derivedTypes.FirstOrDefault().GetCustomAttribute<TypeAttribute>().ColumnMatching;
+            var tableName = derivedTypes.FirstOrDefault()?.GetCustomAttribute<TableAttribute>()?.TableName;
+            var matchingColumnName = derivedTypes.FirstOrDefault()?.GetCustomAttribute<TypeAttribute>()?.ColumnMatching;
             if (matchingColumnName.EndsWith("id", StringComparison.OrdinalIgnoreCase))
             {
                 matchingColumnName = $"{tableName}{matchingColumnName}";
@@ -585,6 +548,25 @@ namespace OrmRepositoryUnitOfWork.Repositories
                     property.SetValue(item, null);
             }
             return item;
+        }
+
+        private List<T> GetReadedItems(List<T> readedItems, Type type, SqlCommand command)
+        {
+            using (var sqlReader = command.ExecuteReader())
+            {
+                if (sqlReader.HasRows)
+                {
+                    while (sqlReader.Read())
+                    {
+                        var resultItem = MatchDataItem(type, sqlReader);
+                        if (resultItem != null)
+                        {
+                            readedItems.Add((T)resultItem);
+                        }
+                    }
+                }
+            }
+            return readedItems;
         }
 
         #endregion Methods.Private
