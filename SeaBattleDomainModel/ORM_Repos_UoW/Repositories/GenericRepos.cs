@@ -59,7 +59,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             var type = typeof(T);
             var sqlQuery = this.sqlGenerator.GetSelectJoinString(type, id);
             var properties = type.Columns(typeof(RelatedEntityAttribute));
-            bool hasCollectionInside = IsCollectionsInsideType(properties);
+            bool hasCollectionInside = IsTypeHasCollectionsInside(properties);
             if (hasCollectionInside)
             {
                 using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
@@ -108,32 +108,31 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         public IEnumerable<T> ReadItems()
         {
-            var result = new List<T>();
+            var readedItems = new List<T>();
             var type = typeof(T);
             var properties = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
 
-            bool hasCollectionInside = IsCollectionsInsideType(properties);
-            if (hasCollectionInside)
+            var isTypeHasCollectionInside = IsTypeHasCollectionsInside(properties);
+            if (isTypeHasCollectionInside)
             {
                 using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
                 {
                     connection.Open();
-                    var primaryKeys = SelectPrimaryKeyValues(type, connection);
+                    var primaryKeysValues = SelectPrimaryKeyValues(type, connection);
 
-                    foreach (var primaryKey in primaryKeys)
+                    foreach (var primaryKey in primaryKeysValues)
                     {
-                        var testSql = this.sqlGenerator.GetSelectJoinString(type, primaryKey);
-                        SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
+                        using (var sqlReader = command.ExecuteReader())
                         {
-                            if (reader.HasRows)
+                            if (sqlReader.HasRows)
                             {
-                                while (reader.Read())
+                                while (sqlReader.Read())
                                 {
-                                    var resultItem = MatchDataItem(type, reader);
+                                    var resultItem = MatchDataItem(type, sqlReader);
                                     if (resultItem != null)
                                     {
-                                        result.Add((T)resultItem);
+                                        readedItems.Add((T)resultItem);
                                     }
                                 }
                             }
@@ -143,11 +142,10 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
             else
             {
-                using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
+                using (var connection = new SqlConnection(this.unitOfWork.ConnectionString))
                 {
                     connection.Open();
-                    var testSql = this.sqlGenerator.GetSelectJoinString(type);
-                    SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);
+                    var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);
                     var reader = command.ExecuteReader();
                     if (reader.HasRows)
                     {
@@ -156,13 +154,13 @@ namespace OrmRepositoryUnitOfWork.Repositories
                             var resultItem = MatchDataItem(type, reader);
                             if (resultItem != null)
                             {
-                                result.Add((T)resultItem);
+                                readedItems.Add((T)resultItem);
                             }
                         }
                     }
                 }
             }
-            return result;
+            return readedItems;
         }
 
         public void Update(T item)
@@ -196,7 +194,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             var type = typeof(T);
             var primaryColumnProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-            int id = (int)primaryColumnProperty.GetValue(item);
+            var id = (int)primaryColumnProperty.GetValue(item);
             if (id > 0)
             {
                 var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery(item);
@@ -208,11 +206,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery(columnName, value);
             this.sqlQueries.Add(sqlQuery);
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
         }
 
         public void Submit(SqlConnection connection, SqlTransaction transaction)
@@ -229,7 +222,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         #region Methods.Private
 
-        private bool IsCollectionsInsideType(IEnumerable<PropertyInfo> properties)
+        private bool IsTypeHasCollectionsInside(IEnumerable<PropertyInfo> properties)
         {
             bool hasCollectionInside = false;
             foreach (var property in properties)
@@ -300,7 +293,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                     if (child.GetValue(item) == null)
                         continue;
 
-                    dynamic childInstance = child.GetValue(item);
+                    dynamic? childInstance = child.GetValue(item);
                     if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                     {
                         if (child.PropertyType.GetInterface("IDictionary") != null)

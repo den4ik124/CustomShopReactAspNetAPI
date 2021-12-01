@@ -2,7 +2,7 @@
 
 namespace OrmRepositoryUnitOfWork.Interfaces
 {
-    public interface IUnitOfWork : IDisposable
+    public interface IUnitOfWork
     {
         string ConnectionString { get; }
 

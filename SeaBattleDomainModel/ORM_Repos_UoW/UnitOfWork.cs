@@ -119,10 +119,5 @@ namespace OrmRepositoryUnitOfWork
             }
             return (GenericRepos<T>)this.repositories[type.Name];
         }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
     }
 }
