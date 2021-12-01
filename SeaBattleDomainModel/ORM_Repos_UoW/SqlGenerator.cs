@@ -10,6 +10,13 @@ namespace OrmRepositoryUnitOfWork
 {
     public class SqlGenerator
     {
+        private const int PropertyEndOfStringOffset = 2;
+        private const int PropertyAmountOfDeletingSymbols = 1;
+        private const int ConditionEndOfStringOffset = 4;
+        private const int ConditionAmountOfDeletingSymbols = 3;
+
+        private const string ScopeIdentity = "\nSELECT CAST(scope_identity() AS int)";
+
         private Assembly assembly;
         private Stack<string> deleteSqlQueries;
         private Stack<string> updateSqlQueries;
@@ -94,34 +101,34 @@ namespace OrmRepositoryUnitOfWork
                 var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var columnValue = property.GetValue(item);
 
-                columnNameStringBuilder.Append($"[{tableName}].[{columnName}],");
+                columnNameStringBuilder.Append($"[{tableName}].[{columnName}], ");
                 if (columnValue == null)
                 {
-                    columnValueStringBuilder.Append("NULL,");
+                    columnValueStringBuilder.Append("NULL, ");
                 }
                 else
                 {
-                    columnValueStringBuilder.Append($"{columnValue},");
+                    columnValueStringBuilder.Append($"{columnValue}, ");
                 }
             }
             if (type.GetCustomAttribute<InheritanceRelationAttribute>() != null)
             {
                 columnMatching = type.GetCustomAttribute<InheritanceRelationAttribute>().ColumnMatching;
                 typeId = type.GetCustomAttribute<TypeAttribute>().TypeID;
-                columnNameStringBuilder.Append($"[{tableName}].[{columnMatching}],");
-                columnValueStringBuilder.Append($"{typeId},");
+                columnNameStringBuilder.Append($"[{tableName}].[{columnMatching}], ");
+                columnValueStringBuilder.Append($"{typeId}, ");
             }
 
-            columnNameStringBuilder.Remove(columnNameStringBuilder.Length - 1, 1);
-            columnValueStringBuilder.Remove(columnValueStringBuilder.Length - 1, 1);
+            columnNameStringBuilder.Remove(columnNameStringBuilder.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
+            columnValueStringBuilder.Remove(columnValueStringBuilder.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
 
             insertQueryBuilder.Append($"({columnNameStringBuilder}) VALUES ({columnValueStringBuilder})");
-            insertQueryBuilder.Append("\nSELECT CAST(scope_identity() AS int)");
+            insertQueryBuilder.Append(ScopeIdentity);
 
             return prefix + insertQueryBuilder.ToString() + postfix;
         }
 
-        public string GetSelectJoinString(Type type, int id = -1)
+        public string GetSelectJoinString(Type type, int id = default)
         {
             var tablePropetriesNames = new Dictionary<Type, List<string>>();
 
@@ -134,7 +141,7 @@ namespace OrmRepositoryUnitOfWork
             var childTables = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
             if (childTables.Count() == 0)
             {
-                if (id > -1)
+                if (id > default(int))
                 {
                     return SelectFromSingleTableSqlQuery(tablePropetriesNames, tableName, id);
                 }
@@ -176,7 +183,7 @@ namespace OrmRepositoryUnitOfWork
                 }
             }
 
-            selectQueryBuider.Remove(selectQueryBuider.Length - 2, 1);
+            selectQueryBuider.Remove(selectQueryBuider.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
 
             selectQueryBuider.Append($" FROM [{tableName}]\n");
             return selectQueryBuider.ToString();
@@ -362,7 +369,7 @@ namespace OrmRepositoryUnitOfWork
 
         #region Methods.Private
 
-        private string SelectJoinSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string whereFilterTable = "", int id = -1)
+        private string SelectJoinSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string whereFilterTable = "", int id = default)
         {
             var selectQueryBuilder = new StringBuilder("SELECT\n");
             foreach (var table in tablePropetriesNames)
@@ -378,7 +385,7 @@ namespace OrmRepositoryUnitOfWork
                     selectQueryBuilder.Append($"[{currentTableName}].[{property}],\n");
                 }
             }
-            selectQueryBuilder.Remove(selectQueryBuilder.Length - 2, 1);
+            selectQueryBuilder.Remove(selectQueryBuilder.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
 
             var relatedTable = tablePropetriesNames.First(type => type.Key
                                                                       .GetCustomAttribute<TableAttribute>()
@@ -446,7 +453,7 @@ namespace OrmRepositoryUnitOfWork
             }
         }
 
-        private string SelectFromSingleTableSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string tableName, int id = -1)
+        private string SelectFromSingleTableSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string tableName, int id = default)
         {
             var selectQueryBuilder = new StringBuilder("SELECT \n");
 
@@ -466,7 +473,7 @@ namespace OrmRepositoryUnitOfWork
                 }
             }
 
-            selectQueryBuilder.Remove(selectQueryBuilder.Length - 2, 1);
+            selectQueryBuilder.Remove(selectQueryBuilder.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
 
             selectQueryBuilder.Append($" FROM [{tableName}]\n");
             if (id > 0)
@@ -546,7 +553,7 @@ namespace OrmRepositoryUnitOfWork
                 var columnValue = property.GetValue(item);
                 selectQueryWithConditionBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
             }
-            selectQueryWithConditionBuilder.Remove(selectQueryWithConditionBuilder.Length - 4, 3);
+            selectQueryWithConditionBuilder.Remove(selectQueryWithConditionBuilder.Length - ConditionEndOfStringOffset, ConditionAmountOfDeletingSymbols);
 
             return selectQueryWithConditionBuilder.ToString();
         }
@@ -568,12 +575,12 @@ namespace OrmRepositoryUnitOfWork
                 var columnValue = property.GetValue(item);
                 selectQueryBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
             }
-            selectQueryBuilder.Remove(selectQueryBuilder.Length - 4, 3);
+            selectQueryBuilder.Remove(selectQueryBuilder.Length - ConditionEndOfStringOffset, ConditionAmountOfDeletingSymbols);
 
             return selectQueryBuilder.ToString();
         }
 
-        private string SetNullOrDeleteForeignKey(string tableName, string columnName = "", object value = default)
+        private string SetNullOrDeleteForeignKey(string tableName, string columnName = "", object? value = default)
         {
             var type = this.assembly.GetTypes()
                                 .First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Count() > 0
@@ -621,11 +628,11 @@ namespace OrmRepositoryUnitOfWork
                 }
             }
 
-            deleteQueryStringBuilder.Remove(deleteQueryStringBuilder.Length - 5, 5);
+            deleteQueryStringBuilder.Remove(deleteQueryStringBuilder.Length - ConditionEndOfStringOffset, ConditionAmountOfDeletingSymbols);
             return deleteQueryStringBuilder.ToString() + Environment.NewLine;
         }
 
-        private string GetUpdateConcreteItemSqlQuery<T>(T item, string columnName = "", object value = default)
+        private string GetUpdateConcreteItemSqlQuery<T>(T item, string columnName = "", object? value = default)
         {
             var type = typeof(T);
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
@@ -652,7 +659,7 @@ namespace OrmRepositoryUnitOfWork
                     updateQueryBuider.Append($"[{tableName}].[{currentColumnName}] = {columnValue},\n");
                 }
             }
-            updateQueryBuider.Remove(updateQueryBuider.Length - 2, 1);
+            updateQueryBuider.Remove(updateQueryBuider.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
             if (columnName == "")
             {
                 updateQueryBuider.Append($"WHERE [{tableName}].[{primaryColumnName}] = {primaryColumnValue}");
