@@ -15,7 +15,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
     {
         private List<string> sqlQueries = new List<string>();
 
-        private readonly string typeTableName;
+        private readonly string? typeTableName;
         private Assembly assembly;
         private IUnitOfWork unitOfWork;
         private SqlGenerator sqlGenerator;
@@ -24,8 +24,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             this.unitOfWork = uow;
             this.sqlGenerator = new SqlGenerator();
-            this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
-            this.typeTableName = typeof(T).GetCustomAttribute<TableAttribute>().TableName;
+            this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
+            this.typeTableName = typeof(T).GetCustomAttribute<TableAttribute>()?.TableName;
         }
 
         #region Methods
@@ -39,7 +39,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             var baseType = item.GetType();
             int? itemPrimaryKeyValue = (int)item.GetType()
                                                 .GetProperties()
-                                                .First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                                .FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
                                                 .GetValue(item);
 
             InsertRelatedDataOnly(ref item, connection, itemPrimaryKeyValue, baseType);
@@ -110,7 +110,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             var readedItems = new List<T>();
             var type = typeof(T);
-            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
 
             var isTypeHasCollectionInside = IsTypeHasCollectionsInside(properties);
             if (isTypeHasCollectionInside)
@@ -193,7 +193,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
         public void Delete(T item)
         {
             var type = typeof(T);
-            var primaryColumnProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+            var primaryColumnProperty = type.GetProperties().FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
             var id = (int)primaryColumnProperty.GetValue(item);
             if (id > 0)
             {
@@ -239,20 +239,20 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         private List<int> SelectPrimaryKeyValues(Type type, SqlConnection connection)
         {
-            string selectAllDataForSpecificType = sqlGenerator.SelectFromSingleTableSqlQuery(type);
+            var selectAllDataForSpecificType = sqlGenerator.SelectFromSingleTableSqlQuery(type);
             var primaryColumnName = type.GetProperties()
-                                                       .First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
-                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
+                                        .FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                        .GetCustomAttribute<ColumnAttribute>().ColumnName;
             primaryColumnName = $"{this.typeTableName}{primaryColumnName}";
             var primaryKeyValues = new List<int>();
-            SqlCommand cmd = new SqlCommand(selectAllDataForSpecificType, connection);
-            using (SqlDataReader reader = cmd.ExecuteReader())
+            var command = new SqlCommand(selectAllDataForSpecificType, connection);
+            using (var sqlReader = command.ExecuteReader())
             {
-                if (reader.HasRows)
+                if (sqlReader.HasRows)
                 {
-                    while (reader.Read())
+                    while (sqlReader.Read())
                     {
-                        primaryKeyValues.Add((int)reader[primaryColumnName]);
+                        primaryKeyValues.Add((int)sqlReader[primaryColumnName]);
                     }
                 }
             }
@@ -268,24 +268,24 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 if (type == baseType)
                 {
                     type.GetProperties()
-                        .Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0)
-                        .First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                        .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
+                        .First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
                         .SetValue(item, baseTypeId);
                 }
                 else
                 {
                     type.GetProperties()
-                        .Where(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0)
-                        .First(p => p.GetCustomAttribute<ColumnAttribute>().BaseType == baseType)
+                        .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
+                        .First(property => property.GetCustomAttribute<ColumnAttribute>().BaseType == baseType)
                         .SetValue(item, baseTypeId);
                 }
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
 
-                int itemId = (int)sqlCommand.ExecuteScalar();
+                var itemId = (int)sqlCommand.ExecuteScalar();
             }
 
-            var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Any());
             if (childs.Any())
             {
                 foreach (var child in childs)
@@ -347,7 +347,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                     primaryKeyProperty.SetValue(item, itemId);
                 }
             }
-            var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
             if (childs.Any())
             {
                 foreach (var child in childs)
@@ -401,8 +401,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         private void WorkingWithRelatedEntities<TItem>(ref TItem? item, SqlConnection connection, Type type)
         {
-            var realtedEntities = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
-            if (realtedEntities.Count() > 0)
+            var realtedEntities = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
+            if (realtedEntities.Any())
             {
                 foreach (var realtedEntity in realtedEntities)
                 {
@@ -492,9 +492,9 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         private dynamic FillChilds(object item, Type type, SqlDataReader sqlReader)
         {
-            var relatedEntities = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            var relatedEntities = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
 
-            if (relatedEntities.Count() == 0)
+            if (!relatedEntities.Any())
             {
                 return item;
             }
@@ -549,8 +549,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         private object GetDerivedClass(SqlDataReader sqlReader)
         {
-            var derivedTypes = this.assembly.GetTypes().Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
-                                                        && t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false);
+            var derivedTypes = this.assembly.GetTypes().Where(assemblyType => assemblyType.GetCustomAttributes<InheritanceRelationAttribute>().Any()
+                                                        && !assemblyType.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass);
             var tableName = derivedTypes.First().GetCustomAttribute<TableAttribute>().TableName;
             var matchingColumnName = derivedTypes.FirstOrDefault().GetCustomAttribute<TypeAttribute>().ColumnMatching;
             if (matchingColumnName.EndsWith("id", StringComparison.OrdinalIgnoreCase))
@@ -563,13 +563,13 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 return null;
             }
 
-            var type = derivedTypes.FirstOrDefault(derivaedType => derivaedType.GetCustomAttribute<TypeAttribute>().TypeID == (int)sqlReader[matchingColumnName]);
+            var type = derivedTypes.FirstOrDefault(derivedType => derivedType.GetCustomAttribute<TypeAttribute>().TypeID == (int)sqlReader[matchingColumnName]);
             return Activator.CreateInstance(type);
         }
 
         private object FillProperties(object item, Type type, SqlDataReader sqlReader)
         {
-            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any());
 
             foreach (var property in properties)
             {
