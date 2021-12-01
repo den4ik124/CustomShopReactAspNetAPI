@@ -26,5 +26,10 @@ namespace ReflectionExtensions
             var type = typeof(T);
             return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0).ToArray();
         }
+
+        public static PropertyInfo[] Columns(this Type type, Type attributeType)
+        {
+            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0).ToArray();
+        }
     }
 }

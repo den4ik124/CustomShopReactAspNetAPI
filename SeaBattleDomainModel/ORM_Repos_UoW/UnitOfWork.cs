@@ -22,19 +22,35 @@ namespace ORM_Repos_UoW
 
         public void Create<TInsert>(TInsert item)
         {
-            using (var connection = new SqlConnection(ConnectionString))
+            try
             {
-                connection.Open();
-                GetRepository<TInsert>().Create(ref item, connection);
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    connection.Open();
+                    GetRepository<TInsert>().Create(ref item, connection);
+                }
+            }
+            catch (Exception ex)
+            {
+                //TODO: use some logger instead of Debug.
+                Debug.WriteLine(ex.Message);
             }
         }
 
         public void Create<TInsert>(IEnumerable<TInsert> items)
         {
-            using (var connection = new SqlConnection(ConnectionString))
+            try
             {
-                connection.Open();
-                GetRepository<TInsert>().Create(items, connection);
+                using (var connection = new SqlConnection(ConnectionString))
+                {
+                    connection.Open();
+                    GetRepository<TInsert>().Create(items, connection);
+                }
+            }
+            catch (Exception ex)
+            {
+                //TODO: use some logger instead of Debug.
+                Debug.WriteLine(ex.Message);
             }
         }
 

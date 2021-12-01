@@ -1,6 +1,7 @@
 ﻿using ORM_Repos_UoW.Attributes;
 using ORM_Repos_UoW.Enums;
 using ORM_Repos_UoW.Interfaces;
+using ReflectionExtensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -51,8 +52,6 @@ namespace ORM_Repos_UoW.Repositories
             {
                 var refitem = item;
                 Create(ref refitem, connection);
-                //var sqlQuery = sqlGenerator.GetInsertIntoSqlQuery(item);
-                //sqlQueries.Add(sqlQuery);
             }
         }
 
@@ -436,7 +435,7 @@ namespace ORM_Repos_UoW.Repositories
                     }
                     else
                     {
-                        //ЕСЛИ НЕ КОЛЕКЦИЯ
+                        //if not a collection
                         InsertAlgorithm(ref relatedEntityInstance, connection);
                     }
                     SetValueIntoProperty(ref item, relatedEntityInstance, realtedEntity);
