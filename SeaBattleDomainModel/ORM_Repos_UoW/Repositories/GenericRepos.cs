@@ -188,7 +188,7 @@ namespace ORM_Repos_UoW.Repositories
             sqlQueries.Add(sqlUpdateQuery);
         }
 
-        public void Delete(int id)
+        public void DeleteById(int id)
         {
             var sqlQuery = sqlGenerator.GetDeleteSqlQuery(this.typeTableName, id);
             sqlQueries.Add(sqlQuery);

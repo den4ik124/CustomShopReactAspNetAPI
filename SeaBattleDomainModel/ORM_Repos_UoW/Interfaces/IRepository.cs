@@ -18,7 +18,7 @@ namespace ORM_Repos_UoW.Interfaces
 
         IEnumerable<T> ReadItems();
 
-        void Delete(int id);
+        void DeleteById(int id);
 
         void Delete(T item);
 

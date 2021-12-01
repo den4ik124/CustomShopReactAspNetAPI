@@ -58,9 +58,9 @@ namespace ORM_Repos_UoW
             GetRepository<TDelete>().Delete(item);
         }
 
-        public void Delete<TDelete>(int id)
+        public void DeleteById<TDelete>(int id)
         {
-            GetRepository<TDelete>().Delete(id);
+            GetRepository<TDelete>().DeleteById(id);
         }
 
         public void Commit()
