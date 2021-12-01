@@ -268,15 +268,15 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 if (type == baseType)
                 {
                     type.GetProperties()
-                        .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
-                        .First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                        .FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Any()
+                                        && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)?
                         .SetValue(item, baseTypeId);
                 }
                 else
                 {
                     type.GetProperties()
-                        .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
-                        .First(property => property.GetCustomAttribute<ColumnAttribute>().BaseType == baseType)
+                        .FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Any()
+                                        && property.GetCustomAttribute<ColumnAttribute>().BaseType == baseType)?
                         .SetValue(item, baseTypeId);
                 }
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
