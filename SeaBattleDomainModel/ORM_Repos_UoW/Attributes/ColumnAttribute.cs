@@ -17,7 +17,7 @@ namespace OrmRepositoryUnitOfWork.Attributes
 
         public bool AllowNull { get; set; } = false;
 
-        public ColumnAttribute(string columnName = "", KeyType keyType = KeyType.None, ReadWriteOption readWriteOption = ReadWriteOption.Read | ReadWriteOption.Write)
+        public ColumnAttribute(string columnName = "", ReadWriteOption readWriteOption = ReadWriteOption.Read | ReadWriteOption.Write)
         {
             ColumnName = columnName;
             ReadWriteOption = readWriteOption;

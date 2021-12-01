@@ -37,7 +37,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             InsertAlgorithm(ref item, connection);
 
             var baseType = item.GetType();
-            int itemPrimaryKeyValue = (int)item.GetType()
+            int? itemPrimaryKeyValue = (int)item.GetType()
                                                 .GetProperties()
                                                 .First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
                                                 .GetValue(item);
@@ -259,7 +259,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return primaryKeyValues;
         }
 
-        private void InsertRelatedDataOnly<TItem>(ref TItem? item, SqlConnection connection, int baseTypeId, Type baseType)
+        private void InsertRelatedDataOnly<TItem>(ref TItem? item, SqlConnection connection, int? baseTypeId, Type baseType)
         {
             var type = item.GetType();
 
