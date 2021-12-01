@@ -9,8 +9,5 @@ namespace OrmRepositoryUnitOfWork.Attributes
         public Type RelatedType { get; set; }
 
         public bool IsCollection { get; set; }
-
-        public RelatedEntityAttribute()
-        { }
     }
 }
