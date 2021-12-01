@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.SqlClient;
 
-namespace ORM_Repos_UoW.Interfaces
+namespace OrmRepositoryUnitOfWork.Interfaces
 {
     public interface IBaseRepository : IDisposable
     {

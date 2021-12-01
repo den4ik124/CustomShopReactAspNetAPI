@@ -1,5 +1,5 @@
-﻿using ORM_Repos_UoW.Attributes;
-using ORM_Repos_UoW.Enums;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +59,7 @@ namespace SeaBattleDomainModel.Entities
         #region Constructors
 
         /// <summary>
-        /// Для корректной работы ORM
+        /// for ORM
         /// </summary>
         public BattleField()
         {

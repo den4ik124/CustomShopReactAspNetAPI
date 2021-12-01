@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ORM_Repos_UoW\ORM_Repos_UoW.csproj" />
+    <ProjectReference Include="..\ORM_Repos_UoW\OrmRepositoryUnitOfWork.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace ORM_Repos_UoW.Enums
+﻿namespace OrmRepositoryUnitOfWork.Enums
 {
     public enum KeyType
     {

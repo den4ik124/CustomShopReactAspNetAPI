@@ -1,5 +1,5 @@
-﻿using ORM_Repos_UoW.Attributes;
-using ORM_Repos_UoW.Enums;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
 using System;
 
 namespace SeaBattleDomainModel.Entities

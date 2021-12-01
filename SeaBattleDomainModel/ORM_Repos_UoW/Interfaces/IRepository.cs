@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.SqlClient;
 
-namespace ORM_Repos_UoW.Interfaces
+namespace OrmRepositoryUnitOfWork.Interfaces
 {
     public interface IRepository<T> : IBaseRepository
     {

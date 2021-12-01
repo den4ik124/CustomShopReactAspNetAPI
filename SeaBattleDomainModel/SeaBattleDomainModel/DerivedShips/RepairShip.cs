@@ -1,4 +1,4 @@
-﻿using ORM_Repos_UoW.Attributes;
+﻿using OrmRepositoryUnitOfWork.Attributes;
 using SeaBattleDomainModel.Entities;
 using SeaBattleDomainModel.Interfaces;
 using System;

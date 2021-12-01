@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ORM_Repos_UoW.Attributes
+namespace OrmRepositoryUnitOfWork.Attributes
 {
     public class InheritanceRelationAttribute : Attribute
     {

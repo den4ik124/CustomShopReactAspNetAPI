@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace ORM_Repos_UoW.Attributes
+namespace OrmRepositoryUnitOfWork.Attributes
 {
     public class TypeAttribute : Attribute
     {

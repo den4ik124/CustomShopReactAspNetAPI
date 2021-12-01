@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ORM_Repos_UoW.Attributes
+namespace OrmRepositoryUnitOfWork.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class TableAttribute : Attribute

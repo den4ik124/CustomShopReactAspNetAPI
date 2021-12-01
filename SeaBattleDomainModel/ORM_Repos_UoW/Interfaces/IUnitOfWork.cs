@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ORM_Repos_UoW.Interfaces
+namespace OrmRepositoryUnitOfWork.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {

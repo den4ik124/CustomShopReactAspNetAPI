@@ -1,16 +1,15 @@
-﻿using ORM_Repos_UoW.Attributes;
-using ORM_Repos_UoW.Enums;
-using ORM_Repos_UoW.Interfaces;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
+using OrmRepositoryUnitOfWork.Interfaces;
 using ReflectionExtensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
-namespace ORM_Repos_UoW.Repositories
+namespace OrmRepositoryUnitOfWork.Repositories
 {
     public class GenericRepos<T> : IRepository<T>
     {
@@ -197,7 +196,7 @@ namespace ORM_Repos_UoW.Repositories
         {
             var type = typeof(T);
             var primaryColumnProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-            int id = (int)primaryColumnProperty.GetValue(item); // fot items with ID>0 only
+            int id = (int)primaryColumnProperty.GetValue(item);
             if (id > 0)
             {
                 var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery(item);
@@ -247,7 +246,7 @@ namespace ORM_Repos_UoW.Repositories
 
         private List<int> SelectPrimaryKeyValues(Type type, SqlConnection connection)
         {
-            string selectAllDataForSpecificType = sqlGenerator.SelectFromSingleTableSqlQuery(type); //select all rows from a specific table to get the all IDs
+            string selectAllDataForSpecificType = sqlGenerator.SelectFromSingleTableSqlQuery(type);
             var primaryColumnName = type.GetProperties()
                                                        .First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
                                                        .GetCustomAttribute<ColumnAttribute>().ColumnName;
@@ -290,7 +289,6 @@ namespace ORM_Repos_UoW.Repositories
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
 
-                //get itemID from DB
                 int itemId = (int)sqlCommand.ExecuteScalar();
             }
 
@@ -307,7 +305,6 @@ namespace ORM_Repos_UoW.Repositories
                     {
                         if (child.PropertyType.GetInterface("IDictionary") != null)
                         {
-                            //If collection  IS DICTIONARY
                             var keys = childInstance.Keys;
                             foreach (var key in keys)
                             {
@@ -319,7 +316,6 @@ namespace ORM_Repos_UoW.Repositories
                         }
                         else
                         {
-                            //If collection IS NOT DICTIONARY
                             foreach (var element in childInstance)
                             {
                                 var elementInstance = element;
@@ -329,7 +325,6 @@ namespace ORM_Repos_UoW.Repositories
                     }
                     else
                     {
-                        //IF NOT A COLLECTION
                         InsertRelatedDataOnly(ref childInstance, connection, baseTypeId, baseType);
                     }
                     SetValueIntoProperty(ref item, childInstance, child);
@@ -345,10 +340,8 @@ namespace ORM_Repos_UoW.Repositories
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
 
-                //get itemID from DB
                 int itemId = (int)sqlCommand.ExecuteScalar();
 
-                //set item ID to ENTITY
                 var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
                 if (type.IsValueType)
                 {
@@ -373,7 +366,6 @@ namespace ORM_Repos_UoW.Repositories
                     {
                         if (child.PropertyType.GetInterface("IDictionary") != null)
                         {
-                            //If collection  IS DICTIONARY
                             var keys = childInstance.Keys;
                             foreach (var key in keys)
                             {
@@ -384,7 +376,6 @@ namespace ORM_Repos_UoW.Repositories
                         }
                         else
                         {
-                            //If collection IS NOT DICTIONARY
                             for (int i = 0; i < childInstance.Count; i++)
                             {
                                 InsertNonRelatedData(childInstance[i], connection);
@@ -393,7 +384,6 @@ namespace ORM_Repos_UoW.Repositories
                     }
                     else
                     {
-                        //IF NOT A COLLECTION
                         InsertNonRelatedData(ref childInstance, connection);
                     }
                 }
@@ -408,10 +398,8 @@ namespace ORM_Repos_UoW.Repositories
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
 
-                //get itemID from DB
                 int itemId = (int)sqlCommand.ExecuteScalar();
 
-                //set item ID to ENTITY
                 var primaryKeyProperty = type.GetProperties().First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
                 SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
             }
@@ -435,7 +423,6 @@ namespace ORM_Repos_UoW.Repositories
                     }
                     else
                     {
-                        //if not a collection
                         InsertAlgorithm(ref relatedEntityInstance, connection);
                     }
                     SetValueIntoProperty(ref item, relatedEntityInstance, realtedEntity);
@@ -447,7 +434,6 @@ namespace ORM_Repos_UoW.Repositories
         {
             if (child.PropertyType.GetInterface("IDictionary") != null)
             {
-                //If collection IS DICTIONARY
                 var keys = childInstance.Keys;
                 foreach (var key in keys)
                 {
@@ -459,7 +445,6 @@ namespace ORM_Repos_UoW.Repositories
             }
             else
             {
-                //If collection IS NOT DICTIONARY
                 foreach (var element in childInstance)
                 {
                     var elementInstance = element;

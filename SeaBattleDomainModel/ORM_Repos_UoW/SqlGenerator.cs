@@ -1,19 +1,18 @@
-﻿using ORM_Repos_UoW.Attributes;
-using ORM_Repos_UoW.Enums;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace ORM_Repos_UoW
+namespace OrmRepositoryUnitOfWork
 {
     public class SqlGenerator
     {
         private Assembly assembly;
-
-        private Stack<string> deleteSqlQueries { get; set; }
-        private Stack<string> updateSqlQueries { get; set; }
+        private Stack<string> deleteSqlQueries;
+        private Stack<string> updateSqlQueries;
 
         public SqlGenerator()
         {
@@ -114,17 +113,17 @@ namespace ORM_Repos_UoW
 
             var type = tablePropetriesNames.First(keyType => keyType.Key.GetCustomAttribute<TableAttribute>().TableName == tableName).Key;
 
-            var properties = tablePropetriesNames[type];// type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            var properties = tablePropetriesNames[type];
             foreach (var property in properties)
             {
                 if (property.EndsWith("id", StringComparison.OrdinalIgnoreCase))
                 {
                     string propAs = $"{property}] AS [{tableName}{property}";
-                    selectQueryBuilder.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                    selectQueryBuilder.Append($"[{tableName}].[{propAs}],\n");
                 }
                 else
                 {
-                    selectQueryBuilder.Append($"[{tableName}].[{property}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                    selectQueryBuilder.Append($"[{tableName}].[{property}],\n");
                 }
             }
 
@@ -370,8 +369,8 @@ namespace ORM_Repos_UoW
                 {
                     continue;
                 }
-                dynamic childInstance = child.GetValue(item); //получение значения свойства
-                if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection) //если свойство - коллекция, то для каждого элемента нужно получить имя колонки и значение
+                dynamic childInstance = child.GetValue(item);
+                if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                 {
                     if (childInstance.GetType().GetInterface("IDictionary") != null)
                     {
@@ -397,11 +396,11 @@ namespace ORM_Repos_UoW
             return result;
         }
 
-        public string GetInsertConcreteItemSqlQuery<T>(T item) //TODO: был private
+        public string GetInsertConcreteItemSqlQuery<T>(T item)
         {
             var type = item.GetType();
-            string prefix = "";
-            string postfix = "";
+            var prefix = "";
+            var postfix = "";
 
             if (type.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
             {
@@ -492,17 +491,17 @@ namespace ORM_Repos_UoW
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
 
             var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0)
-                                .Select(property => property.GetCustomAttribute<ColumnAttribute>().ColumnName); //tablePropetriesNames[type];// type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+                                .Select(property => property.GetCustomAttribute<ColumnAttribute>().ColumnName);
             foreach (var property in properties)
             {
                 if (property.EndsWith("id", StringComparison.OrdinalIgnoreCase))
                 {
                     string propAs = $"{property}] AS [{tableName}{property}";
-                    selectQueryBuider.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                    selectQueryBuider.Append($"[{tableName}].[{propAs}],\n");
                 }
                 else
                 {
-                    selectQueryBuider.Append($"[{tableName}].[{property}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                    selectQueryBuider.Append($"[{tableName}].[{property}],\n");
                 }
             }
 
@@ -514,15 +513,15 @@ namespace ORM_Repos_UoW
 
         public IEnumerable<Type> GetDependentTypes(Type deletedType)
         {
-            var types = this.assembly.GetTypes(); //get assembly types
+            var types = this.assembly.GetTypes();
             var usefulTypes = types.Where(type => type.GetProperties()
                                                 .Where(property => property.GetCustomAttributes<ColumnAttribute>()
                                                 .Count() > 0)
-                                    .Count() > 0); //select types where exists properties with [ColumnAttribute]
+                                    .Count() > 0);
             return usefulTypes.Where(type => type.GetProperties()
                                             .Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                         && property.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType)
-                                            .Count() > 0); //select dependent types where BaseType == type of deleted item
+                                            .Count() > 0);
         }
 
         public string GetUpdateSqlQuery<T>(T item, string columnName = "", object value = default)
@@ -543,7 +542,8 @@ namespace ORM_Repos_UoW
                 this.deleteSqlQueries = new Stack<string>();
             }
 
-            var type = this.assembly.GetTypes().First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Count() > 0 && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
+            var type = this.assembly.GetTypes().First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Count() > 0
+                                                   && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
             var primaryKeyColumnName = type.GetProperties()
                                             .First(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                             && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
@@ -602,8 +602,6 @@ namespace ORM_Repos_UoW
                 this.deleteSqlQueries.Push(updateQuery);
             }
             return GetStringFromStack(this.deleteSqlQueries);
-
-            //return $"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}";
         }
 
         public string GetDeleteSqlQuery<T>(T item)

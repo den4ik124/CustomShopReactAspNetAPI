@@ -1,23 +1,23 @@
-﻿using ORM_Repos_UoW.Interfaces;
-using ORM_Repos_UoW.Repositories;
+﻿using OrmRepositoryUnitOfWork.Interfaces;
+using OrmRepositoryUnitOfWork.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
 
-namespace ORM_Repos_UoW
+namespace OrmRepositoryUnitOfWork
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private Dictionary<string, IBaseRepository> _repositories;
-
+        private Dictionary<string, IBaseRepository> repositories;
+        private readonly ILogger logger;
         public string ConnectionString { get; }
 
-        public UnitOfWork(string connectionString)
+        public UnitOfWork(string connectionString, ILogger logger)
         {
             this.ConnectionString = connectionString;
-            _repositories = new Dictionary<string, IBaseRepository>();
+            this.repositories = new Dictionary<string, IBaseRepository>();
+            this.logger = logger;
         }
 
         public void Create<TInsert>(TInsert item)
@@ -32,8 +32,7 @@ namespace ORM_Repos_UoW
             }
             catch (Exception ex)
             {
-                //TODO: use some logger instead of Debug.
-                Debug.WriteLine(ex.Message);
+                this.logger.Log(ex.Message);
             }
         }
 
@@ -49,8 +48,7 @@ namespace ORM_Repos_UoW
             }
             catch (Exception ex)
             {
-                //TODO: use some logger instead of Debug.
-                Debug.WriteLine(ex.Message);
+                this.logger.Log(ex.Message);
             }
         }
 
@@ -91,36 +89,35 @@ namespace ORM_Repos_UoW
 
                     try
                     {
-                        _repositories.ToList().ForEach(x => x.Value.Submit(connection, transaction));
+                        this.repositories.ToList().ForEach(x => x.Value.Submit(connection, transaction));
 
                         transaction.Commit();
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine(ex.Message);
+                        this.logger.Log(ex.Message);
                         transaction.Rollback();
                     }
                 }
             }
             catch (Exception ex)
             {
-                //TODO: use some logger instead of Debug
-                Debug.WriteLine(ex.Message);
+                this.logger.Log(ex.Message);
             }
         }
 
         private GenericRepos<T> GetRepository<T>()
         {
             var type = typeof(T);
-            if (_repositories == null)
+            if (this.repositories == null)
             {
-                _repositories = new Dictionary<string, IBaseRepository>();
+                this.repositories = new Dictionary<string, IBaseRepository>();
             }
-            if (!_repositories.ContainsKey(typeof(T).Name))
+            if (!this.repositories.ContainsKey(typeof(T).Name))
             {
-                _repositories[type.Name] = new GenericRepos<T>(this);
+                this.repositories[type.Name] = new GenericRepos<T>(this);
             }
-            return (GenericRepos<T>)_repositories[type.Name];
+            return (GenericRepos<T>)this.repositories[type.Name];
         }
 
         public void Dispose()

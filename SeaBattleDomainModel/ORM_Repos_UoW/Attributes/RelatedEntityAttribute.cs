@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ORM_Repos_UoW.Attributes
+namespace OrmRepositoryUnitOfWork.Attributes
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     public class RelatedEntityAttribute : Attribute
@@ -11,13 +11,6 @@ namespace ORM_Repos_UoW.Attributes
         public bool IsCollection { get; set; }
 
         public RelatedEntityAttribute()
-        {
-        }
-
-        //public ChildAttribute(string table, Type relatedType)
-        //{
-        //    Table = table;
-        //    RelatedType = relatedType;
-        //}
+        { }
     }
 }

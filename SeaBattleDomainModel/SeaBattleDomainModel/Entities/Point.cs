@@ -1,5 +1,5 @@
-﻿using ORM_Repos_UoW.Attributes;
-using ORM_Repos_UoW.Enums;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
 using System;
 
 namespace SeaBattleDomainModel.Entities
@@ -9,7 +9,7 @@ namespace SeaBattleDomainModel.Entities
     {
         #region Fields
 
-        private int x; //TODO: могу ли я поменять readonly на свойство {get; private set;} ?
+        private int x; //TODO: can I use {get; private set;} instead of readonly?
 
         private int y;
 

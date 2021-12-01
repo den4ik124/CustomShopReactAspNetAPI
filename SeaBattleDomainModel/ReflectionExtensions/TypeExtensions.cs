@@ -5,9 +5,6 @@ using System.Reflection;
 
 namespace ReflectionExtensions
 {
-    /// <summary>
-    /// Clarify, can I use extensions instead of long LINQ queries
-    /// </summary>
     public enum PropertyKeyType
     {
         Primary,

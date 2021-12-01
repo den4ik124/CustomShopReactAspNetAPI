@@ -1,7 +1,7 @@
-﻿using ORM_Repos_UoW.Enums;
+﻿using OrmRepositoryUnitOfWork.Enums;
 using System;
 
-namespace ORM_Repos_UoW.Attributes
+namespace OrmRepositoryUnitOfWork.Attributes
 {
     /// <summary>
     /// Mark property to match the data with corresponding column in table
@@ -21,7 +21,6 @@ namespace ORM_Repos_UoW.Attributes
         {
             ColumnName = columnName;
             ReadWriteOption = readWriteOption;
-            //KeyType = keyType;
         }
     }
 }
