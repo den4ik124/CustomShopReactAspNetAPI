@@ -2,8 +2,8 @@
 {
     public enum KeyType
     {
-        Primary,
-        Foreign,
-        None,
+        Primary = 1,
+        Foreign = 2,
+        None = 3,
     }
 }
