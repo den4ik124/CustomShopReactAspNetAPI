@@ -78,21 +78,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return default(T);
         }
 
-        //private T GetItem()
-        //{
-        //    //using (SqlDataReader sqlReader = command.ExecuteReader())
-        //    //{
-        //    //    if (sqlReader.HasRows)
-        //    //    {
-        //    //        while (sqlReader.Read())
-        //    //        {
-        //    //            return (T)MatchDataItem(type, sqlReader);
-        //    //        }
-        //    //        return default(T);
-        //    //    }
-        //    //}
-        //}
-
         public IEnumerable<T> ReadItems()
         {
             var readedItems = new List<T>();
