@@ -286,7 +286,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
 
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
-            if (childs.Count() > 0)
+            if (childs.Any())
             {
                 foreach (var child in childs)
                 {
@@ -298,11 +298,11 @@ namespace OrmRepositoryUnitOfWork.Repositories
                     {
                         if (child.PropertyType.GetInterface("IDictionary") != null)
                         {
-                            var keys = childInstance.Keys;
+                            var keys = childInstance?.Keys;
                             foreach (var key in keys)
                             {
                                 var keyInstance = key;
-                                var valueInstance = childInstance[key];
+                                var valueInstance = childInstance?[key];
                                 InsertRelatedDataOnly(ref keyInstance, connection, baseTypeId, baseType);
                                 InsertRelatedDataOnly(ref valueInstance, connection, baseTypeId, baseType);
                             }
@@ -348,7 +348,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 }
             }
             var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
-            if (childs.Count() > 0)
+            if (childs.Any())
             {
                 foreach (var child in childs)
                 {

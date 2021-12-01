@@ -37,7 +37,7 @@ namespace OrmRepositoryUnitOfWork
             var result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
 
             var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
-            if (childs.Count() == 0)
+            if (!childs.Any())
             {
                 return result;
             }
@@ -327,7 +327,7 @@ namespace OrmRepositoryUnitOfWork
 
             var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
 
-            if (childs.Count() > 0)
+            if (childs.Any())
             {
                 foreach (var child in childs)
                 {
