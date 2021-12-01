@@ -10,7 +10,6 @@ using System.Text;
 namespace SeaBattleDomainModel.Entities
 {
     [Table("BattleFields")]
-    [Parent]
     public class BattleField
     {
         #region Fields

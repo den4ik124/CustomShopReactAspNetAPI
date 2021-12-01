@@ -5,7 +5,6 @@ using System;
 namespace SeaBattleDomainModel.Entities
 {
     [Table(TableName = "Cells", IsRelatedTable = true)]
-    [Parent]
     public class Cell
     {
         #region Fields
