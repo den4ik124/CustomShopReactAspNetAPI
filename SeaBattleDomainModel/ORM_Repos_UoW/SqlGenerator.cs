@@ -17,9 +17,9 @@ namespace ORM_Repos_UoW
 
         public SqlGenerator()
         {
-            assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
-            deleteSqlQueries = new Stack<string>();
-            updateSqlQueries = new Stack<string>();
+            this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
+            this.deleteSqlQueries = new Stack<string>();
+            this.updateSqlQueries = new Stack<string>();
         }
 
         #region Methods.Private
@@ -72,7 +72,7 @@ namespace ORM_Repos_UoW
             }
             if (id > 0)
             {
-                var type = assembly.GetTypes().First(t => t.GetCustomAttributes<TableAttribute>().Count() > 0
+                var type = this.assembly.GetTypes().First(t => t.GetCustomAttributes<TableAttribute>().Count() > 0
                                                     && t.GetCustomAttribute<TableAttribute>().TableName == whereFilterTable);
                 var primaryKeyColumnName = type.GetProperties().First(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                     && p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetCustomAttribute<ColumnAttribute>().ColumnName;
@@ -172,7 +172,7 @@ namespace ORM_Repos_UoW
                                     .Select(attribute => attribute.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList();
             if (type.IsAbstract)
             {
-                var columnMatching = assembly.GetTypes()
+                var columnMatching = this.assembly.GetTypes()
                                             .Where(assemblyType => assemblyType.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
                                             && assemblyType.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false)
                                             .Select(a => a.GetCustomAttribute<InheritanceRelationAttribute>().ColumnMatching)
@@ -237,7 +237,7 @@ namespace ORM_Repos_UoW
 
         private string SetNullOrDeleteForeignKey(string tableName, string columnName = "", object value = default)
         {
-            var type = assembly.GetTypes()
+            var type = this.assembly.GetTypes()
                                 .First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Count() > 0
                                                     && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
             var isPropertyAllowNull = type.GetProperties()
@@ -514,7 +514,7 @@ namespace ORM_Repos_UoW
 
         public IEnumerable<Type> GetDependentTypes(Type deletedType)
         {
-            var types = assembly.GetTypes(); //get assembly types
+            var types = this.assembly.GetTypes(); //get assembly types
             var usefulTypes = types.Where(type => type.GetProperties()
                                                 .Where(property => property.GetCustomAttributes<ColumnAttribute>()
                                                 .Count() > 0)
@@ -527,23 +527,23 @@ namespace ORM_Repos_UoW
 
         public string GetUpdateSqlQuery<T>(T item, string columnName = "", object value = default)
         {
-            if (updateSqlQueries == null)
+            if (this.updateSqlQueries == null)
             {
-                updateSqlQueries = new Stack<string>();
+                this.updateSqlQueries = new Stack<string>();
             }
-            updateSqlQueries.Push(GetUpdateConcreteItemSqlQuery<T>(item, columnName, value));
+            this.updateSqlQueries.Push(GetUpdateConcreteItemSqlQuery<T>(item, columnName, value));
 
-            return GetStringFromStack(updateSqlQueries);
+            return GetStringFromStack(this.updateSqlQueries);
         }
 
         public string GetDeleteSqlQuery(string tableName, int id)
         {
-            if (deleteSqlQueries == null)
+            if (this.deleteSqlQueries == null)
             {
-                deleteSqlQueries = new Stack<string>();
+                this.deleteSqlQueries = new Stack<string>();
             }
 
-            var type = assembly.GetTypes().First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Count() > 0 && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
+            var type = this.assembly.GetTypes().First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Count() > 0 && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
             var primaryKeyColumnName = type.GetProperties()
                                             .First(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                             && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
@@ -559,7 +559,7 @@ namespace ORM_Repos_UoW
             }
             else
             {
-                deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{primaryKeyColumnName}] = {id}\n");
+                this.deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{primaryKeyColumnName}] = {id}\n");
             }
 
             var relatedTypes = GetDependentTypes(type);
@@ -573,20 +573,20 @@ namespace ORM_Repos_UoW
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, id);
 
-                deleteSqlQueries.Push(updateQuery);
+                this.deleteSqlQueries.Push(updateQuery);
             }
-            return GetStringFromStack(deleteSqlQueries);
+            return GetStringFromStack(this.deleteSqlQueries);
         }
 
         public string GetDeleteSqlQuery<T>(string columnName, object value)
         {
-            if (deleteSqlQueries == null)
+            if (this.deleteSqlQueries == null)
             {
-                deleteSqlQueries = new Stack<string>();
+                this.deleteSqlQueries = new Stack<string>();
             }
             var type = typeof(T);
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}\n");
+            this.deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}\n");
 
             var relatedTypes = GetDependentTypes(type);
             foreach (var relatedType in relatedTypes)
@@ -599,9 +599,9 @@ namespace ORM_Repos_UoW
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, value);
 
-                deleteSqlQueries.Push(updateQuery);
+                this.deleteSqlQueries.Push(updateQuery);
             }
-            return GetStringFromStack(deleteSqlQueries);
+            return GetStringFromStack(this.deleteSqlQueries);
 
             //return $"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}";
         }
@@ -614,12 +614,12 @@ namespace ORM_Repos_UoW
             }
             var type = item.GetType();
 
-            if (deleteSqlQueries == null)
+            if (this.deleteSqlQueries == null)
             {
-                deleteSqlQueries = new Stack<string>();
+                this.deleteSqlQueries = new Stack<string>();
             }
 
-            deleteSqlQueries.Push(GetDeleteConcreteItemSqlQuery(item));
+            this.deleteSqlQueries.Push(GetDeleteConcreteItemSqlQuery(item));
 
             int primaryKeyValue = (int)type.GetProperties().FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                                               && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
@@ -646,7 +646,7 @@ namespace ORM_Repos_UoW
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
 
                 var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, primaryKeyValue);
-                deleteSqlQueries.Push(updateQuery);
+                this.deleteSqlQueries.Push(updateQuery);
             }
 
             var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
@@ -667,26 +667,26 @@ namespace ORM_Repos_UoW
                             var keys = propertyObject.Keys;
                             foreach (var key in keys)
                             {
-                                deleteSqlQueries.Push(GetDeleteSqlQuery(key));
-                                deleteSqlQueries.Push(GetDeleteSqlQuery(propertyObject[key]));
+                                this.deleteSqlQueries.Push(GetDeleteSqlQuery(key));
+                                this.deleteSqlQueries.Push(GetDeleteSqlQuery(propertyObject[key]));
                             }
                         }
                         else
                         {
                             foreach (var collectionItem in propertyObject)
                             {
-                                deleteSqlQueries.Push(GetDeleteSqlQuery(collectionItem));
+                                this.deleteSqlQueries.Push(GetDeleteSqlQuery(collectionItem));
                             }
                         }
                     }
                     else
                     {
-                        deleteSqlQueries.Push(GetDeleteSqlQuery(propertyObject));
+                        this.deleteSqlQueries.Push(GetDeleteSqlQuery(propertyObject));
                     }
                 }
             }
 
-            return GetStringFromStack(deleteSqlQueries);
+            return GetStringFromStack(this.deleteSqlQueries);
         }
 
         #endregion Methods.Public

@@ -16,7 +16,7 @@ namespace ORM_Repos_UoW
 
         public UnitOfWork(string connectionString)
         {
-            ConnectionString = connectionString;
+            this.ConnectionString = connectionString;
             _repositories = new Dictionary<string, IBaseRepository>();
         }
 
@@ -24,7 +24,7 @@ namespace ORM_Repos_UoW
         {
             try
             {
-                using (var connection = new SqlConnection(ConnectionString))
+                using (var connection = new SqlConnection(this.ConnectionString))
                 {
                     connection.Open();
                     GetRepository<TInsert>().Create(ref item, connection);
@@ -41,7 +41,7 @@ namespace ORM_Repos_UoW
         {
             try
             {
-                using (var connection = new SqlConnection(ConnectionString))
+                using (var connection = new SqlConnection(this.ConnectionString))
                 {
                     connection.Open();
                     GetRepository<TInsert>().Create(items, connection);
@@ -84,7 +84,7 @@ namespace ORM_Repos_UoW
             SqlTransaction transaction;
             try
             {
-                using (SqlConnection connection = new SqlConnection(ConnectionString))
+                using (SqlConnection connection = new SqlConnection(this.ConnectionString))
                 {
                     connection.Open();
                     transaction = connection.BeginTransaction();
