@@ -18,37 +18,15 @@ namespace ORM_Repos_UoW
         public SqlGenerator()
         {
             assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
+            deleteSqlQueries = new Stack<string>();
+            updateSqlQueries = new Stack<string>();
         }
 
         #region Methods.Private
 
         private string SelectJoinSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string whereFilterTable = "", int id = -1)
         {
-            #region SELECT .. JOIN Example
-
-            //SELECT
-            //  [table1].[id] AS [table1Id],
-            //  [table1].[prop2],
-            //  [table1].[...],
-
-            //  [table2].[Id] AS [table2Id],
-            //  [table2].[prop2],
-            //  [table2].[...],
-
-            //  [table3].[Id] AS [table3Id],
-            //  [table3].[prop2],
-            //  ... . ...
-            //  [tableN].[Id] AS [tableNId],
-            //  [tableN].[prop2]
-            // FROM [table1]
-            // LEFT JOIN [table2] ON [table2].[Id] = [relTable].[FK_table2_Id]
-            // LEFT JOIN [table3] ON [table3].[Id] = [relTable].[FK_table3_Id]
-            // ...
-            // LEFT JOIN [tableN] ON [tableN].[Id] = [relTable].[FK_tableN_Id]
-
-            #endregion SELECT .. JOIN Example
-
-            StringBuilder sb = new StringBuilder("SELECT\n");
+            var selectQueryBuilder = new StringBuilder("SELECT\n");
             foreach (var table in tablePropetriesNames)
             {
                 string currentTableName = table.Key.GetCustomAttribute<TableAttribute>().TableName;
@@ -56,13 +34,13 @@ namespace ORM_Repos_UoW
                 {
                     if (property.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                     {
-                        sb.Append($"[{currentTableName}].[{property}] AS [{currentTableName}{property}],\n");
+                        selectQueryBuilder.Append($"[{currentTableName}].[{property}] AS [{currentTableName}{property}],\n");
                         continue;
                     }
-                    sb.Append($"[{currentTableName}].[{property}],\n");
+                    selectQueryBuilder.Append($"[{currentTableName}].[{property}],\n");
                 }
             }
-            sb.Remove(sb.Length - 2, 1);
+            selectQueryBuilder.Remove(selectQueryBuilder.Length - 2, 1);
 
             var relatedTable = tablePropetriesNames.First(type => type.Key
                                                                       .GetCustomAttribute<TableAttribute>()
@@ -73,7 +51,7 @@ namespace ORM_Repos_UoW
                                                      .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                                  && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign);
 
-            sb.Append($" FROM [{relatedTableName}]\n");
+            selectQueryBuilder.Append($" FROM [{relatedTableName}]\n");
 
             var notRelatedTables = tablePropetriesNames.Where(i => i.Key.GetCustomAttribute<TableAttribute>().IsRelatedTable == false);
 
@@ -81,25 +59,16 @@ namespace ORM_Repos_UoW
             {
                 var currentTable = table.Key.GetCustomAttribute<TableAttribute>();
                 var currentTableName = currentTable.TableName;
-                //var primaryColumnName = table.Key.GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                //                                                          && p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name;
-
                 var primaryColumnName = table.Key.GetProperties()
                                                  .FirstOrDefault(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                                       && p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
                                                  .GetCustomAttribute<ColumnAttribute>().ColumnName;
 
-                //var relatedPropertyColumn = relatedTableProperties.First(prop => prop.GetCustomAttribute<ColumnAttribute>()
-                //                                                                        .BaseType
-                //                                                                        .GetCustomAttribute<TableAttribute>()
-                //                                                                        .TableName == currentTableName).Name;
-                var relatedPropertyColumn = relatedTableProperties.First(prop => prop.GetCustomAttribute<ColumnAttribute>()
-                                                                                        .BaseType
-                                                                                        .GetCustomAttribute<TableAttribute>()
-                                                                                        .TableName == currentTableName)
+                var relatedPropertyColumn = relatedTableProperties.First(prop => prop.GetCustomAttribute<ColumnAttribute>().BaseType
+                                                                                        .GetCustomAttribute<TableAttribute>().TableName == currentTableName)
                                                  .GetCustomAttribute<ColumnAttribute>().ColumnName;
                 string joinResult = $"LEFT JOIN {currentTableName} ON [{currentTableName}].[{primaryColumnName}] = [{relatedTableName}].[{relatedPropertyColumn}]\n";
-                sb.Append(joinResult);
+                selectQueryBuilder.Append(joinResult);
             }
             if (id > 0)
             {
@@ -108,10 +77,10 @@ namespace ORM_Repos_UoW
                 var primaryKeyColumnName = type.GetProperties().First(p => p.GetCustomAttributes<ColumnAttribute>().Count() > 0
                                                     && p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetCustomAttribute<ColumnAttribute>().ColumnName;
 
-                string whereResult = $"WHERE [{whereFilterTable}].[{primaryKeyColumnName}] = {id}"; //TODO : избавиться от "Id"
-                sb.Append(whereResult);
+                string whereResult = $"WHERE [{whereFilterTable}].[{primaryKeyColumnName}] = {id}";
+                selectQueryBuilder.Append(whereResult);
             }
-            return sb.ToString();
+            return selectQueryBuilder.ToString();
         }
 
         private void DefineRelatedEntities(ref Dictionary<Type, List<string>> tablePropetriesNames, ref string tableName, ref List<string> propertiesNames, IEnumerable<PropertyInfo> childTables)
@@ -141,69 +110,35 @@ namespace ORM_Repos_UoW
 
         private string SelectFromSingleTableSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string tableName, int id = -1)
         {
-            StringBuilder sb = new StringBuilder("SELECT \n");
+            var selectQueryBuilder = new StringBuilder("SELECT \n");
 
-            var type = tablePropetriesNames.First(t => t.Key.GetCustomAttribute<TableAttribute>().TableName == tableName).Key;
+            var type = tablePropetriesNames.First(keyType => keyType.Key.GetCustomAttribute<TableAttribute>().TableName == tableName).Key;
 
             var properties = tablePropetriesNames[type];// type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
-            foreach (var prop in properties)
+            foreach (var property in properties)
             {
-                if (prop.EndsWith("id", StringComparison.OrdinalIgnoreCase))
+                if (property.EndsWith("id", StringComparison.OrdinalIgnoreCase))
                 {
-                    string propAs = $"{prop}] AS [{tableName}{prop}";
-                    sb.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                    string propAs = $"{property}] AS [{tableName}{property}";
+                    selectQueryBuilder.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
                 }
                 else
                 {
-                    sb.Append($"[{tableName}].[{prop}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                    selectQueryBuilder.Append($"[{tableName}].[{property}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
                 }
             }
 
-            sb.Remove(sb.Length - 2, 1);
+            selectQueryBuilder.Remove(selectQueryBuilder.Length - 2, 1);
 
-            sb.Append($" FROM [{tableName}]\n");
+            selectQueryBuilder.Append($" FROM [{tableName}]\n");
             if (id > 0)
             {
                 var primaryColumnName = type.GetProperties()
                                              .FirstOrDefault(atr => atr.GetCustomAttribute<ColumnAttribute>()
                                                                        .KeyType == KeyType.Primary).Name;
-                sb.Append($" WHERE [{tableName}].[{primaryColumnName}] = {id}");
+                selectQueryBuilder.Append($" WHERE [{tableName}].[{primaryColumnName}] = {id}");
             }
-            return sb.ToString();
-        }
-
-        public string SelectFromSingleTableSqlQuery(Type type, int id = -1)
-        {
-            StringBuilder sb = new StringBuilder("SELECT \n");
-
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-
-            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
-                                .Select(prop => prop.GetCustomAttribute<ColumnAttribute>().ColumnName); //tablePropetriesNames[type];// type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
-            foreach (var prop in properties)
-            {
-                if (prop.EndsWith("id", StringComparison.OrdinalIgnoreCase))
-                {
-                    string propAs = $"{prop}] AS [{tableName}{prop}";
-                    sb.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
-                }
-                else
-                {
-                    sb.Append($"[{tableName}].[{prop}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
-                }
-            }
-
-            sb.Remove(sb.Length - 2, 1);
-
-            sb.Append($" FROM [{tableName}]\n");
-            //if (id > 0)
-            //{
-            //    var primaryColumnName = type.GetProperties()
-            //                                 .FirstOrDefault(atr => atr.GetCustomAttribute<ColumnAttribute>()
-            //                                                           .KeyType == KeyType.Primary).Name;
-            //    sb.Append($" WHERE [{tableName}].[{primaryColumnName}] = {id}");
-            //}
-            return sb.ToString();
+            return selectQueryBuilder.ToString();
         }
 
         private void DefineTableAndProperties(Type type, out string tableName, out List<string> propertiesNames)
@@ -211,13 +146,11 @@ namespace ORM_Repos_UoW
             tableName = "";
             propertiesNames = new List<string>();
 
-            var test = type.GetCustomAttribute<RelatedEntityAttribute>();
             if (type.GetCustomAttribute<RelatedEntityAttribute>() != null && type.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
             {
                 if (type.IsGenericType)
                 {
                     var genericTypes = type.GetGenericArguments();
-
                     foreach (var genericType in genericTypes)
                     {
                         GetSinglePropertyData(genericType, out tableName, out propertiesNames);
@@ -232,45 +165,21 @@ namespace ORM_Repos_UoW
 
         private void GetSinglePropertyData(Type type, out string tableName, out List<string> propertiesNames)
         {
-            var attribute = type.GetCustomAttribute<TableAttribute>();
-            tableName = attribute.TableName;
-            if (attribute.IsRelatedTable)
-            {
-                //   tableName += $".rel";
-            }
-            //propertiesNames = type.Columns(typeof(ColumnAttribute)).Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList(); //просто тест extension метода
+            var typeTableAttribute = type.GetCustomAttribute<TableAttribute>();
+            tableName = typeTableAttribute.TableName;
             propertiesNames = type.GetProperties()
-                                    .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
-                                    .Select(atr => atr.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList();
+                                    .Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0)
+                                    .Select(attribute => attribute.GetCustomAttribute<ColumnAttribute>().ColumnName).ToList();
             if (type.IsAbstract)
             {
                 var columnMatching = assembly.GetTypes()
-                                            .Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
-                                            && t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false)
+                                            .Where(assemblyType => assemblyType.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
+                                            && assemblyType.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false)
                                             .Select(a => a.GetCustomAttribute<InheritanceRelationAttribute>().ColumnMatching)
-                                            .First();
-                //string propertyName = $"{columnMatching} AS  {tableName}{columnMatching}";
+                                            .FirstOrDefault();
                 string propertyName = $"{columnMatching}";
                 propertiesNames.Add(propertyName);
             }
-        }
-
-        public IEnumerable<Type> GetDependentTypes(Type deletedType)
-        {
-            Assembly assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
-            var types = assembly.GetTypes();
-            var usefulTypes = types.Where(t => t.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0).Count() > 0);
-            return usefulTypes.Where(t => t.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                        && prop.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType).Count() > 0);
-            //return AppDomain.CurrentDomain.GetAssemblies()
-            //                                .First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0)
-            //                                    .GetTypes()
-            //                                    .Where(t => t.GetProperties()
-            //                                        .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0)
-            //                                    .Count() > 0)
-            //                                .Where(t => t.GetProperties()
-            //                                    .Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-            //                                                && prop.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType).Count() > 0);
         }
 
         private string GetStringFromStack(Stack<string> stack)
@@ -278,10 +187,166 @@ namespace ORM_Repos_UoW
             var stackStringBuilder = new StringBuilder();
             do
             {
-                stackStringBuilder.Append(stack.Pop()/* + Environment.NewLine*/);
+                stackStringBuilder.Append(stack.Pop());
             } while (stack.Count > 0);
 
             return stackStringBuilder.ToString();
+        }
+
+        private string GetSqlIfNotExists<T>(T item)
+        {
+            var type = item.GetType();
+            var selectQueryWithConditionBuilder = new StringBuilder($"{GetSelectJoinString(type)} \n WHERE ");
+
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                            && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+
+            foreach (var property in properties)
+            {
+                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var columnValue = property.GetValue(item);
+                selectQueryWithConditionBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
+            }
+            selectQueryWithConditionBuilder.Remove(selectQueryWithConditionBuilder.Length - 4, 3);
+
+            return selectQueryWithConditionBuilder.ToString();
+        }
+
+        private string GetSqlIfExists<T>(T item)
+        {
+            var type = item.GetType();
+
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                            && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+            var primaryKeyProperty = type.GetProperties().First(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                             && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetCustomAttribute<ColumnAttribute>().ColumnName;
+
+            var selectQueryBuilder = new StringBuilder($"SELECT [{tableName}].[{primaryKeyProperty}] FROM [{tableName}] WHERE\n");
+            foreach (var property in properties)
+            {
+                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var columnValue = property.GetValue(item);
+                selectQueryBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
+            }
+            selectQueryBuilder.Remove(selectQueryBuilder.Length - 4, 3);
+
+            return selectQueryBuilder.ToString();
+        }
+
+        private string SetNullOrDeleteForeignKey(string tableName, string columnName = "", object value = default)
+        {
+            var type = assembly.GetTypes()
+                                .First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Count() > 0
+                                                    && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
+            var isPropertyAllowNull = type.GetProperties()
+                                            .First(property => property.GetCustomAttribute<ColumnAttribute>().ColumnName == columnName)
+                                            .GetCustomAttribute<ColumnAttribute>().AllowNull;
+            if (isPropertyAllowNull)
+            {
+                return $"UPDATE [{tableName}]\nSET [{tableName}].[{columnName}] = NULL\nWHERE [{tableName}].[{columnName}] = {value}\n";
+            }
+            else
+            {
+                return $"DELETE FROM [{tableName}]\nWHERE [{tableName}].[{columnName}] = {value}\n";
+            }
+        }
+
+        private string GetDeleteConcreteItemSqlQuery<T>(T item)
+        {
+            if (item.GetType().GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
+            {
+                return string.Empty;
+            }
+            var type = item.GetType();
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var properties = GetTypeProperties(item, type);
+
+            var deleteQueryStringBuilder = new StringBuilder($"DELETE FROM [{tableName}] WHERE\n");
+
+            var primaryKeyProperty = type.GetProperties().First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+            var primaryKeyColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>().ColumnName;
+            var primaryKeyValue = primaryKeyProperty.GetValue(item);
+
+            foreach (var property in properties)
+            {
+                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var value = property.GetValue(item);
+                if (value == null)
+                {
+                    deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] IS NULL AND\n");
+                }
+                else
+                {
+                    deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] = {value} AND\n");
+                }
+            }
+
+            deleteQueryStringBuilder.Remove(deleteQueryStringBuilder.Length - 5, 5);
+            return deleteQueryStringBuilder.ToString() + Environment.NewLine;
+        }
+
+        private string GetUpdateConcreteItemSqlQuery<T>(T item, string columnName = "", object value = default)
+        {
+            var type = typeof(T);
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+            var primaryColumnName = type.GetProperties()
+                                        .First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                        .Name;
+            var primaryColumnValue = type.GetProperties()
+                                         .FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                         .GetValue(item);
+            var propertyValue = new Dictionary<string, object>();
+            var updateQueryBuider = new StringBuilder($"UPDATE [{tableName}]\nSET\n");
+            foreach (var property in properties)
+            {
+                var currentColumnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var columnValue = property.GetValue(item);
+                if (columnValue == null)
+                {
+                    updateQueryBuider.Append($"[{tableName}].[{currentColumnName}] = NULL,\n");
+                }
+                else
+                {
+                    updateQueryBuider.Append($"[{tableName}].[{currentColumnName}] = {columnValue},\n");
+                }
+            }
+            updateQueryBuider.Remove(updateQueryBuider.Length - 2, 1);
+            if (columnName == "")
+            {
+                updateQueryBuider.Append($"WHERE [{tableName}].[{primaryColumnName}] = {primaryColumnValue}");
+            }
+            else
+            {
+                updateQueryBuider.Append($"WHERE [{tableName}].[{columnName}] = {value}");
+            }
+            return updateQueryBuider.ToString();
+        }
+
+        /// <summary>
+        /// Selection properties with or without primary key property
+        /// </summary>
+        /// <typeparam name="T">type of item</typeparam>
+        /// <param name="item"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private IEnumerable<PropertyInfo> GetTypeProperties<T>(T item, Type type)
+        {
+            IEnumerable<PropertyInfo> properties;
+            if ((int)type.GetProperties().FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item) > 0)
+            {
+                properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            }
+            else
+            {
+                properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+              && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+            }
+
+            return properties;
         }
 
         #endregion Methods.Private
@@ -292,9 +357,9 @@ namespace ORM_Repos_UoW
         {
             var type = typeof(T);
 
-            string result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
+            var result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
 
-            var childs = type.GetProperties().Where(p => p.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
             if (childs.Count() == 0)
             {
                 return result;
@@ -305,7 +370,6 @@ namespace ORM_Repos_UoW
                 {
                     continue;
                 }
-                //Dictionary<object, object> childInstance = (Dictionary<object, object>)child.GetValue(item); //получение значения свойства
                 dynamic childInstance = child.GetValue(item); //получение значения свойства
                 if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection) //если свойство - коллекция, то для каждого элемента нужно получить имя колонки и значение
                 {
@@ -333,15 +397,6 @@ namespace ORM_Repos_UoW
             return result;
         }
 
-        //IF NOT EXISTS
-        //     (SELECT * FROM [Points]
-        //     WHERE[Points].[X] = 99
-        //                AND[Points].[Y] = 99)
-        //BEGIN
-        //     INSERT INTO[Points]
-        //     ([Points].[X],[Points].[Y]) VALUES(99,99);
-        //END
-
         public string GetInsertConcreteItemSqlQuery<T>(T item) //TODO: был private
         {
             var type = item.GetType();
@@ -354,29 +409,14 @@ namespace ORM_Repos_UoW
                 postfix = $"\nEND\nELSE\nBEGIN\n{GetSqlIfExists(item)}\nEND";
             }
 
-            //IF NOT EXISTS
-            //     (SELECT [Points].[Id] FROM [Points]
-            //     WHERE[Points].[X] = 99 AND
-            //          [Points].[Y] = 99)
-            //BEGIN
-            //     INSERT INTO[Points]
-            //     ([Points].[X],[Points].[Y]) VALUES(99, 99);
-            //END
-            //ELSE
-            //BEGIN
-            //    (SELECT [Points].[Id] FROM[Points]
-            //     WHERE[Points].[X] = 99 AND
-            //           [Points].[Y] = 99)
-            //END
-
             string columnMatching = "";
             int typeId = 0;
             var propertyValue = new Dictionary<string, object>();
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                            && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                            && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
 
-            var sb = new StringBuilder($"INSERT INTO [{tableName}]\n");
+            var insertQueryBuilder = new StringBuilder($"INSERT INTO [{tableName}]\n");
             var columnNameStringBuilder = new StringBuilder();
             var columnValueStringBuilder = new StringBuilder();
             foreach (var property in properties)
@@ -404,78 +444,13 @@ namespace ORM_Repos_UoW
 
             columnNameStringBuilder.Remove(columnNameStringBuilder.Length - 1, 1);
             columnValueStringBuilder.Remove(columnValueStringBuilder.Length - 1, 1);
-            sb.Append($"({columnNameStringBuilder}) VALUES ({columnValueStringBuilder})");
 
-            sb.Append("\nSELECT CAST(scope_identity() AS int)");
+            insertQueryBuilder.Append($"({columnNameStringBuilder}) VALUES ({columnValueStringBuilder})");
+            insertQueryBuilder.Append("\nSELECT CAST(scope_identity() AS int)");
 
-            var test = prefix + sb.ToString() + postfix;
-            return prefix + sb.ToString() + postfix;
+            return prefix + insertQueryBuilder.ToString() + postfix;
         }
 
-        private string GetSqlIfNotExists<T>(T item)
-        {
-            //var type = typeof(T);
-            var type = item.GetType();
-            StringBuilder sb = new StringBuilder($"{GetSelectJoinString(type)} \n WHERE ");
-
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                            && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
-
-            foreach (var property in properties)
-            {
-                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                var columnValue = property.GetValue(item);
-                sb.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
-            }
-            sb.Remove(sb.Length - 4, 3);
-
-            return sb.ToString();
-        }
-
-        private string GetSqlIfExists<T>(T item)
-        {
-            var type = item.GetType();// typeof(T);
-
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                            && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
-            var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                             && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetCustomAttribute<ColumnAttribute>().ColumnName;
-
-            StringBuilder sb = new StringBuilder($"SELECT [{tableName}].[{primaryKeyProperty}] FROM [{tableName}] WHERE\n");
-            foreach (var property in properties)
-            {
-                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                var columnValue = property.GetValue(item);
-                sb.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
-            }
-            sb.Remove(sb.Length - 4, 3);
-
-            return sb.ToString();
-        }
-
-        //public string GetSelectAllString(string table)
-        //{
-        //    return $"SELECT * FROM {table}";
-        //}
-
-        //SELECT
-        // BattleFields.Id AS BF_ID,
-        // BattleFields.SideLength,
-        // Cells.Id AS CELL_ID,
-        // Cells.ShipId,
-        // Cells.BattleFieldID,
-        // Ships.Id AS SHIP_ID,
-        // Ships.TypeId,
-        // Ships.Velocity,
-        // Ships.[Range],
-        // Ships.Size,
-        // ShipTypes.[Type]
-        //FROM BattleFields
-        // LEFT JOIN Cells ON Cells.BattleFieldID = BattleFields.Id
-        // LEFT JOIN ships on Ships.id = cells.shipid
-        // LEFT JOIN ShipTypes on Ships.TypeId = ShipTypes.Id
         public string GetSelectJoinString(Type type, int id = -1)
         {
             var tablePropetriesNames = new Dictionary<Type, List<string>>();
@@ -500,6 +475,7 @@ namespace ORM_Repos_UoW
             }
 
             DefineRelatedEntities(ref tablePropetriesNames, ref tableName, ref propertiesNames, childTables);
+
             if (id > 0)
             {
                 string whereFilterTable = type.GetCustomAttribute<TableAttribute>().TableName;
@@ -509,21 +485,44 @@ namespace ORM_Repos_UoW
             return SelectJoinSqlQuery(tablePropetriesNames);
         }
 
-        private string SetNullOnForeignKeyOrDelete(string tableName, string columnName = "", object value = default)
+        public string SelectFromSingleTableSqlQuery(Type type)
         {
-            //UPDATE [{tableName}]
-            //SET [{tableName}].[{columnName}] = NULL
-            //WHERE[{tableName}].[{columnName}] = {value}"
-            var type = assembly.GetTypes().First(t => t.GetCustomAttributes<TableAttribute>().Count() > 0 && t.GetCustomAttribute<TableAttribute>().TableName == tableName);
-            var isPropertyAllowNull = type.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().ColumnName == columnName).GetCustomAttribute<ColumnAttribute>().AllowNull;
-            if (isPropertyAllowNull)
+            var selectQueryBuider = new StringBuilder("SELECT \n");
+
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+
+            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0)
+                                .Select(property => property.GetCustomAttribute<ColumnAttribute>().ColumnName); //tablePropetriesNames[type];// type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
+            foreach (var property in properties)
             {
-                return $"UPDATE [{tableName}]\nSET [{tableName}].[{columnName}] = NULL\nWHERE [{tableName}].[{columnName}] = {value}\n";
+                if (property.EndsWith("id", StringComparison.OrdinalIgnoreCase))
+                {
+                    string propAs = $"{property}] AS [{tableName}{property}";
+                    selectQueryBuider.Append($"[{tableName}].[{propAs}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                }
+                else
+                {
+                    selectQueryBuider.Append($"[{tableName}].[{property}],\n");//.GetCustomAttribute<ColumnAttribute>().ColumnName
+                }
             }
-            else
-            {
-                return $"DELETE FROM [{tableName}]\nWHERE [{tableName}].[{columnName}] = {value}\n";
-            }
+
+            selectQueryBuider.Remove(selectQueryBuider.Length - 2, 1);
+
+            selectQueryBuider.Append($" FROM [{tableName}]\n");
+            return selectQueryBuider.ToString();
+        }
+
+        public IEnumerable<Type> GetDependentTypes(Type deletedType)
+        {
+            var types = assembly.GetTypes(); //get assembly types
+            var usefulTypes = types.Where(type => type.GetProperties()
+                                                .Where(property => property.GetCustomAttributes<ColumnAttribute>()
+                                                .Count() > 0)
+                                    .Count() > 0); //select types where exists properties with [ColumnAttribute]
+            return usefulTypes.Where(type => type.GetProperties()
+                                            .Where(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                        && property.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType)
+                                            .Count() > 0); //select dependent types where BaseType == type of deleted item
         }
 
         public string GetUpdateSqlQuery<T>(T item, string columnName = "", object value = default)
@@ -537,65 +536,17 @@ namespace ORM_Repos_UoW
             return GetStringFromStack(updateSqlQueries);
         }
 
-        private string GetUpdateConcreteItemSqlQuery<T>(T item, string columnName = "", object value = default)
-        {
-            var type = typeof(T);
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            var properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
-            var primaryColumnName = type.GetProperties().First(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).Name;
-            var primaryColumnValue = type.GetProperties().FirstOrDefault(p => p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
-            var propertyValue = new Dictionary<string, object>();
-            StringBuilder sb = new StringBuilder($"UPDATE [{tableName}]\nSET\n");
-            foreach (var property in properties)
-            {
-                var currentColumnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                var columnValue = property.GetValue(item);
-                if (columnValue == null)
-                {
-                    sb.Append($"[{tableName}].[{currentColumnName}] = NULL,\n");
-                }
-                else
-                {
-                    sb.Append($"[{tableName}].[{currentColumnName}] = {columnValue},\n");
-                }
-            }
-            sb.Remove(sb.Length - 2, 1);
-            if (columnName == "")
-            {
-                sb.Append($"WHERE [{tableName}].[{primaryColumnName}] = {primaryColumnValue}");
-            }
-            else
-            {
-                sb.Append($"WHERE [{tableName}].[{columnName}] = {value}");
-            }
-            //UPDATE [tableName]
-            //SET
-            //[prop1] = [item.value1],
-            //[prop2] = [item.value2],
-            //...
-            //[propN] = [item.valueN]
-            //WHERE [tableName].[Id] = item.Id
-
-            return sb.ToString();
-        }
-
-        //DELETE {tableName} WHERE {parameter} = {value} [AND {parameter2} = {value}]
         public string GetDeleteSqlQuery(string tableName, int id)
         {
             if (deleteSqlQueries == null)
             {
                 deleteSqlQueries = new Stack<string>();
             }
-            //UPDATE {RelatedTable}
-            //SET {RelatedTable}.{ForeignKey} = NULL
-            //WHERE {RelatedTable}.{ForeignKey} = {id}
 
-            //DELETE FROM Ships WHERE Ships.Id = 9
-            var type = assembly.GetTypes().First(t => t.GetCustomAttributes<TableAttribute>().Count() > 0 && t.GetCustomAttribute<TableAttribute>().TableName == tableName);
+            var type = assembly.GetTypes().First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Count() > 0 && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
             var primaryKeyColumnName = type.GetProperties()
-                                            .First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                            && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                            .First(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                            && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
                                             .GetCustomAttribute<ColumnAttribute>().ColumnName;
 
             if (type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
@@ -611,20 +562,16 @@ namespace ORM_Repos_UoW
                 deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{primaryKeyColumnName}] = {id}\n");
             }
 
-            //var relatedTypes = assembly.GetTypes().Where(t => t.GetCustomAttributes<TableAttribute>().Count() > 0 && t.GetCustomAttribute<TableAttribute>().IsRelatedTable);
-
-            //TODO: !!! продумать каскадное удаление !!! Как на основании "имени таблицы" и "Id" удалить все вложенные корабли в поле боя?
-
             var relatedTypes = GetDependentTypes(type);
             foreach (var relatedType in relatedTypes)
             {
                 var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>().TableName;
                 var foreignKeyColumnName = relatedType.GetProperties()
-                                                      .First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                                        && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
-                                                                        && prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
+                                                      .First(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                                        && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
+                                                                        && property.GetCustomAttribute<ColumnAttribute>().BaseType == type)
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
-                var updateQuery = SetNullOnForeignKeyOrDelete(relatedTablename, foreignKeyColumnName, id);
+                var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, id);
 
                 deleteSqlQueries.Push(updateQuery);
             }
@@ -637,15 +584,8 @@ namespace ORM_Repos_UoW
             {
                 deleteSqlQueries = new Stack<string>();
             }
-            //throw new NotImplementedException();
-            //1. получаем тип, где [Table(TableName)] = tableName;
-            //2. создаем запрос за удаление
-            //3. проходим рекурсивно по вложенным сущностям
-            //4. создаем запрос за удаление
-
-            //SetForeignKeyNull();
             var type = typeof(T);
-            var tableName = typeof(T).GetCustomAttribute<TableAttribute>().TableName;
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}\n");
 
             var relatedTypes = GetDependentTypes(type);
@@ -653,11 +593,11 @@ namespace ORM_Repos_UoW
             {
                 var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>().TableName;
                 var foreignKeyColumnName = relatedType.GetProperties()
-                                                      .First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                                        && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
-                                                                        && prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
+                                                      .First(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                                        && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
+                                                                        && property.GetCustomAttribute<ColumnAttribute>().BaseType == type)
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
-                var updateQuery = SetNullOnForeignKeyOrDelete(relatedTablename, foreignKeyColumnName, value);
+                var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, value);
 
                 deleteSqlQueries.Push(updateQuery);
             }
@@ -681,8 +621,8 @@ namespace ORM_Repos_UoW
 
             deleteSqlQueries.Push(GetDeleteConcreteItemSqlQuery(item));
 
-            int primaryKeyValue = (int)type.GetProperties().FirstOrDefault(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                                              && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+            int primaryKeyValue = (int)type.GetProperties().FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                                              && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
                                             .GetValue(item);
             IEnumerable<Type> relatedTypes;
             if (type.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0 && !type.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass)
@@ -700,16 +640,16 @@ namespace ORM_Repos_UoW
                 var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>().TableName;
 
                 var foreignKeyColumnName = relatedType.GetProperties()
-                                                      .First(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-                                                                        && prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
-                                                                        && prop.GetCustomAttribute<ColumnAttribute>().BaseType == type)
+                                                      .First(property => property.GetCustomAttributes<ColumnAttribute>().Count() > 0
+                                                                        && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
+                                                                        && property.GetCustomAttribute<ColumnAttribute>().BaseType == type)
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
 
-                var updateQuery = SetNullOnForeignKeyOrDelete(relatedTablename, foreignKeyColumnName, primaryKeyValue);
+                var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, primaryKeyValue);
                 deleteSqlQueries.Push(updateQuery);
             }
 
-            var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
+            var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Count() > 0);
 
             if (childs.Count() > 0)
             {
@@ -747,111 +687,6 @@ namespace ORM_Repos_UoW
             }
 
             return GetStringFromStack(deleteSqlQueries);
-        }
-
-        private string GetDeleteConcreteItemSqlQuery<T>(T item)
-        {
-            if (item.GetType().GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
-            {
-                return string.Empty;
-            }
-            var type = item.GetType();
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            IEnumerable<PropertyInfo> properties = GetTypeProperties(item, type);
-
-            var deleteQueryStringBuilder = new StringBuilder($"DELETE FROM [{tableName}] WHERE\n");
-            var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-            var primaryKeyColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>().ColumnName;
-            var primaryKeyValue = primaryKeyProperty.GetValue(item);
-
-            //if (primaryKeyColumnName != null)
-            //deleteQueryStringBuilder.Append($"[{tableName}].[{primaryKeyColumnName}] = {primaryKeyValue}\n");
-
-            //#region DELETE using all properties (not works)
-
-            foreach (var prop in properties)
-            {
-                var columnName = prop.GetCustomAttribute<ColumnAttribute>().ColumnName;
-                var value = prop.GetValue(item);
-                if (value == null)
-                {
-                    deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] IS NULL AND\n");
-                }
-                else
-                {
-                    deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] = {value} AND\n");
-                }
-            }
-
-            deleteQueryStringBuilder.Remove(deleteQueryStringBuilder.Length - 5, 5);
-
-            //#endregion DELETE using all properties (not works)
-
-            return deleteQueryStringBuilder.ToString() + Environment.NewLine;
-        }
-
-        /// <summary>
-        /// Selection properties with or without primary key property
-        /// </summary>
-        /// <typeparam name="T">type of item</typeparam>
-        /// <param name="item"></param>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        private static IEnumerable<PropertyInfo> GetTypeProperties<T>(T item, Type type)
-        {
-            IEnumerable<PropertyInfo> properties;
-            if ((int)type.GetProperties().FirstOrDefault(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item) > 0)
-            {
-                properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0);
-            }
-            else
-            {
-                properties = type.GetProperties().Where(prop => prop.GetCustomAttributes<ColumnAttribute>().Count() > 0
-              && prop.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
-            }
-
-            return properties;
-        }
-
-        //MERGE {TargetTableName} AS TargetTable
-        //Using {SourceTableName} AS Source
-        //ON TargetTable.Id = Source.Id
-        //WHEN MATCHED THEN UPDATE SET
-        //    TargetTable.{Field1} = Source.{Field1},
-        //    TargetTable.{Field2} = Source.{Field2},
-        //    TargetTable.{Field3} = Source.{Field3},
-        //      .....................................................
-        //    TargetTable.{FieldN} = Source.{FieldN},
-        //WHEN NOT MATCHED THEN
-        //      INSERT({Field1}, {Field2}, ... , {FieldN})
-        //      VALUES(Source.{Field1}, Source.{Field2}, ... , Source.{FieldN});
-
-        public string GetMergeString(string TargetTableName, string SourceTableName, List<string> columns)
-        {
-            StringBuilder mergeSQL = new StringBuilder(@$"MERGE {TargetTableName} AS TargetTable Using {SourceTableName} AS Source ON TargetTable.Id = Source.Id WHEN MATCHED THEN UPDATE SET ");
-            StringBuilder updateColumns = new StringBuilder();
-            StringBuilder values = new StringBuilder();
-
-            foreach (var column in columns)
-            {
-                updateColumns.Append($"TargetTable.{column} =  Source.{column},");
-            }
-            updateColumns.Remove(updateColumns.Length - 1, 1);
-
-            mergeSQL.Append(updateColumns.ToString() + "\nWHEN NOT MATCHED THEN\nINSERT (");
-            StringBuilder insertColumns = new StringBuilder();
-
-            foreach (var column in columns)
-            {
-                insertColumns.Append($"{column}, ");
-                values.Append($"Source.{column}, ");
-            }
-            insertColumns.Remove(insertColumns.Length - 2, 2);
-            values.Remove(values.Length - 2, 2);
-
-            mergeSQL.Append(insertColumns.ToString() + ") VALUES (");
-            mergeSQL.Append(values.ToString() + ");");
-            return mergeSQL.ToString();
         }
 
         #endregion Methods.Public

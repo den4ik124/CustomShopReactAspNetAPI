@@ -4,6 +4,9 @@ using System.Reflection;
 
 namespace ReflectionExtensions
 {
+    /// <summary>
+    /// Clarify, can I use extensions instead of long LINQ queries
+    /// </summary>
     public static class TypeExtensions
     {
         public static MethodInfo[] Methods<T>(this T item)
@@ -17,6 +20,7 @@ namespace ReflectionExtensions
             var type = typeof(T);
             return type.GetProperties();
         }
+
         public static PropertyInfo[] Columns<T>(this T item, Type attributeType)
         {
             var type = typeof(T);

@@ -22,7 +22,6 @@ namespace ORM_Repos_UoW
 
         public void Create<TInsert>(TInsert item)
         {
-            // GetRepository<TInsert>().Create(item);
             using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
@@ -32,7 +31,11 @@ namespace ORM_Repos_UoW
 
         public void Create<TInsert>(IEnumerable<TInsert> items)
         {
-            GetRepository<TInsert>().Create(items);
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                GetRepository<TInsert>().Create(items, connection);
+            }
         }
 
         public TRead ReadItem<TRead>(int id)

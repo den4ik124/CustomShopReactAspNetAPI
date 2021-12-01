@@ -18,7 +18,7 @@ namespace SeaBattleDomainModel.Entities
         private const int expressionPower = 2;
         private const int battleFieldPointsIncreaser = 1;
 
-        private List<Ship> ships; //TODO: могу ли я убрать readonly
+        private List<Ship> ships; //TODO: can i replace "readonly" with "private set;" in property
 
         private int battleFieldSideLength;
 
@@ -38,9 +38,6 @@ namespace SeaBattleDomainModel.Entities
             set => this.battleFieldSideLength = value + battleFieldPointsIncreaser;
         }
 
-        //[RelatedEntity(Table = "Ships",
-        //       RelatedType = typeof(Ship),
-        //       IsCollection = true)]
         public List<Ship> Ships { get => this.ships; set => this.ships = value; }
 
         [RelatedEntity(Table = "Cells",
@@ -52,7 +49,7 @@ namespace SeaBattleDomainModel.Entities
             set
             {
                 this.cells = value;
-                Ships = cells.Select(cell => cell.Value.Ship).Where(ship => ship != null).Distinct().ToList(); //TODO: заполнение коллекции кораблей из коллекции ячеек. уточнить
+                Ships = cells.Select(cell => cell.Value.Ship).Where(ship => ship != null).Distinct().ToList(); //TODO: clarify can be such change implemented
             }
         }
 

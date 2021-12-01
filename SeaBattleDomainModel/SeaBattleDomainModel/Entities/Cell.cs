@@ -47,7 +47,7 @@ namespace SeaBattleDomainModel.Entities
         #region Constructors
 
         /// <summary>
-        /// Для корректной работы ORM
+        /// for ORM
         /// </summary>
         public Cell()
         {
