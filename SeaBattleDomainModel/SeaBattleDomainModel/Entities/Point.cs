@@ -9,7 +9,7 @@ namespace SeaBattleDomainModel.Entities
     {
         #region Fields
 
-        private int x; //TODO: can I use {get; private set;} instead of readonly?
+        private int x;
 
         private int y;
 

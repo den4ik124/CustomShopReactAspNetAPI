@@ -19,7 +19,7 @@ namespace SeaBattleDomainModel.Entities
         private const int expressionPower = 2;
         private const int battleFieldPointsIncreaser = 1;
 
-        private List<Ship> ships; //TODO: can i replace "readonly" with "private set;" in property
+        private List<Ship> ships;
 
         private int battleFieldSideLength;
 
@@ -50,7 +50,7 @@ namespace SeaBattleDomainModel.Entities
             set
             {
                 this.cells = value;
-                Ships = cells.Select(cell => cell.Value.Ship).Where(ship => ship != null).Distinct().ToList(); //TODO: clarify can be such change implemented
+                Ships = cells.Select(cell => cell.Value.Ship).Where(ship => ship != null).Distinct().ToList();
             }
         }
 
