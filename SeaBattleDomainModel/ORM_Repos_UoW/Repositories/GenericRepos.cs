@@ -23,10 +23,10 @@ namespace ORM_Repos_UoW.Repositories
 
         public GenericRepos(IUnitOfWork uow)
         {
-            unitOfWork = uow;
-            sqlGenerator = new SqlGenerator();
-            assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
-            typeTableName = typeof(T).GetCustomAttribute<TableAttribute>().TableName;
+            this.unitOfWork = uow;
+            this.sqlGenerator = new SqlGenerator();
+            this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Count() > 0);
+            this.typeTableName = typeof(T).GetCustomAttribute<TableAttribute>().TableName;
         }
 
         #region Methods
@@ -58,15 +58,15 @@ namespace ORM_Repos_UoW.Repositories
         public T ReadItemById(int id)
         {
             var type = typeof(T);
-            var sqlQuery = sqlGenerator.GetSelectJoinString(type, id);
+            var sqlQuery = this.sqlGenerator.GetSelectJoinString(type, id);
             var properties = type.Columns(typeof(RelatedEntityAttribute));
             bool hasCollectionInside = IsCollectionsInsideType(properties);
             if (hasCollectionInside)
             {
-                using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+                using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
                 {
                     connection.Open();
-                    SqlCommand command = new SqlCommand(sqlGenerator.GetSelectJoinString(type, id), connection);
+                    SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), connection);
                     using (SqlDataReader sqlReader = command.ExecuteReader())
                     {
                         if (sqlReader.HasRows)
@@ -83,7 +83,7 @@ namespace ORM_Repos_UoW.Repositories
             {
                 try
                 {
-                    using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+                    using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
                     {
                         connection.Open();
                         SqlCommand command = new SqlCommand(sqlQuery, connection);
@@ -116,15 +116,15 @@ namespace ORM_Repos_UoW.Repositories
             bool hasCollectionInside = IsCollectionsInsideType(properties);
             if (hasCollectionInside)
             {
-                using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+                using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
                 {
                     connection.Open();
                     var primaryKeys = SelectPrimaryKeyValues(type, connection);
 
                     foreach (var primaryKey in primaryKeys)
                     {
-                        var testSql = sqlGenerator.GetSelectJoinString(type, primaryKey);
-                        SqlCommand command = new SqlCommand(sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
+                        var testSql = this.sqlGenerator.GetSelectJoinString(type, primaryKey);
+                        SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
                             if (reader.HasRows)
@@ -144,11 +144,11 @@ namespace ORM_Repos_UoW.Repositories
             }
             else
             {
-                using (SqlConnection connection = new SqlConnection(unitOfWork.ConnectionString))
+                using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
                 {
                     connection.Open();
-                    var testSql = sqlGenerator.GetSelectJoinString(type);
-                    SqlCommand command = new SqlCommand(sqlGenerator.GetSelectJoinString(type), connection);
+                    var testSql = this.sqlGenerator.GetSelectJoinString(type);
+                    SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);
                     var reader = command.ExecuteReader();
                     if (reader.HasRows)
                     {
@@ -172,8 +172,8 @@ namespace ORM_Repos_UoW.Repositories
             var primaryKeyColumn = (int)type.GetProperties().FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item);
             if (primaryKeyColumn > 0)
             {
-                var sqlUpdateQuery = sqlGenerator.GetUpdateSqlQuery(item);
-                sqlQueries.Add(sqlUpdateQuery);
+                var sqlUpdateQuery = this.sqlGenerator.GetUpdateSqlQuery(item);
+                this.sqlQueries.Add(sqlUpdateQuery);
             }
             else
             {
@@ -183,14 +183,14 @@ namespace ORM_Repos_UoW.Repositories
 
         public void UpdateBy(T item, string columnName, object value)
         {
-            var sqlUpdateQuery = sqlGenerator.GetUpdateSqlQuery(item, columnName, value);
-            sqlQueries.Add(sqlUpdateQuery);
+            var sqlUpdateQuery = this.sqlGenerator.GetUpdateSqlQuery(item, columnName, value);
+            this.sqlQueries.Add(sqlUpdateQuery);
         }
 
         public void DeleteById(int id)
         {
-            var sqlQuery = sqlGenerator.GetDeleteSqlQuery(this.typeTableName, id);
-            sqlQueries.Add(sqlQuery);
+            var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery(this.typeTableName, id);
+            this.sqlQueries.Add(sqlQuery);
         }
 
         public void Delete(T item)
@@ -200,15 +200,15 @@ namespace ORM_Repos_UoW.Repositories
             int id = (int)primaryColumnProperty.GetValue(item); // fot items with ID>0 only
             if (id > 0)
             {
-                var sqlQuery = sqlGenerator.GetDeleteSqlQuery(item);
-                sqlQueries.Add(sqlQuery);
+                var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery(item);
+                this.sqlQueries.Add(sqlQuery);
             }
         }
 
         public void Delete(string columnName, dynamic value)
         {
-            var sqlQuery = sqlGenerator.GetDeleteSqlQuery(columnName, value);
-            sqlQueries.Add(sqlQuery);
+            var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery(columnName, value);
+            this.sqlQueries.Add(sqlQuery);
         }
 
         public void Dispose()
@@ -218,7 +218,7 @@ namespace ORM_Repos_UoW.Repositories
 
         public void Submit(SqlConnection connection, SqlTransaction transaction)
         {
-            foreach (var command in sqlQueries)
+            foreach (var command in this.sqlQueries)
             {
                 SqlCommand sqlCommand = new SqlCommand(command, connection);
                 sqlCommand.Transaction = transaction;
@@ -571,7 +571,7 @@ namespace ORM_Repos_UoW.Repositories
 
         private object GetDerivedClass(SqlDataReader sqlReader)
         {
-            var derivedTypes = assembly.GetTypes().Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
+            var derivedTypes = this.assembly.GetTypes().Where(t => t.GetCustomAttributes<InheritanceRelationAttribute>().Count() > 0
                                                         && t.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass == false);
             var tableName = derivedTypes.First().GetCustomAttribute<TableAttribute>().TableName;
             var matchingColumnName = derivedTypes.FirstOrDefault().GetCustomAttribute<TypeAttribute>().ColumnMatching;
