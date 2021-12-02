@@ -20,6 +20,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         private SqlGenerator sqlGenerator;
         private ILogger logger;
+        private SqlTransaction transaction;
 
         public GenericRepos(ILogger logger)
         {
@@ -37,7 +38,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             try
             {
-                using (SqlTransaction transaction = connection.BeginTransaction())
+                using (this.transaction = connection.BeginTransaction())
                 {
                     try
                     {
@@ -50,14 +51,14 @@ namespace OrmRepositoryUnitOfWork.Repositories
                                                             .GetValue(item);
 
                         InsertRelatedDataOnly(ref item, connection, itemPrimaryKeyValue, baseType);
-                        transaction.Commit();
+                        this.transaction.Commit();
                     }
                     catch (Exception ex)
                     {
                         this.logger.Log(ex.Message);
                         try
                         {
-                            transaction.Rollback();
+                            this.transaction.Rollback();
                         }
                         catch (Exception innerEx)
                         {
@@ -221,6 +222,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             primaryColumnName = $"{this.typeTableName}{primaryColumnName}";
             var primaryKeyValues = new List<int>();
             var command = new SqlCommand(selectAllDataForSpecificType, connection);
+            command.Transaction = this.transaction;
             using (var sqlReader = command.ExecuteReader())
             {
                 if (sqlReader.HasRows)
@@ -258,6 +260,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 {
                     var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                     var sqlCommand = new SqlCommand(sqlInsert, connection);
+                    sqlCommand.Transaction = this.transaction;
                     sqlCommand.ExecuteScalar();
                 }
                 catch (Exception ex)
@@ -313,7 +316,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             {
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
-
+                sqlCommand.Transaction = this.transaction;
                 int itemId = (int)sqlCommand.ExecuteScalar();
 
                 var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
@@ -371,6 +374,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             {
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
+                sqlCommand.Transaction = this.transaction;
 
                 try
                 {
