@@ -17,12 +17,14 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         private readonly string? typeTableName;
         private Assembly assembly;
-        private IUnitOfWork unitOfWork;
+
         private SqlGenerator sqlGenerator;
 
-        public GenericRepos(IUnitOfWork uow)
+        private string connectionString;
+
+        public GenericRepos(string connectionString)
         {
-            this.unitOfWork = uow;
+            this.connectionString = connectionString;
             this.sqlGenerator = new SqlGenerator();
             this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
             this.typeTableName = typeof(T).GetCustomAttribute<TableAttribute>()?.TableName;
@@ -58,7 +60,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             var type = typeof(T);
 
-            using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(this.connectionString))
             {
                 connection.Open();
                 SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), connection);
@@ -87,7 +89,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             var isTypeHasCollectionInside = IsTypeHasCollectionsInside(properties);
             if (isTypeHasCollectionInside)
             {
-                using (SqlConnection connection = new SqlConnection(this.unitOfWork.ConnectionString))
+                using (SqlConnection connection = new SqlConnection(this.connectionString))
                 {
                     connection.Open();
                     var primaryKeysValues = SelectPrimaryKeyValues(type, connection);
@@ -101,7 +103,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
             else
             {
-                using (var connection = new SqlConnection(this.unitOfWork.ConnectionString))
+                using (var connection = new SqlConnection(this.connectionString))
                 {
                     connection.Open();
                     var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);

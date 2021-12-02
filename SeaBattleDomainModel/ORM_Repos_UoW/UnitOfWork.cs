@@ -115,7 +115,7 @@ namespace OrmRepositoryUnitOfWork
             }
             if (!this.repositories.ContainsKey(typeof(T).Name))
             {
-                this.repositories[type.Name] = new GenericRepos<T>(this);
+                this.repositories[type.Name] = new GenericRepos<T>(this.ConnectionString);
             }
             return (GenericRepos<T>)this.repositories[type.Name];
         }
