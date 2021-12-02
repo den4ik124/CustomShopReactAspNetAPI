@@ -79,13 +79,12 @@ namespace OrmRepositoryUnitOfWork
 
         public void Commit()
         {
-            SqlTransaction transaction;
             try
             {
                 using (SqlConnection connection = new SqlConnection(this.ConnectionString))
                 {
                     connection.Open();
-                    transaction = connection.BeginTransaction();
+                    var transaction = connection.BeginTransaction();
 
                     try
                     {
