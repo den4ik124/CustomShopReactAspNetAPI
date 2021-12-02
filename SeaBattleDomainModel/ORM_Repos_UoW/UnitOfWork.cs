@@ -96,7 +96,14 @@ namespace OrmRepositoryUnitOfWork
                     catch (Exception ex)
                     {
                         this.logger.Log(ex.Message);
-                        transaction.Rollback();
+                        try
+                        {
+                            transaction.Rollback();
+                        }
+                        catch (Exception innerEx)
+                        {
+                            this.logger.Log(innerEx.Message);
+                        }
                     }
                 }
             }
