@@ -17,7 +17,7 @@ namespace SeaBattleDomainModel.Entities
 
         #endregion Fields
 
-        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
+        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
         public int Id { get; set; }
 
         [Column(ColumnName = "BattleFieldID", KeyType = KeyType.Foreign, BaseType = typeof(BattleField))]

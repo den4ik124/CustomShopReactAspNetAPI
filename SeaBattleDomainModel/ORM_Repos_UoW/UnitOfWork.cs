@@ -11,24 +11,23 @@ namespace OrmRepositoryUnitOfWork
     {
         private Dictionary<string, IBaseRepository> repositories;
         private readonly ILogger logger;
-        public string ConnectionString { get; }
+        private bool disposed = false;
+        private SqlConnection sqlConnection;
 
         public UnitOfWork(string connectionString, ILogger logger)
         {
-            this.ConnectionString = connectionString;
             this.repositories = new Dictionary<string, IBaseRepository>();
             this.logger = logger;
+
+            this.sqlConnection = new SqlConnection(connectionString);
+            sqlConnection.Open();
         }
 
         public void Create<TInsert>(TInsert item)
         {
             try
             {
-                using (var connection = new SqlConnection(this.ConnectionString))
-                {
-                    connection.Open();
-                    GetRepository<TInsert>().Create(ref item, connection);
-                }
+                GetRepository<TInsert>().Create(ref item, this.sqlConnection);
             }
             catch (Exception ex)
             {
@@ -40,11 +39,7 @@ namespace OrmRepositoryUnitOfWork
         {
             try
             {
-                using (var connection = new SqlConnection(this.ConnectionString))
-                {
-                    connection.Open();
-                    GetRepository<TInsert>().Create(items, connection);
-                }
+                GetRepository<TInsert>().Create(items, this.sqlConnection);
             }
             catch (Exception ex)
             {
@@ -54,12 +49,12 @@ namespace OrmRepositoryUnitOfWork
 
         public TRead ReadItem<TRead>(int id)
         {
-            return GetRepository<TRead>().ReadItemById(id);
+            return GetRepository<TRead>().ReadItemById(id, this.sqlConnection);
         }
 
         public IEnumerable<TRead> ReadItems<TRead>()
         {
-            return GetRepository<TRead>().ReadItems();
+            return GetRepository<TRead>().ReadItems(this.sqlConnection);
         }
 
         public void Update<TUpdate>(TUpdate item)
@@ -81,28 +76,24 @@ namespace OrmRepositoryUnitOfWork
         {
             try
             {
-                using (SqlConnection connection = new SqlConnection(this.ConnectionString))
-                {
-                    connection.Open();
-                    var transaction = connection.BeginTransaction();
+                var transaction = this.sqlConnection.BeginTransaction();
 
+                try
+                {
+                    this.repositories.ToList().ForEach(x => x.Value.Submit(this.sqlConnection, transaction));
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Log(ex.Message);
                     try
                     {
-                        this.repositories.ToList().ForEach(x => x.Value.Submit(connection, transaction));
-
-                        transaction.Commit();
+                        transaction.Rollback();
                     }
-                    catch (Exception ex)
+                    catch (Exception innerEx)
                     {
-                        this.logger.Log(ex.Message);
-                        try
-                        {
-                            transaction.Rollback();
-                        }
-                        catch (Exception innerEx)
-                        {
-                            this.logger.Log(innerEx.Message);
-                        }
+                        this.logger.Log(innerEx.Message);
                     }
                 }
             }
@@ -118,14 +109,27 @@ namespace OrmRepositoryUnitOfWork
 
             if (!this.repositories.ContainsKey(typeof(T).Name))
             {
-                this.repositories[type.Name] = new GenericRepos<T>(this.ConnectionString);
+                this.repositories[type.Name] = new GenericRepos<T>(this.logger);
             }
             return (IRepository<T>)this.repositories[type.Name];
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    sqlConnection.Dispose();
+                }
+                disposed = true;
+            }
         }
     }
 }

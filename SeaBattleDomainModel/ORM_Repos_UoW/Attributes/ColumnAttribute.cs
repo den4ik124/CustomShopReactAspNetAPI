@@ -12,8 +12,10 @@ namespace OrmRepositoryUnitOfWork.Attributes
         public string ColumnName { get; set; }
         public ReadWriteOption ReadWriteOption { get; set; }
         public KeyType KeyType { get; set; } = KeyType.None;
+        public bool IsUniq { get; set; } = false;
 
-        public Type BaseType { get; set; } = typeof(object);
+        public Type BaseType
+        { get; set; } = typeof(object);
 
         public bool AllowNull { get; set; } = false;
 

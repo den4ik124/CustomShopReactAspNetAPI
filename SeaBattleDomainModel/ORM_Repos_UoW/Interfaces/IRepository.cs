@@ -13,9 +13,9 @@ namespace OrmRepositoryUnitOfWork.Interfaces
 
         void UpdateBy(T item, string columnName, object value);
 
-        T ReadItemById(int id);
+        T ReadItemById(int id, SqlConnection connection);
 
-        IEnumerable<T> ReadItems();
+        IEnumerable<T> ReadItems(SqlConnection connection);
 
         void DeleteById(int id);
 

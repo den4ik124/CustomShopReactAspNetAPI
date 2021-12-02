@@ -28,7 +28,7 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
+        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
         public int Id { get; set; }
 
         [Column(ColumnName = "Velocity")]

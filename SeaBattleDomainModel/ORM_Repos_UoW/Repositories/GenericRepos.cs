@@ -19,15 +19,14 @@ namespace OrmRepositoryUnitOfWork.Repositories
         private Assembly assembly;
 
         private SqlGenerator sqlGenerator;
+        private ILogger logger;
 
-        private string connectionString;
-
-        public GenericRepos(string connectionString)
+        public GenericRepos(ILogger logger)
         {
-            this.connectionString = connectionString;
             this.sqlGenerator = new SqlGenerator();
             this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
             this.typeTableName = typeof(T).GetCustomAttribute<TableAttribute>()?.TableName;
+            this.logger = logger;
         }
 
         #region Methods
@@ -56,31 +55,26 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        public T ReadItemById(int id)
+        public T ReadItemById(int id, SqlConnection connection)
         {
             var type = typeof(T);
 
-            using (SqlConnection connection = new SqlConnection(this.connectionString))
+            var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), connection);
+            using (var sqlReader = command.ExecuteReader())
             {
-                connection.Open();
-                SqlCommand command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), connection);
-                using (SqlDataReader sqlReader = command.ExecuteReader())
+                if (sqlReader.HasRows)
                 {
-                    if (sqlReader.HasRows)
+                    while (sqlReader.Read())
                     {
-                        while (sqlReader.Read())
-                        {
-                            return (T)MatchDataItem(type, sqlReader);
-                        }
-                        return default(T);
+                        return (T)MatchDataItem(type, sqlReader);
                     }
                 }
+                return default(T);
             }
-
             return default(T);
         }
 
-        public IEnumerable<T> ReadItems()
+        public IEnumerable<T> ReadItems(SqlConnection connection)
         {
             var readedItems = new List<T>();
             var type = typeof(T);
@@ -89,26 +83,18 @@ namespace OrmRepositoryUnitOfWork.Repositories
             var isTypeHasCollectionInside = IsTypeHasCollectionsInside(properties);
             if (isTypeHasCollectionInside)
             {
-                using (SqlConnection connection = new SqlConnection(this.connectionString))
-                {
-                    connection.Open();
-                    var primaryKeysValues = SelectPrimaryKeyValues(type, connection);
+                var primaryKeysValues = SelectPrimaryKeyValues(type, connection);
 
-                    foreach (var primaryKey in primaryKeysValues)
-                    {
-                        var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
-                        readedItems = GetReadedItems(readedItems, type, command);
-                    }
+                foreach (var primaryKey in primaryKeysValues)
+                {
+                    var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
+                    readedItems = GetReadedItems(readedItems, type, command);
                 }
             }
             else
             {
-                using (var connection = new SqlConnection(this.connectionString))
-                {
-                    connection.Open();
-                    var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);
-                    readedItems = GetReadedItems(readedItems, type, command);
-                }
+                var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);
+                readedItems = GetReadedItems(readedItems, type, command);
             }
             return readedItems;
         }
@@ -229,10 +215,16 @@ namespace OrmRepositoryUnitOfWork.Repositories
                                         && property.GetCustomAttribute<ColumnAttribute>().BaseType == baseType)?
                         .SetValue(item, baseTypeId);
                 }
-                var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
-                var sqlCommand = new SqlCommand(sqlInsert, connection);
-
-                var itemId = (int)sqlCommand.ExecuteScalar();
+                try
+                {
+                    var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
+                    var sqlCommand = new SqlCommand(sqlInsert, connection);
+                    sqlCommand.ExecuteScalar();
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Log(ex.Message);
+                }
             }
 
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Any());
@@ -341,10 +333,16 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
                 var sqlCommand = new SqlCommand(sqlInsert, connection);
 
-                int itemId = (int)sqlCommand.ExecuteScalar();
-
-                var primaryKeyProperty = type.GetProperties().FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-                SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
+                try
+                {
+                    int itemId = (int)sqlCommand.ExecuteScalar();
+                    var primaryKeyProperty = type.GetProperties().FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
+                    SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.Log(ex.Message);
+                }
             }
             WorkingWithRelatedEntities(ref item, connection, type);
         }
@@ -382,6 +380,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 {
                     var keyInstance = key;
                     var valueInstance = childInstance[key];
+
                     InsertAlgorithm(ref keyInstance, connection);
                     InsertAlgorithm(ref valueInstance, connection);
                 }

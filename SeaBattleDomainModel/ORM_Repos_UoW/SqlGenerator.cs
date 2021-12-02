@@ -80,11 +80,8 @@ namespace OrmRepositoryUnitOfWork
             var prefix = "";
             var postfix = "";
 
-            if (type.GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
-            {
-                prefix = $"IF NOT EXISTS (\n{GetSqlIfNotExists(item)})\nBEGIN\n";
-                postfix = $"\nEND\nELSE\nBEGIN\n{GetSqlIfExists(item)}\nEND";
-            }
+            prefix = $"IF NOT EXISTS (\n{GetSqlIfNotExists(item)})\nBEGIN\n";
+            postfix = $"\nEND\nELSE\nBEGIN\n{GetSqlIfExists(item)}\nEND";
 
             string columnMatching = "";
             int typeId = 0;
@@ -139,7 +136,7 @@ namespace OrmRepositoryUnitOfWork
             tablePropetriesNames.Add(type, propertiesNames);
 
             var childTables = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Any());
-            if (childTables.Count() == 0)
+            if (!childTables.Any())
             {
                 if (id > default(int))
                 {
@@ -153,7 +150,7 @@ namespace OrmRepositoryUnitOfWork
 
             DefineRelatedEntities(ref tablePropetriesNames, ref tableName, ref propertiesNames, childTables);
 
-            if (id > 0)
+            if (id > default(int))
             {
                 string whereFilterTable = type.GetCustomAttribute<TableAttribute>().TableName;
                 return SelectJoinSqlQuery(tablePropetriesNames, whereFilterTable, id);
@@ -544,14 +541,22 @@ namespace OrmRepositoryUnitOfWork
             var selectQueryWithConditionBuilder = new StringBuilder($"{GetSelectJoinString(type)} \n WHERE ");
 
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+
             var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                            && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+                                                                    && property.GetCustomAttribute<ColumnAttribute>().IsUniq);
 
             foreach (var property in properties)
             {
                 var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var columnValue = property.GetValue(item);
-                selectQueryWithConditionBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
+                if (columnValue == null)
+                {
+                    selectQueryWithConditionBuilder.Append($"[{tableName}].[{columnName}] IS NULL AND\n");
+                }
+                else
+                {
+                    selectQueryWithConditionBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
+                }
             }
             selectQueryWithConditionBuilder.Remove(selectQueryWithConditionBuilder.Length - ConditionEndOfStringOffset, ConditionAmountOfDeletingSymbols);
 
@@ -564,7 +569,8 @@ namespace OrmRepositoryUnitOfWork
 
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                            && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+                                                        && property.GetCustomAttribute<ColumnAttribute>().IsUniq);
+
             var primaryKeyProperty = type.GetProperties().First(property => property.GetCustomAttributes<ColumnAttribute>().Any()
                                                              && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetCustomAttribute<ColumnAttribute>().ColumnName;
 
@@ -573,7 +579,14 @@ namespace OrmRepositoryUnitOfWork
             {
                 var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
                 var columnValue = property.GetValue(item);
-                selectQueryBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
+                if (columnValue == null)
+                {
+                    selectQueryBuilder.Append($"[{tableName}].[{columnName}] IS NULL AND\n");
+                }
+                else
+                {
+                    selectQueryBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
+                }
             }
             selectQueryBuilder.Remove(selectQueryBuilder.Length - ConditionEndOfStringOffset, ConditionAmountOfDeletingSymbols);
 
