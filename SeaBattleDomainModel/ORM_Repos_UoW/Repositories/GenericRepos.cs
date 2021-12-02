@@ -35,15 +35,41 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         public void Create<TItem>(ref TItem item, SqlConnection connection)
         {
-            InsertAlgorithm(ref item, connection);
+            try
+            {
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        InsertAlgorithm(ref item, connection);
 
-            var baseType = item.GetType();
-            int? itemPrimaryKeyValue = (int)item.GetType()
-                                                .GetProperties()
-                                                .FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
-                                                .GetValue(item);
+                        var baseType = item.GetType();
+                        int? itemPrimaryKeyValue = (int)item.GetType()
+                                                            .GetProperties()
+                                                            .FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                                            .GetValue(item);
 
-            InsertRelatedDataOnly(ref item, connection, itemPrimaryKeyValue, baseType);
+                        InsertRelatedDataOnly(ref item, connection, itemPrimaryKeyValue, baseType);
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.Log(ex.Message);
+                        try
+                        {
+                            transaction.Rollback();
+                        }
+                        catch (Exception innerEx)
+                        {
+                            this.logger.Log(innerEx.Message);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
+            }
         }
 
         public void Create(IEnumerable<T> items, SqlConnection connection)
