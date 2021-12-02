@@ -127,6 +127,10 @@ namespace OrmRepositoryUnitOfWork
                 if (disposing)
                 {
                     sqlConnection.Dispose();
+                    foreach (var repos in repositories.Values)
+                    {
+                        repos.Dispose();
+                    }
                 }
                 disposed = true;
             }

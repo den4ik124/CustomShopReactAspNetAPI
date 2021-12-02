@@ -21,6 +21,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
         private SqlGenerator sqlGenerator;
         private ILogger logger;
         private SqlTransaction transaction;
+        private bool disposed = false;
 
         public GenericRepos(ILogger logger)
         {
@@ -596,6 +597,24 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 }
             }
             return readedItems;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    this.transaction.Dispose();
+                }
+                disposed = true;
+            }
         }
 
         #endregion Methods.Private
