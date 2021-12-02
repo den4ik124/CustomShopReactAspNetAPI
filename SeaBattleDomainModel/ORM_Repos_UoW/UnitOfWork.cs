@@ -106,18 +106,20 @@ namespace OrmRepositoryUnitOfWork
             }
         }
 
-        private GenericRepos<T> GetRepository<T>()
+        private IRepository<T> GetRepository<T>()
         {
             var type = typeof(T);
-            if (this.repositories == null)
-            {
-                this.repositories = new Dictionary<string, IBaseRepository>();
-            }
+
             if (!this.repositories.ContainsKey(typeof(T).Name))
             {
                 this.repositories[type.Name] = new GenericRepos<T>(this.ConnectionString);
             }
-            return (GenericRepos<T>)this.repositories[type.Name];
+            return (IRepository<T>)this.repositories[type.Name];
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }
