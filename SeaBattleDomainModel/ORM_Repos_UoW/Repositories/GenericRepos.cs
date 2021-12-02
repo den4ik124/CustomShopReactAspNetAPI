@@ -84,18 +84,24 @@ namespace OrmRepositoryUnitOfWork.Repositories
         public T ReadItemById(int id, SqlConnection connection)
         {
             var type = typeof(T);
-
-            var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), connection);
-            using (var sqlReader = command.ExecuteReader())
+            try
             {
-                if (sqlReader.HasRows)
+                var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), connection);
+                using (var sqlReader = command.ExecuteReader())
                 {
-                    while (sqlReader.Read())
+                    if (sqlReader.HasRows)
                     {
-                        return (T)MatchDataItem(type, sqlReader);
+                        while (sqlReader.Read())
+                        {
+                            return (T)MatchDataItem(type, sqlReader);
+                        }
                     }
+                    return default(T);
                 }
-                return default(T);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
             }
             return default(T);
         }
@@ -107,20 +113,27 @@ namespace OrmRepositoryUnitOfWork.Repositories
             var properties = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
 
             var isTypeHasCollectionInside = IsTypeHasCollectionsInside(properties);
-            if (isTypeHasCollectionInside)
+            try
             {
-                var primaryKeysValues = SelectPrimaryKeyValues(type, connection);
-
-                foreach (var primaryKey in primaryKeysValues)
+                if (isTypeHasCollectionInside)
                 {
-                    var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
+                    var primaryKeysValues = SelectPrimaryKeyValues(type, connection);
+
+                    foreach (var primaryKey in primaryKeysValues)
+                    {
+                        var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, primaryKey), connection);
+                        readedItems = GetReadedItems(readedItems, type, command);
+                    }
+                }
+                else
+                {
+                    var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);
                     readedItems = GetReadedItems(readedItems, type, command);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type), connection);
-                readedItems = GetReadedItems(readedItems, type, command);
+                this.logger.Log(ex.Message);
             }
             return readedItems;
         }
