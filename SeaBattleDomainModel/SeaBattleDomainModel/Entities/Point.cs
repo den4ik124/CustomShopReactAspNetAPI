@@ -39,10 +39,10 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
+        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
         public int Id { get; set; }
 
-        [Column(ColumnName = "X", IsUniq = true)]
+        [Column(columnName: "X", IsUniq = true)]
         public int X
         {
             get { return this.x; }
@@ -54,7 +54,7 @@ namespace SeaBattleDomainModel.Entities
             }
         }
 
-        [Column(ColumnName = "Y", IsUniq = true)]
+        [Column(columnName: "Y", IsUniq = true)]
         public int Y
         {
             get { return this.y; }

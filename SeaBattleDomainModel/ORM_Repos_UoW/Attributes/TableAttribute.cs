@@ -7,10 +7,10 @@ namespace OrmRepositoryUnitOfWork.Attributes
     {
         public string TableName { get; set; }
 
-        public bool IsRelatedTable { get; set; } = false;
-        public bool IsStaticDataTable { get; set; } = false;
+        public bool IsRelatedTable { get; set; }
+        public bool IsStaticDataTable { get; set; }
 
-        public TableAttribute(string tableName = "", bool isRelated = false)
+        public TableAttribute(string tableName, bool isRelated = false)
         {
             TableName = tableName;
             IsRelatedTable = isRelated;

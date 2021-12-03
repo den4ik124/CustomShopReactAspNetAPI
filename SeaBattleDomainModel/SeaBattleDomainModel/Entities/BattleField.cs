@@ -28,10 +28,10 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
+        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
         public int Id { get; set; }
 
-        [Column(ColumnName = "SideLength")]
+        [Column(columnName: "SideLength")]
         public int BattleFieldSideLength
         {
             get => battleFieldSideLength - battleFieldPointsIncreaser;

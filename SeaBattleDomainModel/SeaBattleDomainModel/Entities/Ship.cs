@@ -28,16 +28,16 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column(ColumnName = "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
+        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
         public int Id { get; set; }
 
-        [Column(ColumnName = "Velocity")]
+        [Column(columnName: "Velocity")]
         public int Velocity { get; set; }
 
-        [Column(ColumnName = "Size")]
+        [Column(columnName: "Size")]
         public int Size { get; set; }
 
-        [Column(ColumnName = "Range")]
+        [Column(columnName: "Range")]
         public int Range { get; set; }
 
         #endregion Properties
