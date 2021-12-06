@@ -187,15 +187,23 @@ namespace OrmRepositoryUnitOfWork.Repositories
             var primaryKeyColumnName = typeof(T).GetProperties().FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Any()
                                                                 && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
                                             .GetCustomAttribute<ColumnAttribute>().ColumnName;
-            using (var reader = command.ExecuteReader())
+
+            try
             {
-                if (reader.HasRows)
+                using (var reader = command.ExecuteReader())
                 {
-                    while (reader.Read())
+                    if (reader.HasRows)
                     {
-                        primaryKeys.Add((int)reader[primaryKeyColumnName]);
+                        while (reader.Read())
+                        {
+                            primaryKeys.Add((int)reader[primaryKeyColumnName]);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
             }
             var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery<T>(columnName, value, primaryKeys);
             this.sqlQueries.Add(sqlQuery);
