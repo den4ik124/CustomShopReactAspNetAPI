@@ -35,7 +35,7 @@ namespace OrmRepositoryUnitOfWork
             }
         }
 
-        public void Create<TInsert>(IEnumerable<TInsert> items)
+        public void CreateItems<TInsert>(IEnumerable<TInsert> items)
         {
             try
             {
@@ -65,6 +65,11 @@ namespace OrmRepositoryUnitOfWork
         public void Delete<TDelete>(TDelete item)
         {
             GetRepository<TDelete>().Delete(item);
+        }
+
+        public void Delete<TDelete>(string columnName, dynamic value)
+        {
+            GetRepository<TDelete>().Delete(columnName, value, this.sqlConnection);
         }
 
         public void DeleteById<TDelete>(int id)

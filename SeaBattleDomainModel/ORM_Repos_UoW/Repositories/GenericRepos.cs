@@ -179,9 +179,25 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        public void Delete(string columnName, dynamic value)
+        public void Delete(string columnName, dynamic value, SqlConnection connection)
         {
-            var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery(columnName, value);
+            var sqlPrimaryKeyValues = this.sqlGenerator.GetSelectIdForItem(typeof(T), columnName, value);
+            var command = new SqlCommand(sqlPrimaryKeyValues, connection);
+            var primaryKeys = new List<int>();
+            var primaryKeyColumnName = typeof(T).GetProperties().FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Any()
+                                                                && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                            .GetCustomAttribute<ColumnAttribute>().ColumnName;
+            using (var reader = command.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        primaryKeys.Add((int)reader[primaryKeyColumnName]);
+                    }
+                }
+            }
+            var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery<T>(columnName, value, primaryKeys);
             this.sqlQueries.Add(sqlQuery);
         }
 
@@ -321,16 +337,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 int itemId = (int)sqlCommand.ExecuteScalar();
 
                 var primaryKeyProperty = type.GetProperties().First(prop => prop.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-                if (type.IsValueType)
-                {
-                    object boxedItem = item;
-                    primaryKeyProperty.SetValue(boxedItem, itemId);
-                    item = (TItem)boxedItem;
-                }
-                else
-                {
-                    primaryKeyProperty.SetValue(item, itemId);
-                }
+
+                SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
             }
             var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
             if (childs.Any())

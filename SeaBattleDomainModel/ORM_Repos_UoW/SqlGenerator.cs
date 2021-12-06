@@ -33,13 +33,12 @@ namespace OrmRepositoryUnitOfWork
         public string GetInsertIntoSqlQuery<T>(T item)
         {
             var type = typeof(T);
-
-            var result = GetInsertConcreteItemSqlQuery(item) + Environment.NewLine;
+            var insertQueryBuidler = new StringBuilder(GetInsertConcreteItemSqlQuery(item) + Environment.NewLine);
 
             var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
             if (!childs.Any())
             {
-                return result;
+                return insertQueryBuidler.ToString();
             }
             foreach (var child in childs)
             {
@@ -54,45 +53,43 @@ namespace OrmRepositoryUnitOfWork
                     {
                         foreach (var key in childInstance.Keys)
                         {
-                            result += GetInsertIntoSqlQuery(key) + Environment.NewLine;
-                            result += GetInsertIntoSqlQuery(childInstance[key]) + Environment.NewLine;
+                            insertQueryBuidler.Append(GetInsertIntoSqlQuery(key) + Environment.NewLine);
+                            insertQueryBuidler.Append(GetInsertIntoSqlQuery(childInstance[key]) + Environment.NewLine);
                         }
                     }
                     else
                     {
                         foreach (var element in childInstance)
                         {
-                            result += GetInsertIntoSqlQuery(element) + Environment.NewLine;
+                            insertQueryBuidler.Append(GetInsertIntoSqlQuery(element) + Environment.NewLine);
                         }
                     }
                 }
                 else
                 {
-                    result += GetInsertIntoSqlQuery(childInstance) + Environment.NewLine;
+                    insertQueryBuidler.Append(GetInsertIntoSqlQuery(childInstance) + Environment.NewLine);
                 }
             }
-            return result;
+            return insertQueryBuidler.ToString();
         }
 
         public string GetInsertConcreteItemSqlQuery<T>(T item)
         {
-            var type = item.GetType();
-            var prefix = "";
-            var postfix = "";
-
-            prefix = $"IF NOT EXISTS (\n{GetSqlIfNotExists(item)})\nBEGIN\n";
-            postfix = $"\nEND\nELSE\nBEGIN\n{GetSqlIfExists(item)}\nEND";
-
-            string columnMatching = "";
-            int typeId = 0;
-            var propertyValue = new Dictionary<string, object>();
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                            && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
-
-            var insertQueryBuilder = new StringBuilder($"INSERT INTO [{tableName}]\n");
+            var type = item?.GetType();
             var columnNameStringBuilder = new StringBuilder();
             var columnValueStringBuilder = new StringBuilder();
+
+            var prefix = $"IF NOT EXISTS (\n{GetSqlIfNotExists(item)})\nBEGIN\n";
+            var postfix = $"\nEND\nELSE\nBEGIN\n{GetSqlIfExists(item)}\nEND";
+
+            string columnMatching = string.Empty;
+            int typeId = default;
+            var propertyValue = new Dictionary<string, object>();
+            var tableName = type?.GetCustomAttribute<TableAttribute>()?.TableName;
+            var properties = type?.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
+                                                            && property.GetCustomAttribute<ColumnAttribute>()?.KeyType != KeyType.Primary);
+
+            var insertQueryBuilder = new StringBuilder($"INSERT INTO [{tableName}]\n");
             foreach (var property in properties)
             {
                 var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
@@ -186,6 +183,16 @@ namespace OrmRepositoryUnitOfWork
             return selectQueryBuider.ToString();
         }
 
+        public string GetSelectIdForItem(Type type, string columnName, object value)
+        {
+            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var primaryKeyColumnName = type.GetProperties().FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Any()
+                                                                && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
+                                            .GetCustomAttribute<ColumnAttribute>().ColumnName;
+            return $"SELECT [{tableName}].[{primaryKeyColumnName}] FROM Ships WHERE [{tableName}].[{columnName}] = {value}";
+            //  SELECT [Ships].[Id] FROM Ships WHERE [Ships].[Velocity] = 1
+        }
+
         public IEnumerable<Type> GetDependentTypes(Type deletedType)
         {
             var types = this.assembly.GetTypes();
@@ -201,22 +208,12 @@ namespace OrmRepositoryUnitOfWork
 
         public string GetUpdateSqlQuery<T>(T item, string columnName = "", object value = default)
         {
-            if (this.updateSqlQueries == null)
-            {
-                this.updateSqlQueries = new Stack<string>();
-            }
             this.updateSqlQueries.Push(GetUpdateConcreteItemSqlQuery<T>(item, columnName, value));
-
             return GetStringFromStack(this.updateSqlQueries);
         }
 
         public string GetDeleteSqlQuery(string tableName, int id)
         {
-            if (this.deleteSqlQueries == null)
-            {
-                this.deleteSqlQueries = new Stack<string>();
-            }
-
             var type = this.assembly.GetTypes().First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Any()
                                                    && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
             var primaryKeyColumnName = type.GetProperties()
@@ -253,12 +250,8 @@ namespace OrmRepositoryUnitOfWork
             return GetStringFromStack(this.deleteSqlQueries);
         }
 
-        public string GetDeleteSqlQuery<T>(string columnName, object value)
+        public string GetDeleteSqlQuery<T>(string columnName, object value, IEnumerable<int> primaryKeysValues)
         {
-            if (this.deleteSqlQueries == null)
-            {
-                this.deleteSqlQueries = new Stack<string>();
-            }
             var type = typeof(T);
             var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
             this.deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}\n");
@@ -272,9 +265,11 @@ namespace OrmRepositoryUnitOfWork
                                                                         && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
                                                                         && property.GetCustomAttribute<ColumnAttribute>().BaseType == type)
                                                       .GetCustomAttribute<ColumnAttribute>().ColumnName;
-                var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, value);
-
-                this.deleteSqlQueries.Push(updateQuery);
+                foreach (var primaryKeyValue in primaryKeysValues)
+                {
+                    var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, primaryKeyValue);
+                    this.deleteSqlQueries.Push(updateQuery);
+                }
             }
             return GetStringFromStack(this.deleteSqlQueries);
         }
@@ -286,11 +281,6 @@ namespace OrmRepositoryUnitOfWork
                 return Environment.NewLine;
             }
             var type = item.GetType();
-
-            if (this.deleteSqlQueries == null)
-            {
-                this.deleteSqlQueries = new Stack<string>();
-            }
 
             this.deleteSqlQueries.Push(GetDeleteConcreteItemSqlQuery(item));
 
@@ -485,7 +475,7 @@ namespace OrmRepositoryUnitOfWork
 
         private void DefineTableAndProperties(Type type, out string tableName, out List<string> propertiesNames)
         {
-            tableName = "";
+            tableName = string.Empty;
             propertiesNames = new List<string>();
 
             if (type.GetCustomAttribute<RelatedEntityAttribute>() != null && type.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
@@ -673,7 +663,7 @@ namespace OrmRepositoryUnitOfWork
                 }
             }
             updateQueryBuider.Remove(updateQueryBuider.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
-            if (columnName == "")
+            if (columnName == string.Empty)
             {
                 updateQueryBuider.Append($"WHERE [{tableName}].[{primaryColumnName}] = {primaryColumnValue}");
             }

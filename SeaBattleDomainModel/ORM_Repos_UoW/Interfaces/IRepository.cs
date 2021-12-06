@@ -21,6 +21,6 @@ namespace OrmRepositoryUnitOfWork.Interfaces
 
         void Delete(T item);
 
-        void Delete(string columnName, object value);
+        void Delete(string columnName, object value, SqlConnection connection);
     }
 }
