@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -29,6 +30,10 @@ namespace OrmRepositoryUnitOfWork.Repositories
             this.connection = sqlConnection;
             this.sqlGenerator = new SqlGenerator();
             this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
+            if (this.assembly == null)
+            {
+                throw new ArgumentNullException($"The [{nameof(DomainModelAttribute)}] was not set to your assembly");
+            }
             this.type = typeof(T);
             this.typeTableName = typeof(T).GetCustomAttribute<TableAttribute>()?.TableName;
         }
@@ -52,10 +57,13 @@ namespace OrmRepositoryUnitOfWork.Repositories
                     try
                     {
                         InsertAlgorithm(ref item);
-
+                        if (item == null)
+                        {
+                            return;
+                        }
                         var baseType = item.GetType();
-                        var primaryKeyProperty = GetPrimaryKeyProperty(baseType);
 
+                        var primaryKeyProperty = GetPrimaryKeyProperty(baseType);
                         var itemPrimaryKeyValue = (int?)primaryKeyProperty.GetValue(item);
 
                         InsertRelatedDataOnly(ref item, itemPrimaryKeyValue, baseType);
@@ -73,19 +81,11 @@ namespace OrmRepositoryUnitOfWork.Repositories
                         }
                         throw;
                     }
-                    finally
-                    {
-                        this.transaction.Dispose();
-                    }
                 }
             }
             catch (Exception)
             {
                 throw;
-            }
-            finally
-            {
-                this.Dispose();
             }
         }
 
@@ -112,19 +112,14 @@ namespace OrmRepositoryUnitOfWork.Repositories
                         return (T)MatchDataItem(type, sqlReader);
                     }
                 }
-                return default(T);
+                return default;
             }
-            return default(T);
         }
 
         //DONE
         public IEnumerable<T> ReadItems()
         {
             var readedItems = new List<T>();
-
-            //TODO: delete before Push
-            var columns = this.type.Columns(typeof(RelatedEntityAttribute));
-
             var properties = this.type.GetProperties()
                                         .Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
 
@@ -176,7 +171,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
             else
             {
-                throw new Exception("Primary key value was not set");
+                throw new Exception("Primary key value was not set (or equals to 0)");
             }
         }
 
@@ -255,8 +250,10 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             foreach (var command in this.sqlQueries)
             {
-                var sqlCommand = new SqlCommand(command, this.connection);
-                sqlCommand.Transaction = transaction;
+                var sqlCommand = new SqlCommand(command, this.connection)
+                {
+                    Transaction = transaction
+                };
                 sqlCommand.ExecuteNonQuery();
             }
         }
@@ -299,8 +296,10 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
             var primaryColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
             primaryColumnName = $"{this.typeTableName}{primaryColumnName}";
-            var command = new SqlCommand(selectAllDataForSpecificType, this.connection);
-            command.Transaction = this.transaction;
+            var command = new SqlCommand(selectAllDataForSpecificType, this.connection)
+            {
+                Transaction = this.transaction
+            };
 
             try
             {
@@ -373,15 +372,17 @@ namespace OrmRepositoryUnitOfWork.Repositories
                         continue;
                     }
 
-                    var childAttribute = child.GetCustomAttribute<RelatedEntityAttribute>();
-
                     dynamic? childInstance = child.GetValue(item);
-
+                    var childAttribute = child.GetCustomAttribute<RelatedEntityAttribute>();
                     if (childAttribute != null && childAttribute.IsCollection)
                     {
                         if (child.PropertyType.GetInterface(nameof(IDictionary<object, object>)) != null)
                         {
                             var keys = childInstance?.Keys;
+                            if (keys == null)
+                            {
+                                continue;
+                            }
                             foreach (var key in keys)
                             {
                                 var keyInstance = key;
@@ -409,81 +410,9 @@ namespace OrmRepositoryUnitOfWork.Repositories
         }
 
         //DONE
-        private void InsertNonRelatedData<TItem>(ref TItem? item)
-        {
-            //IsNullChecking(item);
-            if (item == null)
-            {
-                return;
-            }
-            var type = item.GetType();
-            var typeAttribute = type.GetCustomAttribute<TableAttribute>();
-            int itemId;
-
-            if (typeAttribute != null && !typeAttribute.IsRelatedTable)
-            {
-                var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
-                var sqlCommand = new SqlCommand(sqlInsert, this.connection)
-                {
-                    Transaction = this.transaction
-                };
-
-                try
-                {
-                    itemId = (int)sqlCommand.ExecuteScalar();
-                    var primaryKeyProperty = GetPrimaryKeyProperty(type);
-                    SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-            }
-            var childs = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
-            if (childs.Any())
-            {
-                foreach (var child in childs)
-                {
-                    if (child.GetValue(item) == null)
-                    {
-                        continue;
-                    }
-                    var childAttribute = child.GetCustomAttribute<RelatedEntityAttribute>();
-
-                    dynamic? childInstance = child.GetValue(item);
-
-                    if (childAttribute != null && childAttribute.IsCollection)
-                    {
-                        if (child.PropertyType.GetInterface(nameof(IDictionary<object, object>)) != null)
-                        {
-                            var keys = childInstance.Keys;
-                            foreach (var key in keys)
-                            {
-                                var keyInstance = key;
-                                InsertNonRelatedData(ref keyInstance);
-                                InsertNonRelatedData(ref childInstance[key]);
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < childInstance.Count; i++)
-                            {
-                                InsertNonRelatedData(childInstance[i]);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        InsertNonRelatedData(ref childInstance);
-                    }
-                }
-            }
-        }
-
-        //DONE
         private void InsertAlgorithm<TItem>(ref TItem? item)
         {
-            //IsNullChecking(item);
+            ////IsNullChecking(item);
             if (item == null)
             {
                 return;
@@ -502,7 +431,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 try
                 {
                     int itemId = (int)sqlCommand.ExecuteScalar();
-                    var primaryKeyProperty = type.GetProperties().FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>()?.KeyType == KeyType.Primary);
+
+                    var primaryKeyProperty = GetPrimaryKeyProperty(type);
                     if (primaryKeyProperty != null)
                     {
                         SetValueIntoProperty(ref item, itemId, primaryKeyProperty);
@@ -617,7 +547,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
             object? item;
             if (type.IsAbstract)
             {
-                item = GetDerivedClass(sqlReader);
+                item = GetDerivedClass(sqlReader, type);
             }
             else
             {
@@ -625,14 +555,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
             return item;
         }
-
-        //private void IsNullChecking(object? item)
-        //{
-        //    if (item == null)
-        //    {
-        //        throw new ArgumentNullException("Item was null.");
-        //    }
-        //}
 
         //DONE
         private dynamic FillChilds(object item, Type type, SqlDataReader sqlReader)
@@ -705,37 +627,26 @@ namespace OrmRepositoryUnitOfWork.Repositories
         }
 
         //TODO: Recheck
-        private object GetDerivedClass(SqlDataReader sqlReader)
+        private object GetDerivedClass(SqlDataReader sqlReader, Type baseType)
         {
-            var derivedTypes = this.assembly.GetTypes().Where(assemblyType => assemblyType.GetCustomAttributes<InheritanceRelationAttribute>().Any()
-                                                        && !assemblyType.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass);
+            var assemblyInheritedTypes = this.assembly.GetTypes().Where(assemblyType => assemblyType.GetCustomAttributes<InheritanceRelationAttribute>().Any());
 
-            #region Refactored code
+            IsAnyItemsWereFound(assemblyInheritedTypes, $"There are no types that marked by [{ nameof(InheritanceRelationAttribute)}] attribute.");
 
-            //var derivedClass = derivedTypes.FirstOrDefault();
-            //Attribute? derivedClassTableAttribute;
-            //Attribute? derivedClassTypeAttribute;
-            //string? tableName = string.Empty;
-            //string? matchingColumnName = string.Empty;
+            var derivedClasses = assemblyInheritedTypes.Where(assemblyType => assemblyType.BaseType == baseType);
 
-            //if (derivedClass != null)
-            //{
-            //    derivedClassTableAttribute = derivedClass.GetCustomAttribute<TableAttribute>();
-            //    derivedClassTypeAttribute = derivedClass.GetCustomAttribute<TypeAttribute>();
-            //    if (derivedClassTableAttribute != null)
-            //    {
-            //        tableName = ((TableAttribute)derivedClassTableAttribute).TableName;
-            //    }
-            //    if (derivedClassTypeAttribute != null)
-            //    {
-            //        matchingColumnName = ((TypeAttribute)derivedClassTypeAttribute).ColumnMatching;
-            //    }
-            //}
+            IsAnyItemsWereFound(derivedClasses, $"There are no derived classes from \"{baseType.Name}\" type.");
 
-            #endregion Refactored code
+            var derivedClassesWithTableAttribute = derivedClasses.Where(derivedType => derivedType.GetCustomAttributes<TableAttribute>().Any());
 
-            var tableName = derivedTypes.FirstOrDefault().GetCustomAttribute<TableAttribute>().TableName;
-            var matchingColumnName = derivedTypes.FirstOrDefault()?.GetCustomAttribute<TypeAttribute>()?.ColumnMatching;
+            IsAnyItemsWereFound(derivedClassesWithTableAttribute, $"There are no derived classes that marked by [{nameof(TableAttribute)}] attribute.");
+
+            var derivedClassesWithTypeAttribute = derivedClassesWithTableAttribute.Where(derivedType => derivedType.GetCustomAttributes<TypeAttribute>().Any());
+
+            IsAnyItemsWereFound(derivedClassesWithTypeAttribute, $"There are no derived classes that marked by [{nameof(TypeAttribute)}] attribute.");
+
+            var tableName = derivedClassesWithTypeAttribute.First().GetCustomAttribute<TableAttribute>().TableName;
+            var matchingColumnName = derivedClassesWithTypeAttribute.First().GetCustomAttribute<TypeAttribute>().ColumnMatching;
 
             if (tableName != null && matchingColumnName != null && matchingColumnName.EndsWith("id", StringComparison.OrdinalIgnoreCase))
             {
@@ -747,8 +658,16 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 return null;
             }
 
-            var type = derivedTypes.FirstOrDefault(derivedType => derivedType.GetCustomAttribute<TypeAttribute>().TypeID == (int)sqlReader[matchingColumnName]);
+            var type = derivedClassesWithTypeAttribute.First(derivedType => derivedType.GetCustomAttribute<TypeAttribute>().TypeID == (int)sqlReader[matchingColumnName]);
             return Activator.CreateInstance(type);
+        }
+
+        private static void IsAnyItemsWereFound(IEnumerable<Type> items, string exceptionMessage)
+        {
+            if (!items.Any())
+            {
+                throw new Exception(exceptionMessage);
+            }
         }
 
         //DONE

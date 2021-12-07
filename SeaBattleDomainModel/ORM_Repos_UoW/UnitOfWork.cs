@@ -53,11 +53,15 @@ namespace OrmRepositoryUnitOfWork
             try
             {
                 var item = GetRepository<TRead>().ReadItemById(id);
+                if (item == null)
+                {
+                    throw new NullReferenceException($"{typeof(TRead).Name} Item was not readed");
+                }
                 return item;
             }
             catch (Exception ex)
             {
-                this.logger.Log(ex.Message);
+                this.logger.Log(ex.Message + Environment.NewLine + ex.StackTrace);
             }
             return default(TRead);
         }

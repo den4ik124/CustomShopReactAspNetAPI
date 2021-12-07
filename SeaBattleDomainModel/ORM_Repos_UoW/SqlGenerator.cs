@@ -23,7 +23,11 @@ namespace OrmRepositoryUnitOfWork
 
         public SqlGenerator()
         {
-            this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
+            this.assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
+            if (this.assembly == null)
+            {
+                throw new ArgumentNullException($"The [{nameof(DomainModelAttribute)}] was not set to your assembly");
+            }
             this.deleteSqlQueries = new Stack<string>();
             this.updateSqlQueries = new Stack<string>();
         }
@@ -124,7 +128,8 @@ namespace OrmRepositoryUnitOfWork
 
         public string GetSelectJoinString(Type type, int id = default)
         {
-            if (type.GetCustomAttribute<TableAttribute>() == null)
+            var typeTableAttribute = type.GetCustomAttribute<TableAttribute>();
+            if (typeTableAttribute == null)
             {
                 throw new Exception($"Check [TableAttribute] on {type.Name}");
             }
@@ -152,7 +157,7 @@ namespace OrmRepositoryUnitOfWork
 
             if (id > default(int))
             {
-                string whereFilterTable = type.GetCustomAttribute<TableAttribute>().TableName;
+                string whereFilterTable = typeTableAttribute.TableName;
                 return SelectJoinSqlQuery(tablePropetriesNames, whereFilterTable, id);
             }
 
@@ -162,8 +167,12 @@ namespace OrmRepositoryUnitOfWork
         public string SelectFromSingleTableSqlQuery(Type type)
         {
             var selectQueryBuider = new StringBuilder("SELECT \n");
-
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var typeTableAttribute = type.GetCustomAttribute<TableAttribute>();
+            if (typeTableAttribute == null)
+            {
+                throw new Exception($"Check [TableAttribute] on {type.Name}");
+            }
+            var tableName = typeTableAttribute.TableName;
 
             var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
                                 .Select(property => property.GetCustomAttribute<ColumnAttribute>().ColumnName);
