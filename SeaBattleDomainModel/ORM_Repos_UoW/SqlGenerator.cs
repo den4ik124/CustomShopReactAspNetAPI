@@ -49,7 +49,7 @@ namespace OrmRepositoryUnitOfWork
                 dynamic childInstance = child.GetValue(item);
                 if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                 {
-                    if (childInstance.GetType().GetInterface("IDictionary") != null)
+                    if (childInstance.GetType().GetInterface(nameof(IDictionary<object, object>)) != null)
                     {
                         foreach (var key in childInstance.Keys)
                         {
@@ -124,10 +124,13 @@ namespace OrmRepositoryUnitOfWork
 
         public string GetSelectJoinString(Type type, int id = default)
         {
-            var tablePropetriesNames = new Dictionary<Type, List<string>>();
-
+            if (type.GetCustomAttribute<TableAttribute>() == null)
+            {
+                throw new Exception($"Check [TableAttribute] on {type.Name}");
+            }
             string tableName;
             List<string> propertiesNames;
+            var tablePropetriesNames = new Dictionary<Type, List<string>>();
             DefineTableAndProperties(type, out tableName, out propertiesNames);
 
             tablePropetriesNames.Add(type, propertiesNames);
@@ -325,7 +328,7 @@ namespace OrmRepositoryUnitOfWork
                     dynamic propertyObject = child.GetValue(item);
                     if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
                     {
-                        if (child.PropertyType.GetInterface("IDictionary") != null)
+                        if (child.PropertyType.GetInterface(nameof(IDictionary<object, object>)) != null)
                         {
                             var keys = propertyObject.Keys;
                             foreach (var key in keys)

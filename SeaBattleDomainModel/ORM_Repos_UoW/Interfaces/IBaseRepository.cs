@@ -5,6 +5,6 @@ namespace OrmRepositoryUnitOfWork.Interfaces
 {
     public interface IBaseRepository : IDisposable
     {
-        void Submit(SqlConnection connection, SqlTransaction transaction);
+        void Submit(/*SqlConnection connection, */SqlTransaction transaction);
     }
 }

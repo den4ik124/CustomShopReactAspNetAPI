@@ -30,12 +30,22 @@ namespace ReflectionExtensions
         public static IEnumerable<PropertyInfo> Columns<T>(this T item, Type attributeType)
         {
             var type = typeof(T);
-            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0);
+            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Any());
         }
 
         public static IEnumerable<PropertyInfo> Columns(this Type type, Type attributeType)
         {
-            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Count() > 0);
+            return type.GetProperties().Where(prop => prop.GetCustomAttributes(attributeType).Any());
+        }
+
+        public static IEnumerable<Type> GetTypes(this Assembly assembly, Type attributeType)
+        {
+            return assembly.GetTypes().Where(prop => prop.GetCustomAttributes(attributeType).Any());
+        }
+
+        public static Assembly GetAssembly(Type attributeType)
+        {
+            return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(assembly => assembly.GetCustomAttributes(attributeType).Any());
         }
     }
 }

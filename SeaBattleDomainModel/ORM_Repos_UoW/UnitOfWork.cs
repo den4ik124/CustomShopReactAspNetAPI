@@ -3,6 +3,7 @@ using OrmRepositoryUnitOfWork.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 
 namespace OrmRepositoryUnitOfWork
@@ -12,7 +13,7 @@ namespace OrmRepositoryUnitOfWork
         private Dictionary<string, IBaseRepository> repositories;
         private readonly ILogger logger;
         private bool disposed = false;
-        private SqlConnection sqlConnection;
+        private readonly SqlConnection sqlConnection;
 
         public UnitOfWork(string connectionString, ILogger logger)
         {
@@ -27,7 +28,7 @@ namespace OrmRepositoryUnitOfWork
         {
             try
             {
-                GetRepository<TInsert>().Create(ref item, this.sqlConnection);
+                GetRepository<TInsert>().Create(ref item);
             }
             catch (Exception ex)
             {
@@ -39,7 +40,7 @@ namespace OrmRepositoryUnitOfWork
         {
             try
             {
-                GetRepository<TInsert>().Create(items, this.sqlConnection);
+                GetRepository<TInsert>().CreateItems(items);
             }
             catch (Exception ex)
             {
@@ -49,32 +50,81 @@ namespace OrmRepositoryUnitOfWork
 
         public TRead ReadItem<TRead>(int id)
         {
-            return GetRepository<TRead>().ReadItemById(id, this.sqlConnection);
+            try
+            {
+                var item = GetRepository<TRead>().ReadItemById(id);
+                return item;
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
+            }
+            return default(TRead);
         }
 
         public IEnumerable<TRead> ReadItems<TRead>()
         {
-            return GetRepository<TRead>().ReadItems(this.sqlConnection);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            try
+            {
+                return GetRepository<TRead>().ReadItems();
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
+            }
+            sw.Stop();
+            Console.WriteLine("ReadItems :" + sw.ElapsedMilliseconds + " ms.");
+            return default(IEnumerable<TRead>);
         }
 
         public void Update<TUpdate>(TUpdate item)
         {
-            GetRepository<TUpdate>().Update(item);
+            try
+            {
+                GetRepository<TUpdate>().Update(item);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
+            }
         }
 
         public void Delete<TDelete>(TDelete item)
         {
-            GetRepository<TDelete>().Delete(item);
+            try
+            {
+                GetRepository<TDelete>().Delete(item);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
+            }
         }
 
         public void Delete<TDelete>(string columnName, dynamic value)
         {
-            GetRepository<TDelete>().Delete(columnName, value, this.sqlConnection);
+            try
+            {
+                GetRepository<TDelete>().Delete(columnName, value);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
+            }
         }
 
         public void DeleteById<TDelete>(int id)
         {
-            GetRepository<TDelete>().DeleteById(id);
+            try
+            {
+                GetRepository<TDelete>().DeleteById(id);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
+            }
         }
 
         public void Commit()
@@ -85,7 +135,7 @@ namespace OrmRepositoryUnitOfWork
 
                 try
                 {
-                    this.repositories.ToList().ForEach(x => x.Value.Submit(this.sqlConnection, transaction));
+                    this.repositories.ToList().ForEach(x => x.Value.Submit(transaction));
 
                     transaction.Commit();
                 }
@@ -114,7 +164,7 @@ namespace OrmRepositoryUnitOfWork
 
             if (!this.repositories.ContainsKey(typeof(T).Name))
             {
-                this.repositories[type.Name] = new GenericRepos<T>(this.logger);
+                this.repositories[type.Name] = new GenericRepos<T>(this.sqlConnection);
             }
             return (IRepository<T>)this.repositories[type.Name];
         }
@@ -131,8 +181,8 @@ namespace OrmRepositoryUnitOfWork
             {
                 if (disposing)
                 {
-                    sqlConnection.Dispose();
-                    foreach (var repos in repositories.Values)
+                    this.sqlConnection.Dispose();
+                    foreach (var repos in this.repositories.Values)
                     {
                         repos.Dispose();
                     }
