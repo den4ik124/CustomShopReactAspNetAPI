@@ -12,13 +12,6 @@ namespace OrmRepositoryUnitOfWork.Attributes
         public AttributeChecker()
         {
             CheckAssembly();
-            var assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
-            var types = assembly.GetTypes();
-            foreach (var type in types)
-            {
-                CheckTableAttribute(type);
-                CheckColumnAttribute(type);
-            }
         }
 
         private void CheckAssembly()
@@ -28,7 +21,6 @@ namespace OrmRepositoryUnitOfWork.Attributes
             {
                 throw new Exception($"There are no any assembly marked with [{nameof(DomainModelAttribute)}].");
             }
-            throw new NotImplementedException();
         }
 
         /// <summary>
