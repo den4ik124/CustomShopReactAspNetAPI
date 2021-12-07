@@ -235,7 +235,6 @@ namespace OrmRepositoryUnitOfWork
             }
             var primaryKeyColumnName = GetPrimaryKeyProperty(type)?.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
             return $"SELECT [{tableName}].[{primaryKeyColumnName}] FROM Ships WHERE [{tableName}].[{columnName}] = {value}";
-            //  SELECT [Ships].[Id] FROM Ships WHERE [Ships].[Velocity] = 1
         }
 
         public IEnumerable<Type> GetDependentTypes(Type deletedType)
@@ -252,7 +251,6 @@ namespace OrmRepositoryUnitOfWork
                 throw new Exception($"There are no any property marked by [{nameof(ColumnAttribute)}]");
             }
 
-            //TODO: Recheck
             return usefulTypes.Where(type => type.GetProperties()
                                             .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
                                                         && property.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType)

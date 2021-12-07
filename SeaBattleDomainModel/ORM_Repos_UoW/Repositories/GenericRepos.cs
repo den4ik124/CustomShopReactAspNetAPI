@@ -1,12 +1,10 @@
 ﻿using OrmRepositoryUnitOfWork.Attributes;
 using OrmRepositoryUnitOfWork.Enums;
 using OrmRepositoryUnitOfWork.Interfaces;
-using ReflectionExtensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -42,10 +40,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         #region Methods.Public
 
-        //TODO: Recheck
         public void Create<TItem>(ref TItem item)
         {
-            //IsNullChecking(item);
             if (item == null)
             {
                 return;
@@ -89,7 +85,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         public void CreateItems(IEnumerable<T> items)
         {
             foreach (var item in items)
@@ -99,7 +94,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         public T ReadItemById(int id)
         {
             var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), this.connection);
@@ -116,7 +110,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         public IEnumerable<T> ReadItems()
         {
             var readedItems = new List<T>();
@@ -149,10 +142,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return readedItems;
         }
 
-        //DONE
         public void Update(T item)
         {
-            //IsNullChecking(item);
             if (item == null)
             {
                 return;
@@ -175,14 +166,12 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         public void UpdateBy(T item, string columnName, object value)
         {
             var sqlUpdateQuery = this.sqlGenerator.GetUpdateSqlQuery(item, columnName, value);
             this.sqlQueries.Add(sqlUpdateQuery);
         }
 
-        //DONE
         public void DeleteById(int id)
         {
             if (this.typeTableName == null)
@@ -193,10 +182,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
             this.sqlQueries.Add(sqlQuery);
         }
 
-        //DONE
         public void Delete(T item)
         {
-            //IsNullChecking(item);
             if (item == null)
             {
                 return;
@@ -210,7 +197,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         public void Delete(string columnName, dynamic value)
         {
             var sqlPrimaryKeyValues = this.sqlGenerator.GetSelectIdForItem(typeof(T), columnName, value);
@@ -262,7 +248,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         #region Methods.Private
 
-        //DONE
         private bool IsTypeHasCollectionsInside(IEnumerable<PropertyInfo> properties)
         {
             bool hasCollectionInside = false;
@@ -282,7 +267,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return hasCollectionInside;
         }
 
-        //DONE
         private List<int> SelectPrimaryKeyValues(Type type)
         {
             var primaryKeyValues = new List<int>();
@@ -321,10 +305,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return primaryKeyValues;
         }
 
-        //DONE
         private void InsertRelatedDataOnly<TItem>(ref TItem? item, int? baseTypeId, Type baseType)
         {
-            //IsNullChecking(item);
             if (item == null)
             {
                 return;
@@ -409,10 +391,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         private void InsertAlgorithm<TItem>(ref TItem? item)
         {
-            ////IsNullChecking(item);
             if (item == null)
             {
                 return;
@@ -446,10 +426,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
             WorkingWithRelatedEntities(ref item, type);
         }
 
-        //DONE
         private void WorkingWithRelatedEntities<TItem>(ref TItem? item, Type type)
         {
-            //IsNullChecking(item);
             if (item == null)
             {
                 return;
@@ -481,7 +459,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         private void WorkingWithRelatedEntityCollection(PropertyInfo child, dynamic childInstance)
         {
             if (child.PropertyType.GetInterface(nameof(IDictionary<object, object>)) != null)
@@ -506,10 +483,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         private void SetValueIntoProperty<TItem>(ref TItem? item, object value, PropertyInfo property)
         {
-            //IsNullChecking(item);
             if (item == null)
             {
                 return;
@@ -527,7 +502,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         private object MatchDataItem(Type type, SqlDataReader sqlReader)
         {
             var item = GetItemInstance(type, sqlReader);
@@ -541,7 +515,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return item;
         }
 
-        //DONE
         private object GetItemInstance(Type type, SqlDataReader sqlReader)
         {
             object? item;
@@ -556,7 +529,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return item;
         }
 
-        //DONE
         private dynamic FillChilds(object item, Type type, SqlDataReader sqlReader)
         {
             var relatedEntities = type.GetProperties().Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
@@ -590,7 +562,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return item;
         }
 
-        //DONE
         private object? GetFilledCollection(PropertyInfo relatedEntity, SqlDataReader sqlReader)
         {
             var type = relatedEntity.PropertyType;
@@ -626,7 +597,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return collection;
         }
 
-        //TODO: Recheck
         private object GetDerivedClass(SqlDataReader sqlReader, Type baseType)
         {
             var assemblyInheritedTypes = this.assembly.GetTypes().Where(assemblyType => assemblyType.GetCustomAttributes<InheritanceRelationAttribute>().Any());
@@ -645,8 +615,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
             IsAnyItemsWereFound(derivedClassesWithTypeAttribute, $"There are no derived classes that marked by [{nameof(TypeAttribute)}] attribute.");
 
-            var tableName = derivedClassesWithTypeAttribute.First().GetCustomAttribute<TableAttribute>().TableName;
-            var matchingColumnName = derivedClassesWithTypeAttribute.First().GetCustomAttribute<TypeAttribute>().ColumnMatching;
+            var tableName = derivedClassesWithTypeAttribute.First().GetCustomAttribute<TableAttribute>()?.TableName;
+            var matchingColumnName = derivedClassesWithTypeAttribute.First().GetCustomAttribute<TypeAttribute>()?.ColumnMatching;
 
             if (tableName != null && matchingColumnName != null && matchingColumnName.EndsWith("id", StringComparison.OrdinalIgnoreCase))
             {
@@ -658,7 +628,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 return null;
             }
 
-            var type = derivedClassesWithTypeAttribute.First(derivedType => derivedType.GetCustomAttribute<TypeAttribute>().TypeID == (int)sqlReader[matchingColumnName]);
+            var type = derivedClassesWithTypeAttribute.First(derivedType => derivedType.GetCustomAttribute<TypeAttribute>()?.TypeID == (int)sqlReader[matchingColumnName]);
             return Activator.CreateInstance(type);
         }
 
@@ -670,7 +640,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        //DONE
         private object FillProperties(object item, Type type, SqlDataReader sqlReader)
         {
             var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any());
@@ -702,7 +671,6 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return item;
         }
 
-        //DONE
         private List<T> GetReadedItems(List<T> readedItems, Type type, SqlCommand command)
         {
             using (var sqlReader = command.ExecuteReader())
