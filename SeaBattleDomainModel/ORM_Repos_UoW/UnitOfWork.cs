@@ -64,8 +64,6 @@ namespace OrmRepositoryUnitOfWork
 
         public IEnumerable<TRead> ReadItems<TRead>()
         {
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
             try
             {
                 return GetRepository<TRead>().ReadItems();
@@ -74,8 +72,6 @@ namespace OrmRepositoryUnitOfWork
             {
                 this.logger.Log(ex.Message);
             }
-            sw.Stop();
-            Console.WriteLine("ReadItems :" + sw.ElapsedMilliseconds + " ms.");
             return default(IEnumerable<TRead>);
         }
 
