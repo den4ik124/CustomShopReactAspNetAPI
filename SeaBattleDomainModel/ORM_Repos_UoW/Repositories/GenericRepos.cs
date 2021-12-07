@@ -729,7 +729,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
             if (primaryKeyProperty == null)
             {
-                throw new Exception("[ColumnAttribute].KeyType was not set to the primary key property");
+                throw new Exception($"[{nameof(ColumnAttribute)}].{nameof(KeyType)} was not set to the primary key property");
             }
             return primaryKeyProperty;
         }

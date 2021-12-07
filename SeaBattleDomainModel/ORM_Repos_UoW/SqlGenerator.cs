@@ -20,6 +20,7 @@ namespace OrmRepositoryUnitOfWork
         private Assembly assembly;
         private Stack<string> deleteSqlQueries;
         private Stack<string> updateSqlQueries;
+        private AttributeChecker attributeChecker;
 
         public SqlGenerator()
         {
@@ -30,6 +31,7 @@ namespace OrmRepositoryUnitOfWork
             }
             this.deleteSqlQueries = new Stack<string>();
             this.updateSqlQueries = new Stack<string>();
+            this.attributeChecker = new AttributeChecker();
         }
 
         #region Methods.Public
@@ -51,7 +53,9 @@ namespace OrmRepositoryUnitOfWork
                     continue;
                 }
                 dynamic childInstance = child.GetValue(item);
-                if (child.GetCustomAttribute<RelatedEntityAttribute>().IsCollection)
+
+                var childAttribute = child.GetCustomAttribute<RelatedEntityAttribute>();
+                if (childAttribute != null && childAttribute.IsCollection)
                 {
                     if (childInstance.GetType().GetInterface(nameof(IDictionary<object, object>)) != null)
                     {
@@ -79,24 +83,39 @@ namespace OrmRepositoryUnitOfWork
 
         public string GetInsertConcreteItemSqlQuery<T>(T item)
         {
-            var type = item?.GetType();
+            if (item == null)
+            {
+                throw new ArgumentNullException("Item was null");
+            }
+            var propertyValue = new Dictionary<string, object>();
             var columnNameStringBuilder = new StringBuilder();
             var columnValueStringBuilder = new StringBuilder();
+            var columnMatching = string.Empty;
+            var typeId = default(int);
+
+            var type = item.GetType();
 
             var prefix = $"IF NOT EXISTS (\n{GetSqlIfNotExists(item)})\nBEGIN\n";
             var postfix = $"\nEND\nELSE\nBEGIN\n{GetSqlIfExists(item)}\nEND";
 
-            string columnMatching = string.Empty;
-            int typeId = default;
-            var propertyValue = new Dictionary<string, object>();
-            var tableName = type?.GetCustomAttribute<TableAttribute>()?.TableName;
-            var properties = type?.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                            && property.GetCustomAttribute<ColumnAttribute>()?.KeyType != KeyType.Primary);
+            var typeTableAttribute = type.GetCustomAttribute<TableAttribute>();
+            if (typeTableAttribute == null)
+            {
+                throw new ArgumentNullException($"[{nameof(TableAttribute)} was not set for {type.Name} type");
+            }
+
+            var tableName = type.GetCustomAttribute<TableAttribute>()?.TableName;
+            var propertiesWithColumnAttribute = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any());
+            if (!propertiesWithColumnAttribute.Any())
+            {
+                throw new Exception($"There are no properties with [{nameof(ColumnAttribute)}]");
+            }
+            var properties = propertiesWithColumnAttribute.Where(property => property.GetCustomAttribute<ColumnAttribute>()?.KeyType != KeyType.Primary);
 
             var insertQueryBuilder = new StringBuilder($"INSERT INTO [{tableName}]\n");
             foreach (var property in properties)
             {
-                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var columnName = property.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
                 var columnValue = property.GetValue(item);
 
                 columnNameStringBuilder.Append($"[{tableName}].[{columnName}], ");
@@ -109,12 +128,13 @@ namespace OrmRepositoryUnitOfWork
                     columnValueStringBuilder.Append($"{columnValue}, ");
                 }
             }
-            if (type.GetCustomAttribute<InheritanceRelationAttribute>() != null)
+            var typeInheritanceAttribute = type.GetCustomAttribute<InheritanceRelationAttribute>();
+            var typeTypeAttribure = type.GetCustomAttribute<TypeAttribute>();
+
+            if (typeInheritanceAttribute != null && typeTypeAttribure != null)
             {
-                columnMatching = type.GetCustomAttribute<InheritanceRelationAttribute>().ColumnMatching;
-                typeId = type.GetCustomAttribute<TypeAttribute>().TypeID;
-                columnNameStringBuilder.Append($"[{tableName}].[{columnMatching}], ");
-                columnValueStringBuilder.Append($"{typeId}, ");
+                columnNameStringBuilder.Append($"[{tableName}].[{typeInheritanceAttribute.ColumnMatching}], ");
+                columnValueStringBuilder.Append($"{typeTypeAttribure.TypeID}, ");
             }
 
             columnNameStringBuilder.Remove(columnNameStringBuilder.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
@@ -170,22 +190,26 @@ namespace OrmRepositoryUnitOfWork
             var typeTableAttribute = type.GetCustomAttribute<TableAttribute>();
             if (typeTableAttribute == null)
             {
-                throw new Exception($"Check [TableAttribute] on {type.Name}");
+                throw new Exception($"Check [{nameof(TableAttribute)}] on {type.Name}");
             }
             var tableName = typeTableAttribute.TableName;
 
-            var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
-                                .Select(property => property.GetCustomAttribute<ColumnAttribute>().ColumnName);
-            foreach (var property in properties)
+            var propertiesWithColumnAttribute = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any());
+            if (!propertiesWithColumnAttribute.Any())
             {
-                if (property.EndsWith("id", StringComparison.OrdinalIgnoreCase))
+                throw new Exception($"Any property of {type.Name} was not marked by [{nameof(ColumnAttribute)}]");
+            }
+            var columnsNames = propertiesWithColumnAttribute.Select(property => property.GetCustomAttribute<ColumnAttribute>()?.ColumnName);
+            foreach (var column in columnsNames)
+            {
+                if (!String.IsNullOrEmpty(column) && column.EndsWith("id", StringComparison.OrdinalIgnoreCase))
                 {
-                    string propAs = $"{property}] AS [{tableName}{property}";
+                    string propAs = $"{column}] AS [{tableName}{column}";
                     selectQueryBuider.Append($"[{tableName}].[{propAs}],\n");
                 }
                 else
                 {
-                    selectQueryBuider.Append($"[{tableName}].[{property}],\n");
+                    selectQueryBuider.Append($"[{tableName}].[{column}],\n");
                 }
             }
 
@@ -197,10 +221,19 @@ namespace OrmRepositoryUnitOfWork
 
         public string GetSelectIdForItem(Type type, string columnName, object value)
         {
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
-            var primaryKeyColumnName = type.GetProperties().FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                                && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
-                                            .GetCustomAttribute<ColumnAttribute>().ColumnName;
+            var typeTableAttribute = type.GetCustomAttribute<TableAttribute>();
+            if (typeTableAttribute == null)
+            {
+                throw new Exception($"Type {type.Name} was not marked by [{nameof(TableAttribute)}]");
+            }
+            var tableName = typeTableAttribute.TableName;
+
+            var propertiesWithColumnAttribute = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any());
+            if (!propertiesWithColumnAttribute.Any())
+            {
+                throw new Exception($"There are no any property marked by [{nameof(ColumnAttribute)}]");
+            }
+            var primaryKeyColumnName = GetPrimaryKeyProperty(type)?.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
             return $"SELECT [{tableName}].[{primaryKeyColumnName}] FROM Ships WHERE [{tableName}].[{columnName}] = {value}";
             //  SELECT [Ships].[Id] FROM Ships WHERE [Ships].[Velocity] = 1
         }
@@ -209,16 +242,24 @@ namespace OrmRepositoryUnitOfWork
         {
             var types = this.assembly.GetTypes();
             var usefulTypes = types.Where(type => type.GetProperties()
-                                                .Where(property => property.GetCustomAttributes<ColumnAttribute>()
-                                                .Any())
+                                                .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
                                     .Any());
+            var usefullTypesWithColumnAttributeProperties = usefulTypes.Where(type => type.GetProperties()
+                                                                                          .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
+                                                                        .Any());
+            if (!usefullTypesWithColumnAttributeProperties.Any())
+            {
+                throw new Exception($"There are no any property marked by [{nameof(ColumnAttribute)}]");
+            }
+
+            //TODO: Recheck
             return usefulTypes.Where(type => type.GetProperties()
                                             .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
                                                         && property.GetCustomAttribute<ColumnAttribute>().BaseType == deletedType)
                                             .Any());
         }
 
-        public string GetUpdateSqlQuery<T>(T item, string columnName = "", object value = default)
+        public string GetUpdateSqlQuery<T>(T item, string columnName = "", object? value = default)
         {
             this.updateSqlQueries.Push(GetUpdateConcreteItemSqlQuery<T>(item, columnName, value));
             return GetStringFromStack(this.updateSqlQueries);
@@ -226,18 +267,23 @@ namespace OrmRepositoryUnitOfWork
 
         public string GetDeleteSqlQuery(string tableName, int id)
         {
-            var type = this.assembly.GetTypes().First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Any()
-                                                   && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
-            var primaryKeyColumnName = type.GetProperties()
-                                            .First(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                            && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
-                                            .GetCustomAttribute<ColumnAttribute>().ColumnName;
+            var typesWithTableAttribute = this.assembly.GetTypes().Where(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Any());
 
-            if (type.GetCustomAttribute<TableAttribute>().IsRelatedTable)
+            if (!typesWithTableAttribute.Any())
+            {
+                throw new Exception($"There is no any type marked with [{nameof(TableAttribute)}]");
+            }
+
+            var type = typesWithTableAttribute.First(assemblyType => assemblyType.GetCustomAttribute<TableAttribute>()?.TableName == tableName);
+            var primaryKeyColumnName = GetPrimaryKeyProperty(type)?.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
+
+            var typeTableAttribute = type.GetCustomAttribute<TableAttribute>();
+
+            if (typeTableAttribute != null && typeTableAttribute.IsRelatedTable)
             {
                 return $"DELETE [{tableName}] WHERE [{tableName}].[{primaryKeyColumnName}] = {id}";
             }
-            else if (type.GetCustomAttribute<TableAttribute>().IsStaticDataTable)
+            else if (typeTableAttribute != null && typeTableAttribute.IsStaticDataTable)
             {
                 return string.Empty;
             }
@@ -249,12 +295,25 @@ namespace OrmRepositoryUnitOfWork
             var relatedTypes = GetDependentTypes(type);
             foreach (var relatedType in relatedTypes)
             {
-                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>().TableName;
-                var foreignKeyColumnName = relatedType.GetProperties()
-                                                      .First(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                                        && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
-                                                                        && property.GetCustomAttribute<ColumnAttribute>().BaseType == type)
-                                                      .GetCustomAttribute<ColumnAttribute>().ColumnName;
+                this.attributeChecker.CheckTableAttribute(relatedType);
+                this.attributeChecker.CheckColumnAttribute(relatedType);
+
+                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>()?.TableName;
+
+                var propertiesWithColumnAttribute = relatedType.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any());
+                if (!propertiesWithColumnAttribute.Any())
+                {
+                    throw new Exception($"There are no any property marked by [{nameof(ColumnAttribute)} inside {relatedType.Name} type]");
+                }
+
+                var foreignKeyColumnName = propertiesWithColumnAttribute.FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Any()
+                                                                    && property.GetCustomAttribute<ColumnAttribute>()?.KeyType == KeyType.Foreign
+                                                                    && property.GetCustomAttribute<ColumnAttribute>()?.BaseType == type)?
+                                                  .GetCustomAttribute<ColumnAttribute>()?.ColumnName;
+                if (foreignKeyColumnName == null)
+                {
+                    throw new Exception($"There are no any property inside {relatedType.Name} marked by [{nameof(ColumnAttribute)}].{nameof(KeyType)} or [{nameof(ColumnAttribute)}].BaseType");
+                }
                 var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, id);
 
                 this.deleteSqlQueries.Push(updateQuery);
@@ -265,18 +324,25 @@ namespace OrmRepositoryUnitOfWork
         public string GetDeleteSqlQuery<T>(string columnName, object value, IEnumerable<int> primaryKeysValues)
         {
             var type = typeof(T);
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+
+            this.attributeChecker.CheckTableAttribute(type);
+
+            var tableName = type.GetCustomAttribute<TableAttribute>()?.TableName;
             this.deleteSqlQueries.Push($"DELETE [{tableName}] WHERE [{tableName}].[{columnName}] = {value}\n");
 
             var relatedTypes = GetDependentTypes(type);
             foreach (var relatedType in relatedTypes)
             {
-                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>().TableName;
+                this.attributeChecker.CheckTableAttribute(relatedType);
+                this.attributeChecker.CheckColumnAttribute(relatedType);
+
+                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>()?.TableName;
+
                 var foreignKeyColumnName = relatedType.GetProperties()
                                                       .First(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                                        && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
-                                                                        && property.GetCustomAttribute<ColumnAttribute>().BaseType == type)
-                                                      .GetCustomAttribute<ColumnAttribute>().ColumnName;
+                                                                        && property.GetCustomAttribute<ColumnAttribute>()?.KeyType == KeyType.Foreign
+                                                                        && property.GetCustomAttribute<ColumnAttribute>()?.BaseType == type)?
+                                                      .GetCustomAttribute<ColumnAttribute>()?.ColumnName;
                 foreach (var primaryKeyValue in primaryKeysValues)
                 {
                     var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, primaryKeyValue);
@@ -292,13 +358,14 @@ namespace OrmRepositoryUnitOfWork
             {
                 return Environment.NewLine;
             }
-            var type = item.GetType();
-
             this.deleteSqlQueries.Push(GetDeleteConcreteItemSqlQuery(item));
 
-            int primaryKeyValue = (int)type.GetProperties().FirstOrDefault(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                                              && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
-                                            .GetValue(item);
+            var type = item.GetType();
+
+            this.attributeChecker.CheckTableAttribute(type);
+            this.attributeChecker.CheckColumnAttribute(type);
+
+            var primaryKeyValue = (int?)GetPrimaryKeyProperty(type)?.GetValue(item);
             IEnumerable<Type> relatedTypes;
             if (type.GetCustomAttributes<InheritanceRelationAttribute>().Any() && !type.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass)
             {
@@ -312,13 +379,15 @@ namespace OrmRepositoryUnitOfWork
 
             foreach (var relatedType in relatedTypes)
             {
-                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>().TableName;
+                this.attributeChecker.CheckTableAttribute(relatedType);
+                this.attributeChecker.CheckColumnAttribute(relatedType);
+                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>()?.TableName;
 
                 var foreignKeyColumnName = relatedType.GetProperties()
                                                       .First(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                                        && property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Foreign
-                                                                        && property.GetCustomAttribute<ColumnAttribute>().BaseType == type)
-                                                      .GetCustomAttribute<ColumnAttribute>().ColumnName;
+                                                                        && property.GetCustomAttribute<ColumnAttribute>()?.KeyType == KeyType.Foreign
+                                                                        && property.GetCustomAttribute<ColumnAttribute>()?.BaseType == type)?
+                                                      .GetCustomAttribute<ColumnAttribute>()?.ColumnName;
 
                 var updateQuery = SetNullOrDeleteForeignKey(relatedTablename, foreignKeyColumnName, primaryKeyValue);
                 this.deleteSqlQueries.Push(updateQuery);
@@ -368,6 +437,18 @@ namespace OrmRepositoryUnitOfWork
 
         #region Methods.Private
 
+        private PropertyInfo GetPrimaryKeyProperty(Type type)
+        {
+            var properties = type.GetProperties();
+            var primaryKeyProperty = properties.FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>()?.KeyType == KeyType.Primary);
+
+            if (primaryKeyProperty == null)
+            {
+                throw new Exception($"[{nameof(ColumnAttribute)}].{nameof(KeyType)} was not set to the primary key property");
+            }
+            return primaryKeyProperty;
+        }
+
         private string SelectJoinSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string whereFilterTable = "", int id = default)
         {
             var selectQueryBuilder = new StringBuilder("SELECT\n");
@@ -403,10 +484,7 @@ namespace OrmRepositoryUnitOfWork
             {
                 var currentTable = table.Key.GetCustomAttribute<TableAttribute>();
                 var currentTableName = currentTable.TableName;
-                var primaryColumnName = table.Key.GetProperties()
-                                                 .FirstOrDefault(p => p.GetCustomAttributes<ColumnAttribute>().Any()
-                                                                      && p.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
-                                                 .GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var primaryColumnName = GetPrimaryKeyProperty(table.Key)?.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
 
                 var relatedPropertyColumn = relatedTableProperties.First(prop => prop.GetCustomAttribute<ColumnAttribute>().BaseType
                                                                                         .GetCustomAttribute<TableAttribute>().TableName == currentTableName)
@@ -477,9 +555,7 @@ namespace OrmRepositoryUnitOfWork
             selectQueryBuilder.Append($" FROM [{tableName}]\n");
             if (id > 0)
             {
-                var primaryColumnName = type.GetProperties()
-                                             .FirstOrDefault(atr => atr.GetCustomAttribute<ColumnAttribute>()
-                                                                       .KeyType == KeyType.Primary).Name;
+                var primaryColumnName = GetPrimaryKeyProperty(type).Name;
                 selectQueryBuilder.Append($" WHERE [{tableName}].[{primaryColumnName}] = {id}");
             }
             return selectQueryBuilder.ToString();
@@ -595,13 +671,15 @@ namespace OrmRepositoryUnitOfWork
             return selectQueryBuilder.ToString();
         }
 
-        private string SetNullOrDeleteForeignKey(string tableName, string columnName = "", object? value = default)
+        private string SetNullOrDeleteForeignKey(string? tableName, string? columnName = "", object? value = default)
         {
             var type = this.assembly.GetTypes()
                                 .First(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Any()
-                                                    && assemblyType.GetCustomAttribute<TableAttribute>().TableName == tableName);
+                                                    && assemblyType.GetCustomAttribute<TableAttribute>()?.TableName == tableName);
+            this.attributeChecker.CheckColumnAttribute(type);
+
             var isPropertyAllowNull = type.GetProperties()
-                                            .First(property => property.GetCustomAttribute<ColumnAttribute>().ColumnName == columnName)
+                                            .First(property => property.GetCustomAttribute<ColumnAttribute>()?.ColumnName == columnName)
                                             .GetCustomAttribute<ColumnAttribute>().AllowNull;
             if (isPropertyAllowNull)
             {
@@ -615,23 +693,26 @@ namespace OrmRepositoryUnitOfWork
 
         private string GetDeleteConcreteItemSqlQuery<T>(T item)
         {
-            if (item.GetType().GetCustomAttribute<TableAttribute>().IsStaticDataTable == true)
+            var type = item.GetType();
+            this.attributeChecker.CheckTableAttribute(type);
+            this.attributeChecker.CheckColumnAttribute(type);
+
+            if (type.GetCustomAttribute<TableAttribute>()?.IsStaticDataTable == true)
             {
                 return string.Empty;
             }
-            var type = item.GetType();
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+            var tableName = type.GetCustomAttribute<TableAttribute>()?.TableName;
             var properties = GetTypeProperties(item, type);
 
             var deleteQueryStringBuilder = new StringBuilder($"DELETE FROM [{tableName}] WHERE\n");
 
-            var primaryKeyProperty = type.GetProperties().First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary);
-            var primaryKeyColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>().ColumnName;
+            var primaryKeyProperty = type.GetProperties().First(property => property.GetCustomAttribute<ColumnAttribute>()?.KeyType == KeyType.Primary);
+            var primaryKeyColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
             var primaryKeyValue = primaryKeyProperty.GetValue(item);
 
             foreach (var property in properties)
             {
-                var columnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var columnName = property.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
                 var value = property.GetValue(item);
                 if (value == null)
                 {
@@ -650,20 +731,21 @@ namespace OrmRepositoryUnitOfWork
         private string GetUpdateConcreteItemSqlQuery<T>(T item, string columnName = "", object? value = default)
         {
             var type = typeof(T);
-            var tableName = type.GetCustomAttribute<TableAttribute>().TableName;
+
+            this.attributeChecker.CheckTableAttribute(type);
+            this.attributeChecker.CheckColumnAttribute(type);
+
+            var tableName = type.GetCustomAttribute<TableAttribute>()?.TableName;
             var properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-                                                && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
-            var primaryColumnName = type.GetProperties()
-                                        .First(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
-                                        .Name;
-            var primaryColumnValue = type.GetProperties()
-                                         .FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary)
-                                         .GetValue(item);
+                                                && property.GetCustomAttribute<ColumnAttribute>()?.KeyType != KeyType.Primary);
+            var primaryKeyProperty = GetPrimaryKeyProperty(type);
+            var primaryColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
+            var primaryColumnValue = primaryKeyProperty.GetValue(item);
             var propertyValue = new Dictionary<string, object>();
             var updateQueryBuider = new StringBuilder($"UPDATE [{tableName}]\nSET\n");
             foreach (var property in properties)
             {
-                var currentColumnName = property.GetCustomAttribute<ColumnAttribute>().ColumnName;
+                var currentColumnName = property.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
                 var columnValue = property.GetValue(item);
                 if (columnValue == null)
                 {
@@ -695,15 +777,16 @@ namespace OrmRepositoryUnitOfWork
         /// <returns></returns>
         private IEnumerable<PropertyInfo> GetTypeProperties<T>(T item, Type type)
         {
+            this.attributeChecker.CheckColumnAttribute(type);
             IEnumerable<PropertyInfo> properties;
-            if ((int)type.GetProperties().FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>().KeyType == KeyType.Primary).GetValue(item) > 0)
+            if ((int?)type.GetProperties()?.FirstOrDefault(property => property.GetCustomAttribute<ColumnAttribute>()?.KeyType == KeyType.Primary)?.GetValue(item) > 0)
             {
                 properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any());
             }
             else
             {
                 properties = type.GetProperties().Where(property => property.GetCustomAttributes<ColumnAttribute>().Any()
-              && property.GetCustomAttribute<ColumnAttribute>().KeyType != KeyType.Primary);
+              && property.GetCustomAttribute<ColumnAttribute>()?.KeyType != KeyType.Primary);
             }
 
             return properties;
