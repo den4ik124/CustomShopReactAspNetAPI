@@ -241,7 +241,6 @@ namespace OrmRepositoryUnitOfWork
             return $"{Select} [{tableName}].[{primaryKeyColumnName}] {From} [{tableName}] {Where} [{tableName}].[{columnName}] = {value}";
         }
 
-        //DONE
         public IEnumerable<Type> GetDependentTypes(Type deletedType)
         {
             var types = this.assembly.GetTypes();
@@ -262,7 +261,6 @@ namespace OrmRepositoryUnitOfWork
                                             .Any());
         }
 
-        //DONE
         public string GetUpdateSqlQuery<T>(T item, string columnName = "", object? value = default)
         {
             if (item == null)
@@ -273,7 +271,6 @@ namespace OrmRepositoryUnitOfWork
             return GetStringFromStack(this.updateSqlQueries);
         }
 
-        //DONE
         public string GetDeleteSqlQuery(string tableName, int id)
         {
             var typesWithTableAttribute = this.assembly.GetTypes().Where(assemblyType => assemblyType.GetCustomAttributes<TableAttribute>().Any());
@@ -330,7 +327,6 @@ namespace OrmRepositoryUnitOfWork
             return GetStringFromStack(this.deleteSqlQueries);
         }
 
-        //DONE
         public string GetDeleteSqlQuery<T>(string? columnName, object? value, IEnumerable<int> primaryKeysValues)
         {
             if (columnName == null || value == null || primaryKeysValues == null)
@@ -460,7 +456,6 @@ namespace OrmRepositoryUnitOfWork
             return primaryKeyProperty;
         }
 
-        //DONE
         private string SelectJoinSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string whereFilterTable = "", int id = default)
         {
             var selectQueryBuilder = new StringBuilder($"{Select}\n");
@@ -524,7 +519,6 @@ namespace OrmRepositoryUnitOfWork
             return selectQueryBuilder.ToString();
         }
 
-        //DONE
         private void DefineRelatedEntities(ref Dictionary<Type, List<string>> tablePropetriesNames, ref string tableName, ref List<string> propertiesNames, IEnumerable<PropertyInfo> childTables)
         {
             foreach (var childTable in childTables)
@@ -550,7 +544,6 @@ namespace OrmRepositoryUnitOfWork
             }
         }
 
-        //DONE
         private string SelectFromSingleTableSqlQuery(Dictionary<Type, List<string>> tablePropetriesNames, string? tableName, int id = default)
         {
             if (tablePropetriesNames == null || tableName == null)
@@ -586,7 +579,6 @@ namespace OrmRepositoryUnitOfWork
             return selectQueryBuilder.ToString();
         }
 
-        //DONE
         private void DefineTableAndProperties(Type type, out string tableName, out List<string> propertiesNames)
         {
             tableName = string.Empty;
@@ -609,7 +601,6 @@ namespace OrmRepositoryUnitOfWork
             }
         }
 
-        //DONE
         private void GetSinglePropertyData(Type type, out string tableName, out List<string> propertiesNames)
         {
             CheckTypeAttributes(type);
@@ -639,7 +630,6 @@ namespace OrmRepositoryUnitOfWork
             }
         }
 
-        //DONE
         private string GetStringFromStack(Stack<string> stack)
         {
             var stackStringBuilder = new StringBuilder();
@@ -651,7 +641,6 @@ namespace OrmRepositoryUnitOfWork
             return stackStringBuilder.ToString();
         }
 
-        //DONE
         private string GetSqlIfNotExists<T>(T item)
         {
             if (item == null)
@@ -690,7 +679,6 @@ namespace OrmRepositoryUnitOfWork
             return selectQueryWithConditionBuilder.ToString();
         }
 
-        //DONE
         private string GetSqlIfExists<T>(T item)
         {
             if (item == null)
@@ -728,14 +716,12 @@ namespace OrmRepositoryUnitOfWork
             return selectQueryBuilder.ToString();
         }
 
-        //DONE
         private void CheckTypeAttributes(Type type)
         {
             this.attributeChecker.CheckTableAttribute(type);
             this.attributeChecker.CheckColumnAttribute(type);
         }
 
-        //DONE
         private string SetNullOrDeleteForeignKey(string? tableName, string? columnName = "", object? value = default)
         {
             if (tableName == null || columnName == null || value == null)
@@ -765,7 +751,6 @@ namespace OrmRepositoryUnitOfWork
             }
         }
 
-        //DONE
         private string GetDeleteConcreteItemSqlQuery<T>(T item)
         {
             if (item == null)
@@ -803,7 +788,6 @@ namespace OrmRepositoryUnitOfWork
             return deleteQueryStringBuilder.ToString() + Environment.NewLine;
         }
 
-        //DONE
         private string GetUpdateConcreteItemSqlQuery<T>(T item, string columnName = "", object? value = default)
         {
             if (item == null)
@@ -849,7 +833,6 @@ namespace OrmRepositoryUnitOfWork
             return updateQueryBuider.ToString();
         }
 
-        //DONE
         /// <summary>
         /// Selection properties with or without primary key property
         /// </summary>
