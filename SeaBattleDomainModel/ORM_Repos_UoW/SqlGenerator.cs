@@ -720,7 +720,7 @@ namespace OrmRepositoryUnitOfWork
             this.attributeChecker.CheckColumnAttribute(type);
         }
 
-        private string SetNullOrDeleteForeignKey(string? tableName, string? columnName = "", object? value = default)
+        private string SetNullOrDeleteForeignKey(string? tableName, string? columnName, object? value)
         {
             if (tableName == null || columnName == null || value == null)
             {
