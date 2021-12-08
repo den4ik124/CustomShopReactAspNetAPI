@@ -1,10 +1,56 @@
-﻿using System;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
+using System;
 
 namespace SeaBattleDomainModel.Entities
 {
+    [Table(tableName: "Cells", IsRelatedTable = true)]
     public class Cell
     {
+        #region Fields
+
+        private int? shipId;
+        private int pointId;
+
+        private Point point;
+        private Ship ship;
+
+        #endregion Fields
+
+        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
+        public int Id { get; set; }
+
+        [Column(columnName: "BattleFieldID", KeyType = KeyType.Foreign, BaseType = typeof(BattleField))]
+        public int BattleFieldId { get; set; }
+
+        [Column(columnName: "ShipID", KeyType = KeyType.Foreign, BaseType = typeof(Ship), AllowNull = true)]
+        public int? ShipId
+        {
+            get
+            {
+                if (this.Ship != null)
+                    return this.Ship.Id;
+                else
+                    return this.shipId;
+            }
+            set => this.shipId = value;
+        }
+
+        [Column(columnName: "PointID", KeyType = KeyType.Foreign, BaseType = typeof(Point))]
+        public int PointId
+        {
+            get => this.pointId;
+            set => this.pointId = value;
+        }
+
         #region Constructors
+
+        /// <summary>
+        /// for ORM
+        /// </summary>
+        public Cell()
+        {
+        }
 
         public Cell(Point point)
         {
@@ -21,10 +67,33 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        public Ship Ship { get; set; }
+        [RelatedEntity(Table = "Ships", RelatedType = typeof(Ship))]
+        public Ship Ship
+        {
+            get => this.ship;
+            set
+            {
+                this.ship = value;
+                if (this.ship != null)
+                {
+                    this.shipId = this.ship.Id;
+                }
+            }
+        }
 
-        public Point Point { get; set; }
-        public double DistanceToOrigin { get; set; }
+        [RelatedEntity(Table = "Points", RelatedType = typeof(Point))]
+        public Point Point
+        {
+            get => this.point;
+            set
+            {
+                this.point = value;
+                this.pointId = this.point.Id;
+                DistanceToOrigin = GetDistanceToOrigin(this.point);
+            }
+        }
+
+        public double DistanceToOrigin { get; private set; }
 
         #endregion Properties
 
@@ -48,7 +117,8 @@ namespace SeaBattleDomainModel.Entities
 
         public override string ToString()
         {
-            return $"\tShip:\n{Ship}\n" +
+            return $"\tId:\n{Id}\n" +
+                   $"\tShip:\n{Ship}\n" +
                    $"\tPoint:\n{Point}";
         }
 

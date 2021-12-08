@@ -1,10 +1,15 @@
-﻿using System;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+[assembly: DomainModel]
+
 namespace SeaBattleDomainModel.Entities
 {
+    [Table("BattleFields")]
     public class BattleField
     {
         #region Fields
@@ -13,15 +18,52 @@ namespace SeaBattleDomainModel.Entities
         private const int expressionPower = 2;
         private const int battleFieldPointsIncreaser = 1;
 
-        private readonly List<Ship> ships;
+        private List<Ship> ships;
 
-        private readonly int battleFieldSideLength;
+        private int battleFieldSideLength;
 
         private Dictionary<Point, Cell> cells;
 
         #endregion Fields
 
+        #region Properties
+
+        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
+        public int Id { get; set; }
+
+        [Column(columnName: "SideLength")]
+        public int BattleFieldSideLength
+        {
+            get => battleFieldSideLength - battleFieldPointsIncreaser;
+            set => this.battleFieldSideLength = value + battleFieldPointsIncreaser;
+        }
+
+        public List<Ship> Ships { get => this.ships; set => this.ships = value; }
+
+        [RelatedEntity(Table = "Cells",
+               RelatedType = typeof(Cell),
+            IsCollection = true)]
+        public Dictionary<Point, Cell> Cells
+        {
+            get => this.cells;
+            set
+            {
+                this.cells = value;
+                Ships = cells.Select(cell => cell.Value.Ship).Where(ship => ship != null).Distinct().ToList();
+            }
+        }
+
+        #endregion Properties
+
         #region Constructors
+
+        /// <summary>
+        /// for ORM
+        /// </summary>
+        public BattleField()
+        {
+            this.ships = new List<Ship>();
+        }
 
         public BattleField(int fieldSideLength)
         {
@@ -47,7 +89,8 @@ namespace SeaBattleDomainModel.Entities
                 for (int x = -battleFieldHalfSide; x <= battleFieldHalfSide; x++)
                 {
                     var point = new Point(x, y);
-                    cells.Add(point, new Cell(point));
+                    var cell = new Cell(point) { BattleFieldId = this.Id };
+                    this.cells.Add(point, cell);
                 }
             }
         }
@@ -66,7 +109,7 @@ namespace SeaBattleDomainModel.Entities
         /// <returns>Ship from list</returns>
         private Ship GetShipByCoordinates(Quadrant quadrant, int x, int y)
         {
-            return cells.FirstOrDefault(point => point.Key.XAbsolute == x
+            return this.cells.FirstOrDefault(point => point.Key.XAbsolute == x
                                             && point.Key.YAbsolute == y
                                             && point.Key.Quadrant == quadrant).Value?.Ship;
         }
@@ -271,7 +314,7 @@ namespace SeaBattleDomainModel.Entities
 
         public override string ToString()
         {
-            StringBuilder battleFieldState = new StringBuilder();
+            var battleFieldState = new StringBuilder();
             foreach (var cell in cells.Where(item => item.Value.Ship != null))
             {
                 battleFieldState.Append(cell.ToString());

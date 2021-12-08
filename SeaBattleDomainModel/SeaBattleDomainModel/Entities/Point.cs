@@ -1,20 +1,23 @@
-﻿using System;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
+using System;
 
 namespace SeaBattleDomainModel.Entities
 {
+    [Table("Points", IsStaticDataTable = true)]
     public struct Point : IEquatable<Point>
     {
         #region Fields
 
-        private readonly int x;
+        private int x;
 
-        private readonly int y;
+        private int y;
 
-        private readonly Quadrant quadrantId;
+        private Quadrant quadrantId;
 
-        private readonly int xAbsolute;
+        private int xAbsolute;
 
-        private readonly int yAbsolute;
+        private int yAbsolute;
 
         #endregion Fields
 
@@ -36,29 +39,49 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
+        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
+        public int Id { get; set; }
+
+        [Column(columnName: "X", IsUniq = true)]
         public int X
         {
             get { return this.x; }
+            private set
+            {
+                this.x = value;
+                this.quadrantId = GetQuadrant(this.x, this.y);
+                this.xAbsolute = Math.Abs(this.x);
+            }
         }
 
+        [Column(columnName: "Y", IsUniq = true)]
         public int Y
         {
             get { return this.y; }
+            private set
+            {
+                this.y = value;
+                this.quadrantId = GetQuadrant(this.x, this.y);
+                this.yAbsolute = Math.Abs(this.y);
+            }
         }
 
         public int XAbsolute
         {
             get { return this.xAbsolute; }
+            private set { this.xAbsolute = value; }
         }
 
         public int YAbsolute
         {
             get { return this.yAbsolute; }
+            private set { this.yAbsolute = value; }
         }
 
         public Quadrant Quadrant
         {
             get { return this.quadrantId; }
+            private set { this.quadrantId = value; }
         }
 
         #endregion Properties

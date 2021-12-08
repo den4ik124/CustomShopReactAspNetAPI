@@ -1,11 +1,26 @@
-﻿using SeaBattleDomainModel.Entities;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using SeaBattleDomainModel.Entities;
 using SeaBattleDomainModel.Interfaces;
 using System;
 
 namespace SeaBattleDomainModel.DerivedShips
 {
-    internal class ComboShip : Ship, ICanShot, ICanRepair
+    [Table("Ships")]
+    [InheritanceRelation(ColumnMatching = "TypeId")]
+    [Type(TypeID = 3, BaseType = typeof(Ship), ColumnMatching = "TypeId")]
+    public class ComboShip : Ship, ICanShot, ICanRepair
     {
+        /// <summary>
+        /// for custom ORM
+        /// </summary>
+        public ComboShip()
+        {
+        }
+
+        public ComboShip(int velocity, int range, int size) : base(velocity, range, size)
+        {
+        }
+
         #region Methods
 
         #region Methods.Public

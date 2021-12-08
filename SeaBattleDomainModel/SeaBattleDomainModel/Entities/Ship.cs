@@ -1,33 +1,44 @@
-﻿using System;
+﻿using OrmRepositoryUnitOfWork.Attributes;
+using OrmRepositoryUnitOfWork.Enums;
+using System;
 
 namespace SeaBattleDomainModel.Entities
 {
+    [Table("Ships")]
+    [InheritanceRelation(IsBaseClass = true)]
     public abstract class Ship : IEquatable<Ship>
     {
-        #region Fields
-
-        private static int nextId = 1;
-
-        #endregion Fields
-
         #region Constructors
 
+        /// <summary>
+        /// Для корректной работы ORM
+        /// </summary>
         public Ship()
         {
-            Id = Ship.nextId++;
+        }
+
+        public Ship(int velocity, int range, int size)
+        {
+            this.Velocity = velocity;
+            this.Range = range;
+            this.Size = size;
         }
 
         #endregion Constructors
 
         #region Properties
 
-        public int Id { get; }
+        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
+        public int Id { get; set; }
 
+        [Column(columnName: "Velocity")]
         public int Velocity { get; set; }
 
-        public int Range { get; set; }
-
+        [Column(columnName: "Size")]
         public int Size { get; set; }
+
+        [Column(columnName: "Range")]
+        public int Range { get; set; }
 
         #endregion Properties
 
