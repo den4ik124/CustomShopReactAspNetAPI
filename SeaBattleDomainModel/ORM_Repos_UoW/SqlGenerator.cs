@@ -20,6 +20,7 @@ namespace OrmRepositoryUnitOfWork
         private const string Select = "SELECT ";
         private const string InsertInto = "INSERT INTO ";
         private const string Delete = "DELETE ";
+        private const string Update = "UPDATE ";
         private const string Where = " WHERE ";
         private const string From = " FROM ";
 
@@ -247,10 +248,7 @@ namespace OrmRepositoryUnitOfWork
             var usefulTypes = types.Where(type => type.GetProperties()
                                                 .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
                                     .Any());
-            var usefullTypesWithColumnAttributeProperties = usefulTypes.Where(type => type.GetProperties()
-                                                                                          .Where(property => property.GetCustomAttributes<ColumnAttribute>().Any())
-                                                                        .Any());
-            if (!usefullTypesWithColumnAttributeProperties.Any())
+            if (!usefulTypes.Any())
             {
                 throw new Exception($"There are no any property marked by [{nameof(ColumnAttribute)}]");
             }
@@ -331,7 +329,7 @@ namespace OrmRepositoryUnitOfWork
         {
             if (columnName == null || value == null || primaryKeysValues == null)
             {
-                throw new ArgumentNullException("One of the method arguments was null.");
+                throw new ArgumentNullException("At least one of the method arguments was null.");
             }
 
             var type = typeof(T);
@@ -743,7 +741,7 @@ namespace OrmRepositoryUnitOfWork
 
             if (isPropertyAllowNull)
             {
-                return $"UPDATE [{tableName}]\nSET [{tableName}].[{columnName}] = NULL\n{Where} [{tableName}].[{columnName}] = {value}\n";
+                return $"{Update}[{tableName}]\nSET [{tableName}].[{columnName}] = NULL\n{Where} [{tableName}].[{columnName}] = {value}\n";
             }
             else
             {
@@ -807,7 +805,7 @@ namespace OrmRepositoryUnitOfWork
             var primaryColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
             var primaryColumnValue = primaryKeyProperty.GetValue(item);
             var propertyValue = new Dictionary<string, object>();
-            var updateQueryBuider = new StringBuilder($"UPDATE [{tableName}]\nSET\n");
+            var updateQueryBuider = new StringBuilder($"{Update}[{tableName}]\nSET\n");
             foreach (var property in properties)
             {
                 var currentColumnName = property.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
