@@ -338,14 +338,14 @@ namespace OrmRepositoryUnitOfWork
             var tableName = type.GetCustomAttribute<TableAttribute>()?.TableName;
             this.deleteSqlQueries.Push($"{Delete} [{tableName}] {Where} [{tableName}].[{columnName}] = {value}\n");
 
-            var relatedTypes = GetDependentTypes(type);
-            foreach (var relatedType in relatedTypes)
+            var dependentTypes = GetDependentTypes(type);
+            foreach (var dependentType in dependentTypes)
             {
-                CheckTypeAttributes(relatedType);
+                CheckTypeAttributes(dependentType);
 
-                var relatedTablename = relatedType.GetCustomAttribute<TableAttribute>()?.TableName;
+                var relatedTablename = dependentType.GetCustomAttribute<TableAttribute>()?.TableName;
 
-                var foreignKeyColumnName = relatedType.GetProperties()
+                var foreignKeyColumnName = dependentType.GetProperties()
                                                       .First(property => property.GetCustomAttributes<ColumnAttribute>().Any()
                                                                         && property.GetCustomAttribute<ColumnAttribute>()?.KeyType == KeyType.Foreign
                                                                         && property.GetCustomAttribute<ColumnAttribute>()?.BaseType == type)?

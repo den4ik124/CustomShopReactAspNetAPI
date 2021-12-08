@@ -49,42 +49,35 @@ namespace OrmRepositoryUnitOfWork.Repositories
             {
                 return;
             }
-            try
+            using (this.transaction = this.connection.BeginTransaction())
             {
-                using (this.transaction = this.connection.BeginTransaction())
+                try
+                {
+                    InsertAlgorithm(ref item);
+                    if (item == null)
+                    {
+                        return;
+                    }
+                    var baseType = item.GetType();
+
+                    var primaryKeyProperty = GetPrimaryKeyProperty(baseType);
+                    var itemPrimaryKeyValue = (int?)primaryKeyProperty.GetValue(item);
+
+                    InsertRelatedDataOnly(ref item, itemPrimaryKeyValue, baseType);
+                    this.transaction.Commit();
+                }
+                catch (Exception)
                 {
                     try
                     {
-                        InsertAlgorithm(ref item);
-                        if (item == null)
-                        {
-                            return;
-                        }
-                        var baseType = item.GetType();
-
-                        var primaryKeyProperty = GetPrimaryKeyProperty(baseType);
-                        var itemPrimaryKeyValue = (int?)primaryKeyProperty.GetValue(item);
-
-                        InsertRelatedDataOnly(ref item, itemPrimaryKeyValue, baseType);
-                        this.transaction.Commit();
+                        this.transaction.Rollback();
                     }
                     catch (Exception)
                     {
-                        try
-                        {
-                            this.transaction.Rollback();
-                        }
-                        catch (Exception)
-                        {
-                            throw;
-                        }
                         throw;
                     }
+                    throw;
                 }
-            }
-            catch (Exception)
-            {
-                throw;
             }
         }
 
@@ -217,22 +210,15 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
             var primaryKeyColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
 
-            try
+            using (var reader = command.ExecuteReader())
             {
-                using (var reader = command.ExecuteReader())
+                if (reader.HasRows)
                 {
-                    if (reader.HasRows)
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            primaryKeys.Add((int)reader[primaryKeyColumnName]);
-                        }
+                        primaryKeys.Add((int)reader[primaryKeyColumnName]);
                     }
                 }
-            }
-            catch (Exception)
-            {
-                throw;
             }
             var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery<T>(columnName, value, primaryKeys);
             this.sqlQueries.Add(sqlQuery);
@@ -291,22 +277,15 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 Transaction = this.transaction
             };
 
-            try
+            using (var sqlReader = command.ExecuteReader())
             {
-                using (var sqlReader = command.ExecuteReader())
+                if (sqlReader.HasRows)
                 {
-                    if (sqlReader.HasRows)
+                    while (sqlReader.Read())
                     {
-                        while (sqlReader.Read())
-                        {
-                            primaryKeyValues.Add((int)sqlReader[primaryColumnName]);
-                        }
+                        primaryKeyValues.Add((int)sqlReader[primaryColumnName]);
                     }
                 }
-            }
-            catch (Exception)
-            {
-                throw;
             }
             return primaryKeyValues;
         }
@@ -728,7 +707,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                         this.transaction.Dispose();
                     }
                 }
-                disposed = true;
+                this.disposed = true;
             }
         }
 
