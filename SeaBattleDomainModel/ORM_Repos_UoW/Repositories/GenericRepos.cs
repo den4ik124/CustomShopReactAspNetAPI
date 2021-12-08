@@ -14,7 +14,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
     {
         private List<string> sqlQueries = new List<string>();
 
-        private readonly string? typeTableName;
+        private readonly string typeTableName;
         private readonly Assembly assembly;
 
         private SqlGenerator sqlGenerator;
@@ -22,9 +22,11 @@ namespace OrmRepositoryUnitOfWork.Repositories
         private bool disposed;
         private SqlConnection connection;
         private Type type;
+        private AttributeChecker attributeChecker;
 
         public GenericRepos(SqlConnection sqlConnection)
         {
+            this.attributeChecker = new AttributeChecker();
             this.connection = sqlConnection;
             this.sqlGenerator = new SqlGenerator();
             this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
@@ -33,7 +35,8 @@ namespace OrmRepositoryUnitOfWork.Repositories
                 throw new ArgumentNullException($"The [{nameof(DomainModelAttribute)}] was not set to your assembly");
             }
             this.type = typeof(T);
-            this.typeTableName = typeof(T).GetCustomAttribute<TableAttribute>()?.TableName;
+            CheckAttributes(this.type);
+            this.typeTableName = this.type.GetCustomAttribute<TableAttribute>().TableName;
         }
 
         #region Methods
@@ -96,6 +99,10 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         public T ReadItemById(int id)
         {
+            if (id <= 0)
+            {
+                throw new ArgumentException("Incorrect ID value. Please check.");
+            }
             var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(type, id), this.connection);
             using (var sqlReader = command.ExecuteReader())
             {
@@ -146,14 +153,13 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             if (item == null)
             {
-                return;
+                throw new ArgumentNullException($"{nameof(item)} was null");
             }
             var primaryKeyProperty = GetPrimaryKeyProperty(this.type);
             if (primaryKeyProperty == null)
             {
                 return;
             }
-
             var primaryKeyColumnValue = (int?)primaryKeyProperty.GetValue(item);
             if (primaryKeyColumnValue != null && primaryKeyColumnValue > default(int))
             {
@@ -174,9 +180,9 @@ namespace OrmRepositoryUnitOfWork.Repositories
 
         public void DeleteById(int id)
         {
-            if (this.typeTableName == null)
+            if (id <= 0)
             {
-                return;
+                throw new ArgumentException("Incorrect ID value. Please check.");
             }
             var sqlQuery = this.sqlGenerator.GetDeleteSqlQuery(this.typeTableName, id);
             this.sqlQueries.Add(sqlQuery);
@@ -186,7 +192,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             if (item == null)
             {
-                return;
+                throw new ArgumentNullException($"{nameof(item)} was null");
             }
             var primaryColumnProperty = GetPrimaryKeyProperty(this.type);
 
@@ -309,9 +315,12 @@ namespace OrmRepositoryUnitOfWork.Repositories
         {
             if (item == null)
             {
-                return;
+                throw new ArgumentNullException($"{nameof(item)} was null");
             }
             var type = item.GetType();
+
+            CheckAttributes(type);
+
             var typeAttribute = type.GetCustomAttribute<TableAttribute>();
             if (typeAttribute != null && typeAttribute.IsRelatedTable)
             {
@@ -329,19 +338,13 @@ namespace OrmRepositoryUnitOfWork.Repositories
                                         && property.GetCustomAttribute<ColumnAttribute>()?.BaseType == baseType)?
                                 .SetValue(item, baseTypeId);
                 }
-                try
+
+                var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
+                var sqlCommand = new SqlCommand(sqlInsert, this.connection)
                 {
-                    var sqlInsert = sqlGenerator.GetInsertConcreteItemSqlQuery(item);
-                    var sqlCommand = new SqlCommand(sqlInsert, this.connection)
-                    {
-                        Transaction = this.transaction
-                    };
-                    sqlCommand.ExecuteScalar();
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
+                    Transaction = this.transaction
+                };
+                sqlCommand.ExecuteScalar();
             }
 
             var childs = type.GetProperties().Where(prop => prop.GetCustomAttributes<RelatedEntityAttribute>().Any());
@@ -389,6 +392,12 @@ namespace OrmRepositoryUnitOfWork.Repositories
                     SetValueIntoProperty(ref item, childInstance, child);
                 }
             }
+        }
+
+        private void CheckAttributes(Type type)
+        {
+            this.attributeChecker.CheckTableAttribute(type);
+            this.attributeChecker.CheckColumnAttribute(type);
         }
 
         private void InsertAlgorithm<TItem>(ref TItem? item)
@@ -554,7 +563,7 @@ namespace OrmRepositoryUnitOfWork.Repositories
                     var relatedEintityType = relatedEntityAttribute.RelatedType;
                     if (relatedEintityType == null)
                     {
-                        throw new Exception("[RelatedEntityAttribute].RelatedType was not set, or was set as null");
+                        throw new Exception($"[{nameof(RelatedEntityAttribute)}].RelatedType was not set, or was set as null");
                     }
                     relatedEintity.SetValue(item, MatchDataItem(relatedEintityType, sqlReader));
                 }
