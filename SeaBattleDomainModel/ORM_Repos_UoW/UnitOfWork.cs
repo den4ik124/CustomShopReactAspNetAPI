@@ -66,11 +66,18 @@ namespace OrmRepositoryUnitOfWork
             return default(TRead);
         }
 
-        public IEnumerable<TRead> ReadItems<TRead>()
+        public IEnumerable<TRead> ReadItems<TRead>(string columnName = "", object? value = null)
         {
             try
             {
-                return GetRepository<TRead>().ReadItems();
+                if (columnName == "" || value == null)
+                {
+                    return GetRepository<TRead>().ReadItems();
+                }
+                else
+                {
+                    return GetRepository<TRead>().ReadItems(columnName, value);
+                }
             }
             catch (Exception ex)
             {
