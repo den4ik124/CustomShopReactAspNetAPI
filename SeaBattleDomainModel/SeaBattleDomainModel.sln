@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SeaBattleDomainModel", "SeaBattleDomainModel\SeaBattleDomainModel.csproj", "{FE42018D-D75B-437E-A397-C82A51126959}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "testCodeHere", "testCodeHere\testCodeHere.csproj", "{89F60B13-F440-491D-B110-87FAD60787C8}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OrmRepositoryUnitOfWork", "ORM_Repos_UoW\OrmRepositoryUnitOfWork.csproj", "{61946E26-3C55-4847-9563-54620929B3D4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReflectionExtensions", "ReflectionExtensions\ReflectionExtensions.csproj", "{BAC98B5E-BDC1-4FCC-9C88-AEB3B326109A}"

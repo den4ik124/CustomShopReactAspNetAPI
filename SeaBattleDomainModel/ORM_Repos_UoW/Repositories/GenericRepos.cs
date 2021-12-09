@@ -110,35 +110,27 @@ namespace OrmRepositoryUnitOfWork.Repositories
             }
         }
 
-        public IEnumerable<T> ReadItems()
+        public IEnumerable<T> ReadItems(string columnName = "", object? value = null)
         {
             var readedItems = new List<T>();
             var properties = this.type.GetProperties()
                                         .Where(property => property.GetCustomAttributes<RelatedEntityAttribute>().Any());
-
-            var isTypeHasCollectionInside = IsTypeHasCollectionsInside(properties);
-            try
+            IEnumerable<int> primaryKeysValues;
+            if (columnName == "" || value == null)
             {
-                if (isTypeHasCollectionInside)
-                {
-                    var primaryKeysValues = SelectPrimaryKeyValues(this.type);
-
-                    foreach (var primaryKey in primaryKeysValues)
-                    {
-                        var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(this.type, primaryKey), this.connection);
-                        readedItems = GetReadedItems(readedItems, this.type, command);
-                    }
-                }
-                else
-                {
-                    var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(this.type), this.connection);
-                    readedItems = GetReadedItems(readedItems, this.type, command);
-                }
+                primaryKeysValues = SelectPrimaryKeyValues(this.type);
             }
-            catch (Exception)
+            else
             {
-                throw;
+                primaryKeysValues = SelectPrimaryKeyValues(this.type, columnName, value);
             }
+
+            foreach (var primaryKey in primaryKeysValues)
+            {
+                var command = new SqlCommand(this.sqlGenerator.GetSelectJoinString(this.type, primaryKey), this.connection);
+                readedItems.AddRange(GetReadedItems(this.type, command));
+            }
+
             return readedItems;
         }
 
@@ -259,19 +251,30 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return hasCollectionInside;
         }
 
-        private List<int> SelectPrimaryKeyValues(Type type)
+        private IEnumerable<int> SelectPrimaryKeyValues(Type type)
+        {
+            var selectAllDataForSpecificType = sqlGenerator.SelectFromSingleTableSqlQuery(type);
+            var primaryColumnName = DefinePrimaryColumnName(type);
+            primaryColumnName = $"{this.typeTableName}{primaryColumnName}";
+            return ReadDataBySqlCommand(selectAllDataForSpecificType, primaryColumnName);
+        }
+
+        private string DefinePrimaryColumnName(Type type)
+        {
+            return GetPrimaryKeyProperty(type).GetCustomAttribute<ColumnAttribute>().ColumnName;
+        }
+
+        private IEnumerable<int> SelectPrimaryKeyValues(Type type, string columnName, object value)
+        {
+            var selectAllDataForSpecificType = sqlGenerator.GetSelectIdForItem(type, columnName, value);
+            var primaryColumnName = DefinePrimaryColumnName(type);
+            return ReadDataBySqlCommand(selectAllDataForSpecificType, primaryColumnName);
+        }
+
+        private IEnumerable<int> ReadDataBySqlCommand(string selectAllDataForSpecificType, string? primaryColumnName)
         {
             var primaryKeyValues = new List<int>();
-            var selectAllDataForSpecificType = sqlGenerator.SelectFromSingleTableSqlQuery(type);
-            var primaryKeyProperty = GetPrimaryKeyProperty(type);
 
-            if (primaryKeyProperty == null)
-            {
-                return primaryKeyValues;
-            }
-
-            var primaryColumnName = primaryKeyProperty.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
-            primaryColumnName = $"{this.typeTableName}{primaryColumnName}";
             var command = new SqlCommand(selectAllDataForSpecificType, this.connection)
             {
                 Transaction = this.transaction
@@ -659,8 +662,9 @@ namespace OrmRepositoryUnitOfWork.Repositories
             return item;
         }
 
-        private List<T> GetReadedItems(List<T> readedItems, Type type, SqlCommand command)
+        private List<T> GetReadedItems(Type type, SqlCommand command)
         {
+            var readedItems = new List<T>();
             using (var sqlReader = command.ExecuteReader())
             {
                 if (sqlReader.HasRows)
