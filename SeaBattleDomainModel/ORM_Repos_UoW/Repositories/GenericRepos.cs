@@ -29,12 +29,12 @@ namespace OrmRepositoryUnitOfWork.Repositories
             this.attributeChecker = new AttributeChecker();
             this.connection = sqlConnection;
             this.sqlGenerator = new SqlGenerator();
-            this.assembly = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetCustomAttributes<DomainModelAttribute>().Any());
+            this.type = typeof(T);
+            this.assembly = type.Assembly;
             if (this.assembly == null)
             {
                 throw new ArgumentNullException($"The [{nameof(DomainModelAttribute)}] was not set to your assembly");
             }
-            this.type = typeof(T);
             CheckAttributes(this.type);
             this.typeTableName = this.type.GetCustomAttribute<TableAttribute>().TableName;
         }

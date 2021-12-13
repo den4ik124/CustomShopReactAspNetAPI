@@ -3,7 +3,6 @@ using OrmRepositoryUnitOfWork.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Linq;
 
 namespace OrmRepositoryUnitOfWork
