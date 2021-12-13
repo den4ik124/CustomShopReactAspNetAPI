@@ -132,6 +132,8 @@ namespace OrmRepositoryUnitOfWork
                 }
                 else
                 {
+                    columnValue = ValueToSqlStringConverter(columnValue);
+
                     columnValueStringBuilder.Append($"{columnValue}, ");
                 }
             }
@@ -239,6 +241,9 @@ namespace OrmRepositoryUnitOfWork
                 throw new Exception($"There are no any property marked by [{nameof(ColumnAttribute)}]");
             }
             var primaryKeyColumnName = GetPrimaryKeyProperty(type)?.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
+
+            value = ValueToSqlStringConverter(value);
+
             return $"{Select} [{tableName}].[{primaryKeyColumnName}] {From} [{tableName}] {Where} [{tableName}].[{columnName}] = {value}";
         }
 
@@ -336,6 +341,9 @@ namespace OrmRepositoryUnitOfWork
             this.attributeChecker.CheckTableAttribute(type);
 
             var tableName = type.GetCustomAttribute<TableAttribute>()?.TableName;
+
+            value = ValueToSqlStringConverter(value);
+
             this.deleteSqlQueries.Push($"{Delete} [{tableName}] {Where} [{tableName}].[{columnName}] = {value}\n");
 
             var dependentTypes = GetDependentTypes(type);
@@ -548,7 +556,7 @@ namespace OrmRepositoryUnitOfWork
             {
                 throw new ArgumentNullException($"Argument {nameof(tablePropetriesNames)} or {nameof(tableName)} was null");
             }
-            var selectQueryBuilder = new StringBuilder("SELECT \n");
+            var selectQueryBuilder = new StringBuilder($"{Select} \n");
 
             var type = tablePropetriesNames.FirstOrDefault(keyType => keyType.Key.GetCustomAttribute<TableAttribute>()?.TableName == tableName).Key;
 
@@ -614,11 +622,12 @@ namespace OrmRepositoryUnitOfWork
                                   .ToList();
             if (type.IsAbstract)
             {
-                var typesWithInheritanceRelationAttribute = this.assembly.GetTypes()
+                var assembly = type.Assembly;
+                var typesWithInheritanceRelationAttribute = assembly.GetTypes()
                                             .Where(assemblyType => assemblyType.GetCustomAttributes<InheritanceRelationAttribute>().Any());
                 if (!typesWithInheritanceRelationAttribute.Any())
                 {
-                    throw new Exception($"No one type in assembly {(this.assembly.GetName())} was marked with [{nameof(InheritanceRelationAttribute)}]");
+                    throw new Exception($"No one type in assembly {(assembly.GetName())} was marked with [{nameof(InheritanceRelationAttribute)}]");
                 }
                 var columnMatching = typesWithInheritanceRelationAttribute.Where(assemblyType => !assemblyType.GetCustomAttribute<InheritanceRelationAttribute>().IsBaseClass)
                                             .Select(a => a.GetCustomAttribute<InheritanceRelationAttribute>()?.ColumnMatching)
@@ -669,6 +678,7 @@ namespace OrmRepositoryUnitOfWork
                 }
                 else
                 {
+                    columnValue = ValueToSqlStringConverter(columnValue);
                     selectQueryWithConditionBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
                 }
             }
@@ -695,7 +705,7 @@ namespace OrmRepositoryUnitOfWork
 
             var primaryKeyProperty = GetPrimaryKeyProperty(type)?.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
 
-            var selectQueryBuilder = new StringBuilder($"SELECT [{tableName}].[{primaryKeyProperty}] {From} [{tableName}] {Where}\n");
+            var selectQueryBuilder = new StringBuilder($"{Select} [{tableName}].[{primaryKeyProperty}] {From} [{tableName}] {Where}\n");
             foreach (var property in properties)
             {
                 var columnName = property.GetCustomAttribute<ColumnAttribute>()?.ColumnName;
@@ -706,12 +716,23 @@ namespace OrmRepositoryUnitOfWork
                 }
                 else
                 {
+                    columnValue = ValueToSqlStringConverter(columnValue);
                     selectQueryBuilder.Append($"[{tableName}].[{columnName}] = {columnValue} AND\n");
                 }
             }
             selectQueryBuilder.Remove(selectQueryBuilder.Length - ConditionEndOfStringOffset, ConditionAmountOfDeletingSymbols);
 
             return selectQueryBuilder.ToString();
+        }
+
+        private object ValueToSqlStringConverter(object columnValue)
+        {
+            if (columnValue.GetType() == typeof(String))
+            {
+                return $"'{columnValue}'";
+            }
+
+            return columnValue;
         }
 
         private void CheckTypeAttributes(Type type)
@@ -738,6 +759,8 @@ namespace OrmRepositoryUnitOfWork
                                     ?? throw new ArgumentNullException($"There is no property with {columnName} attribute argument inside {concreteType.Name} type");
 
             var isPropertyAllowNull = columnNameProperty.GetCustomAttribute<ColumnAttribute>().AllowNull;
+
+            value = ValueToSqlStringConverter(value);
 
             if (isPropertyAllowNull)
             {
@@ -778,6 +801,7 @@ namespace OrmRepositoryUnitOfWork
                 }
                 else
                 {
+                    value = ValueToSqlStringConverter(value);
                     deleteQueryStringBuilder.Append($"[{tableName}].[{columnName}] = {value} AND\n");
                 }
             }
@@ -816,16 +840,19 @@ namespace OrmRepositoryUnitOfWork
                 }
                 else
                 {
+                    columnValue = ValueToSqlStringConverter(columnValue);
                     updateQueryBuider.Append($"[{tableName}].[{currentColumnName}] = {columnValue},\n");
                 }
             }
             updateQueryBuider.Remove(updateQueryBuider.Length - PropertyEndOfStringOffset, PropertyAmountOfDeletingSymbols);
             if (columnName == string.Empty)
             {
+                primaryColumnValue = ValueToSqlStringConverter(primaryColumnValue);
                 updateQueryBuider.Append($"{Where} [{tableName}].[{primaryColumnName}] = {primaryColumnValue}");
             }
             else
             {
+                value = ValueToSqlStringConverter(value);
                 updateQueryBuider.Append($"{Where} [{tableName}].[{columnName}] = {value}");
             }
             return updateQueryBuider.ToString();
