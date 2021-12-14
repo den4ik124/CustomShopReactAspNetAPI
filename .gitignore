@@ -379,3 +379,5 @@ FodyWeavers.xsd
 /SQLScripts
 /SeaBattleDomainModel/.vscode/launch.json
 /SeaBattleDomainModel/clientapplication/.vscode/launch.json
+/SeaBattleDomainModel/clientapplication/src/DuckItem.tsx
+/SeaBattleDomainModel/clientapplication/src/demo.ts
