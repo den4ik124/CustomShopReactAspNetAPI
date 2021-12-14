@@ -377,3 +377,5 @@ FodyWeavers.xsd
 /SeaBattleDomainModel/ORM_Repos_UoW/UoW_POC
 /SeaBattleDomainModel/ORM_Repos_UoWTests
 /SQLScripts
+/SeaBattleDomainModel/.vscode/launch.json
+/SeaBattleDomainModel/clientapplication/.vscode/launch.json
