@@ -2,7 +2,7 @@
 
 namespace CustomIdentityAPI.Models
 {
-    public class UserLoginModel
+    public class UserLoginDto
     {
         [MaxLength(20)]
         public string LoginProp { get; set; }

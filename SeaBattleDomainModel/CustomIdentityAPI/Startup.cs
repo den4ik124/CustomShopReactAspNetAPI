@@ -33,11 +33,11 @@ namespace CustomIdentityAPI
         {
             services.AddControllers();
 
-            services.AddTransient<IUnitOfWork, UnitOfWork>((service) => new UnitOfWork(Configuration.GetConnectionString("CustomConnection"), null));
+            services.AddTransient<IUnitOfWork, UnitOfWork>((service) => new UnitOfWork(Configuration.GetConnectionString("CustomConnectionHome"), null));
 
             services.AddTransient<IUserStore<CustomIdentityUser>, CustomUserStore>();
 
-            services.AddTransient<IShipData, ShipData>((service) => new ShipData(new UnitOfWork(Configuration.GetConnectionString("ShipsDBConnection"), null)));
+            services.AddTransient<IShipData, ShipData>((service) => new ShipData(new UnitOfWork(Configuration.GetConnectionString("ShipsDBConnectionHome"), null)));
 
             services.AddAuthentication(o =>
             {
@@ -53,7 +53,8 @@ namespace CustomIdentityAPI
                 o.Stores.MaxLengthForKeys = 128;
                 o.SignIn.RequireConfirmedAccount = false;
             })
-                    .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddSignInManager<SignInManager<CustomIdentityUser>>() ;
 
             services.Configure<IdentityOptions>(options =>
             {

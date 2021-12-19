@@ -20,7 +20,15 @@ namespace OrmRepositoryUnitOfWork
             this.logger = logger;
 
             this.sqlConnection = new SqlConnection(connectionString);
-            sqlConnection.Open();
+
+            try
+            {
+                sqlConnection.Open();
+            }
+            catch (Exception ex)
+            {
+                this.logger.Log(ex.Message);
+            }
         }
 
         public void Create<TInsert>(TInsert item)
