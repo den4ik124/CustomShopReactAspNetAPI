@@ -1,18 +1,39 @@
-import { Formik } from "formik";
+import { ErrorMessage, Formik, FormikErrors } from "formik";
 import React from "react";
-import { Button,  ButtonOr,  Form, Label } from "semantic-ui-react";
+import { Button, Form, Label } from "semantic-ui-react";
 import MyTextInput from "../common/MyTextInput";
 import * as Yup from 'yup';
+import { useStore } from "../stores/store";
+import { observer } from "mobx-react-lite";
+import { UserFormValues } from "../models/user";
+import { useHistory } from "react-router-dom";
 
-export default function LoginPage(){
+function LoginPage(){
+    const history = useHistory();
+    const {userStore} = useStore();
+
     const validationSchema = Yup.object({
         password: Yup.string().required('The "password" field is required!'),
     })
 
-    function handleLoginSubmit(){
+
+    function handleLoginSubmit(values: UserFormValues, setErrors: any){
         //TODO: change login logic
+        if(values.emailProp === "")
+            values.emailProp = null;
+        else if(values.loginProp === "")
+            values.loginProp = null;            
+
         console.log('Login submit')
+        console.log(values)
+
+        userStore.login(values)
+                .catch(error => setErrors({error: 'Invalid email or password'}))
         
+        if(userStore.isLoggedIn) 
+        {
+            history.push('/ships')
+        }   
         //TODO: implement redirection logic
 
     }
@@ -20,24 +41,38 @@ export default function LoginPage(){
     return(
         <Formik 
         validationSchema={validationSchema}
-        initialValues={{
-            userName: '',
-            email: '',
-            password: ''
+        initialValues ={{
+            loginProp: '',
+            emailProp: '',
+            password: '',
+            error: null
         }}
-        onSubmit={handleLoginSubmit}
+        onSubmit={(initialValues, {setErrors}) => handleLoginSubmit(initialValues, setErrors)}
         >
-        {({handleSubmit}) => (
+        {({handleSubmit, isSubmitting, errors}) => (
             <Form onSubmit={handleSubmit} autoComplete="off" size="large">
+                <ErrorMessage 
+                    name="error"
+                    render={() => 
+                        <Label 
+                            basic 
+                            color="red"
+                            style ={{marginBottom: 10}}
+                            content={errors.error}
+                        />
+                    }
+                />
                 <Form.Group widths="equal">
-                    <MyTextInput name="userName" placeholder="User name"/>
+                    <MyTextInput name="loginProp" placeholder="User name"/>
                     <Label size="big" content="or"/>
-                    <MyTextInput name="email" placeholder="Email"/>
+                    <MyTextInput name="emailProp" placeholder="Email"/>
                 </Form.Group>
                 <MyTextInput name = 'password' placeholder='Password' type='password'/>
-                <Button fluid positive type='submit'>Login</Button>
+                <Button loading={isSubmitting} fluid positive type='submit'>Login</Button>
             </Form>
         )}
     </Formik>
     )
 }
+
+export default observer(LoginPage);

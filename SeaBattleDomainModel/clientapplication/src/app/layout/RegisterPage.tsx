@@ -5,6 +5,9 @@ import * as Yup from 'yup'
 import MyTextInput from "../common/MyTextInput";
 
 export default function RegisterPage(){
+
+    
+
     const validationSchema = Yup.object({
         userName: Yup.string().required('The "user name" field is required!'),
         email: Yup.string().required('The "email" field is required!'),

@@ -1,21 +1,16 @@
 using CustomIdentity.Data;
 using CustomIdentityAPI.Models;
+using CustomIdentityAPI.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens;
 using OrmRepositoryUnitOfWork;
 using OrmRepositoryUnitOfWork.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 
 namespace CustomIdentityAPI
 {
@@ -33,20 +28,35 @@ namespace CustomIdentityAPI
         {
             services.AddControllers();
 
-            services.AddTransient<IUnitOfWork, UnitOfWork>((service) => new UnitOfWork(Configuration.GetConnectionString("CustomConnectionHome"), null));
+            services.AddTransient<IUnitOfWork, UnitOfWork>((service) => new UnitOfWork(Configuration.GetConnectionString("CustomConnection"), null));
 
             services.AddTransient<IUserStore<CustomIdentityUser>, CustomUserStore>();
 
-            services.AddTransient<IShipData, ShipData>((service) => new ShipData(new UnitOfWork(Configuration.GetConnectionString("ShipsDBConnectionHome"), null)));
+            services.AddTransient<IShipData, ShipData>((service) => new ShipData(new UnitOfWork(Configuration.GetConnectionString("ShipsDBConnection"), null)));
 
-            services.AddAuthentication(o =>
-            {
-                o.DefaultScheme = IdentityConstants.ApplicationScheme;
-                o.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-            })
-            .AddIdentityCookies(o =>
-            {
-            });
+            services.AddScoped<TokenService>();
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["TokenKey"]));
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(opt =>
+                    {
+                        opt.TokenValidationParameters = new TokenValidationParameters()
+                        {
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = key,
+                            ValidateIssuer = false,
+                            ValidateAudience = false,
+                        };
+                    }
+                ).AddCookie();
+            //services.AddAuthentication(o =>
+            //{
+            //    o.DefaultScheme = IdentityConstants.ApplicationScheme;
+            //    o.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+            //})
+            //.AddIdentityCookies(o =>
+            //{
+            //});
 
             services.AddIdentityCore<CustomIdentityUser>(o =>
             {
@@ -54,7 +64,7 @@ namespace CustomIdentityAPI
                 o.SignIn.RequireConfirmedAccount = false;
             })
             .AddDefaultTokenProviders()
-            .AddSignInManager<SignInManager<CustomIdentityUser>>() ;
+            .AddSignInManager<SignInManager<CustomIdentityUser>>();
 
             services.Configure<IdentityOptions>(options =>
             {
@@ -81,6 +91,7 @@ namespace CustomIdentityAPI
 
             app.UseCors("CorsPolicy");
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

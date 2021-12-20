@@ -1,4 +1,5 @@
 ﻿using CustomIdentity.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SeaBattleDomainModel.Entities;
@@ -20,6 +21,7 @@ namespace CustomIdentityAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public IEnumerable<Ship> Get()
         {
             return this.shipData.GetShips();

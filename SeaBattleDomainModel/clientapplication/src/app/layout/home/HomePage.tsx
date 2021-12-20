@@ -1,13 +1,36 @@
+import { observer } from "mobx-react-lite";
 import React from "react";
 import { Link } from "react-router-dom";
+import { Button, Container, Header, Label } from "semantic-ui-react";
+import { useStore } from "../../stores/store";
 
-import { Container } from "semantic-ui-react";
+function HomePage(){
+    const {userStore} = useStore();
 
-export default function HomePage(){
     return(
         <Container style={{marginTop: '7em' }}>
-            <h1>Home page</h1>
-            <h3>Go to <Link to={'/ships'}>ships list</Link></h3>        
+            {userStore.isLoggedIn ? (
+                <Container>
+                    <Header content='Welcome !'/>
+                    {console.log(userStore.isLoggedIn)}
+                    <Button as={Link} to='/Ships' color="blue" size='huge' inverted>
+                        Go to ships page !    
+                    </Button>    
+                </Container>
+            ) : (
+                <Container>
+                    <Header content='Home page' size="huge"/>
+                    {console.log(userStore.isLoggedIn)}
+                    <Button as={Link} to='/Login' color="blue" size='huge' inverted>
+                        Login !    
+                    </Button>    
+                    <Button as={Link} to='/Register' color="blue" size='huge' inverted>
+                        Register !    
+                    </Button>    
+                </Container>     
+            )}
         </Container>
     )
 }
+
+export default observer(HomePage);
