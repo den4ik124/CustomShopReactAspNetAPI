@@ -29,11 +29,7 @@ function LoginPage(){
 
         userStore.login(values)
                 .catch(error => setErrors({error: 'Invalid email or password'}))
-        
-        if(userStore.isLoggedIn) 
-        {
-            history.push('/ships')
-        }   
+
         //TODO: implement redirection logic
 
     }

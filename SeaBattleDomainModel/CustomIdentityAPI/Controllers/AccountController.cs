@@ -84,7 +84,6 @@ namespace CustomIdentity2.Controllers
             else if (userLogin != null)
             {
                 return BadRequest($"\"{model.LoginProp}\" is already taken. Please check you login.");
-
             }
 
             var createResult = await this.userManager.CreateAsync(user, model.Password);

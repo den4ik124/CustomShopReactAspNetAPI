@@ -1,6 +1,7 @@
 export interface User{
     loginProp: string;
-    emailProp: string
+    emailProp: string;
+    token: string;
 }
 
 export interface UserFormValues{

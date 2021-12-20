@@ -13,11 +13,6 @@ function ShipList(){
     const [ships, setShips] = useState<Ship[]>([]);
     const [loading, setLoading] = useState(true);
 
-    if(!userStore.isLoggedIn) {
-      history.push('/Login');
-      return(null);
-    }
-    console.log('Метод продолжил работу')
     useEffect(() => {
         agent.Ships.list().then(response => {
           setShips(response);
