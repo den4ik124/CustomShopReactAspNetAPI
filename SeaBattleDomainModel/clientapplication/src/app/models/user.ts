@@ -7,5 +7,6 @@ export interface User{
 export interface UserFormValues{
     emailProp?: string | null;
     password: string;
+    confirmPassword?: string;
     loginProp?: string | null;
 }

@@ -11,7 +11,7 @@ function HomePage(){
         <Container style={{marginTop: '7em' }}>
             {userStore.isLoggedIn ? (
                 <Container>
-                    <Header content='Welcome !'/>
+                    <Header content={'Welcome ' + userStore.user!.loginProp + ' !'}/>
                     {console.log(userStore.isLoggedIn)}
                     <Button as={Link} to='/Ships' color="blue" size='huge' inverted>
                         Go to ships page !    

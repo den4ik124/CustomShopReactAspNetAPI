@@ -1,12 +1,15 @@
 ﻿using CustomIdentityAPI.Models;
 using CustomIdentityAPI.Models.DTOs;
 using CustomIdentityAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace CustomIdentity2.Controllers
 {
+    [AllowAnonymous]
     [ApiController]
     [Route("[controller]")]
     public class AccountController : Controller
@@ -75,13 +78,14 @@ namespace CustomIdentity2.Controllers
         {
             var user = new CustomIdentityUser { UserName = model.LoginProp, Email = model.EmailProp };
             var userEmail = await this.userManager.FindByEmailAsync(user.Email);
-            var userLogin = await this.userManager.FindByNameAsync(user.UserName);
 
             if (userEmail != null)
             {
                 return BadRequest($"\"{model.EmailProp}\" is already taken. Please check you email.");
             }
-            else if (userLogin != null)
+
+            var userLogin = await this.userManager.FindByNameAsync(user.UserName);
+            if (userLogin != null)
             {
                 return BadRequest($"\"{model.LoginProp}\" is already taken. Please check you login.");
             }
@@ -95,6 +99,14 @@ namespace CustomIdentity2.Controllers
             }
 
             return BadRequest("Problem with user registration.");
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<ActionResult<UserDataDto>> GetCurrentUser()
+        {
+            var user = await this.userManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
+            return GetUserDto(user);
         }
 
         [HttpPost, ValidateAntiForgeryToken]

@@ -16,4 +16,8 @@
     <ProjectReference Include="..\SeaBattleDomainModel\SeaBattleDomainModel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Extensions\" />
+  </ItemGroup>
+
 </Project>

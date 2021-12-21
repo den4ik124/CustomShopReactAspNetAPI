@@ -21,7 +21,6 @@ namespace CustomIdentityAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public IEnumerable<Ship> Get()
         {
             return this.shipData.GetShips();
