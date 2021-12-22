@@ -58,14 +58,6 @@ namespace CustomIdentityAPI
                         };
                     }
                 ).AddCookie();
-            //services.AddAuthentication(o =>
-            //{
-            //    o.DefaultScheme = IdentityConstants.ApplicationScheme;
-            //    o.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-            //})
-            //.AddIdentityCookies(o =>
-            //{
-            //});
 
             services.AddIdentityCore<CustomIdentityUser>(o =>
             {

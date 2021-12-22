@@ -4,7 +4,9 @@ using CustomIdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mail;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CustomIdentity2.Controllers
@@ -37,6 +39,12 @@ namespace CustomIdentity2.Controllers
                 ModelState.AddModelError("", "At least one property should be inputted (login or email).");
                 return Unauthorized();
             }
+
+            if (model.EmailProp != null && !IsEmailValid(model.EmailProp))
+            {
+                return ValidationProblem("Email has incorrect format!");
+            }
+
             if (ModelState.IsValid)
             {
                 CustomIdentityUser user = null;
@@ -51,7 +59,8 @@ namespace CustomIdentity2.Controllers
 
                 if (user == null)
                 {
-                    return Unauthorized();
+                    return ValidationProblem("User has not been founded");
+                    //return Unauthorized();
                 }
 
                 var loginResult = await this.signInManager.CheckPasswordSignInAsync(user,
@@ -76,25 +85,29 @@ namespace CustomIdentity2.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<UserDataDto>> Register(UserRegistrationDto model)
         {
+            if (!IsEmailValid(model.EmailProp))
+            {
+                return ValidationProblem("Email has incorrect format!");
+            }
+
             var user = new CustomIdentityUser { UserName = model.LoginProp, Email = model.EmailProp };
             var userEmail = await this.userManager.FindByEmailAsync(user.Email);
 
             if (userEmail != null)
             {
-                return BadRequest($"\"{model.EmailProp}\" is already taken. Please check you email.");
+                return BadRequest($"\"{model.EmailProp}\" is already taken. Please check your email.");
             }
 
             var userLogin = await this.userManager.FindByNameAsync(user.UserName);
             if (userLogin != null)
             {
-                return BadRequest($"\"{model.LoginProp}\" is already taken. Please check you login.");
+                return BadRequest($"\"{model.LoginProp}\" is already taken. Please check your login.");
             }
 
             var createResult = await this.userManager.CreateAsync(user, model.Password);
 
             if (createResult.Succeeded)
             {
-                //await this.signInManager.SignInAsync(user, false);
                 return GetUserDto(user);
             }
 
@@ -114,6 +127,12 @@ namespace CustomIdentity2.Controllers
         {
             await this.signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
+        }
+
+        private bool IsEmailValid(string email)
+        {
+            string pattern = @"\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*";
+            return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
         }
 
         private ActionResult<UserDataDto> GetUserDto(CustomIdentityUser user)

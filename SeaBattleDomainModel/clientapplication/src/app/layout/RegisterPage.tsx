@@ -13,9 +13,9 @@ export default function RegisterPage(){
 
     const validationSchema = Yup.object({
         loginProp: Yup.string().required('The "user name" field is required!'),
-        emailProp: Yup.string().required('The "email" field is required!'),
+        emailProp: Yup.string().email().required('The "email" field is required!'),
         password: Yup.string().required('The "password" field is required!'),
-        confirmPassword: Yup.string().required('You should confirm your password!')
+        confirmPassword: Yup.string().oneOf([Yup.ref('password'), null],"Passwords must match") .required('You should confirm your password!')
     })
 
     function handleRegisterSubmit(values: UserFormValues, setErrors: any){

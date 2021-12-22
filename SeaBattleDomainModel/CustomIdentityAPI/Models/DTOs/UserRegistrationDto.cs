@@ -10,7 +10,7 @@ namespace CustomIdentityAPI.Models.DTOs
         [Required, DataType(DataType.Password)]
         public string Password { get; set; }
 
-        [Required, MaxLength(50)]
+        [Required, MaxLength(50), DataType(DataType.EmailAddress)]
         public string EmailProp { get; set; }
 
         [DataType(DataType.Password), Compare(nameof(Password))]
