@@ -382,3 +382,5 @@ FodyWeavers.xsd
 /SeaBattleDomainModel/clientapplication/src/DuckItem.tsx
 /SeaBattleDomainModel/clientapplication/src/demo.ts
 SeaBattleDomainModel/.vscode/tasks.json
+/SeaBattleDomainModel/testShopProject/testShopProject.csproj
+/SeaBattleDomainModel/testShopProject
