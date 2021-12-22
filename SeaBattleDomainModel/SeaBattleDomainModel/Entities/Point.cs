@@ -1,10 +1,7 @@
-﻿using OrmRepositoryUnitOfWork.Attributes;
-using OrmRepositoryUnitOfWork.Enums;
-using System;
+﻿using System;
 
 namespace SeaBattleDomainModel.Entities
 {
-    [Table("Points", IsStaticDataTable = true)]
     public struct Point : IEquatable<Point>
     {
         #region Fields
@@ -39,10 +36,8 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write)]
         public int Id { get; set; }
 
-        [Column(columnName: "X", IsUniq = true)]
         public int X
         {
             get { return this.x; }
@@ -54,7 +49,6 @@ namespace SeaBattleDomainModel.Entities
             }
         }
 
-        [Column(columnName: "Y", IsUniq = true)]
         public int Y
         {
             get { return this.y; }

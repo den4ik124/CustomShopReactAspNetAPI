@@ -1,4 +1,4 @@
-using CustomIdentity.Data;
+using CustomIdentityAPI.DAL;
 using CustomIdentityAPI.Models;
 using CustomIdentityAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -6,11 +6,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using OrmRepositoryUnitOfWork;
-using OrmRepositoryUnitOfWork.Interfaces;
+using SeaBattlePersistence;
 using System;
 using System.Text;
 
@@ -34,13 +35,22 @@ namespace CustomIdentityAPI
                 opt.Filters.Add(new AuthorizeFilter(policy));
             });
 
+            services.AddDbContext<SeaBattleDbContext>(opt =>
+            {
+                opt.UseSqlServer(Configuration.GetConnectionString("SeaBattleDB"));
+            });
             //services.AddDBServices();
 
-            services.AddTransient<IUnitOfWork, UnitOfWork>((service) => new UnitOfWork(Configuration.GetConnectionString("CustomConnection"), null));
-
-            services.AddTransient<IUserStore<CustomIdentityUser>, CustomUserStore>();
-
-            services.AddTransient<IShipData, ShipData>((service) => new ShipData(new UnitOfWork(Configuration.GetConnectionString("ShipsDBConnection"), null)));
+            //services.AddTransient<IUnitOfWork, UnitOfWork>((service) => new UnitOfWork(Configuration.GetConnectionString("CustomConnection"), null));
+            //services.AddTransient<IUserStore<CustomIdentityUser>, CustomUserStore>();
+            //services.AddTransient<IShipData, ShipData>((service) => new ShipData(new UnitOfWork(Configuration.GetConnectionString("ShipsDBConnection"), null)));
+            //services.AddIdentityCore<CustomIdentityUser>(o =>
+            //{
+            //    o.Stores.MaxLengthForKeys = 128;
+            //    o.SignIn.RequireConfirmedAccount = false;
+            //})
+            //.AddDefaultTokenProviders()
+            //.AddSignInManager<SignInManager<CustomIdentityUser>>();
 
             services.AddScoped<TokenService>();
 
@@ -58,14 +68,6 @@ namespace CustomIdentityAPI
                         };
                     }
                 ).AddCookie();
-
-            services.AddIdentityCore<CustomIdentityUser>(o =>
-            {
-                o.Stores.MaxLengthForKeys = 128;
-                o.SignIn.RequireConfirmedAccount = false;
-            })
-            .AddDefaultTokenProviders()
-            .AddSignInManager<SignInManager<CustomIdentityUser>>();
 
             services.Configure<IdentityOptions>(options =>
             {

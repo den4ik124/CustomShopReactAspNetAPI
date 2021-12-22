@@ -1,13 +1,11 @@
-﻿using OrmRepositoryUnitOfWork.Attributes;
-using SeaBattleDomainModel.Entities;
+﻿using SeaBattleDomainModel.Entities;
 using SeaBattleDomainModel.Interfaces;
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SeaBattleDomainModel.DerivedShips
 {
     [Table("Ships")]
-    [InheritanceRelation(ColumnMatching = "TypeId")]
-    [Type(TypeID = 2, BaseType = typeof(Ship), ColumnMatching = "TypeId")]
     public class RepairShip : Ship, ICanRepair
     {
         /// <summary>

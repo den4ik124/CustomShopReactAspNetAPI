@@ -1,4 +1,5 @@
 ﻿using CustomIdentityAPI.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -12,13 +13,13 @@ namespace CustomIdentityAPI.Services
     public class TokenService
     {
         private IConfiguration config { get; }
+
         public TokenService(IConfiguration config)
         {
             this.config = config;
         }
 
-
-        public string CreateToken(CustomIdentityUser user)
+        public string CreateToken(IdentityUser user)
         {
             var claims = new List<Claim>()
             {

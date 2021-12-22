@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ORM_Repos_UoW\OrmRepositoryUnitOfWork.csproj" />
     <ProjectReference Include="..\SeaBattleDomainModel\SeaBattleDomainModel.csproj" />
   </ItemGroup>
 

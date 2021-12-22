@@ -1,15 +1,11 @@
-﻿using OrmRepositoryUnitOfWork.Attributes;
-using OrmRepositoryUnitOfWork.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 
-[assembly: DomainModel]
-
 namespace SeaBattleDomainModel.Entities
 {
-    [Table("BattleFields")]
     public class BattleField
     {
         #region Fields
@@ -28,10 +24,8 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
         public int Id { get; set; }
 
-        [Column(columnName: "SideLength")]
         public int BattleFieldSideLength
         {
             get => battleFieldSideLength - battleFieldPointsIncreaser;
@@ -40,9 +34,7 @@ namespace SeaBattleDomainModel.Entities
 
         public List<Ship> Ships { get => this.ships; set => this.ships = value; }
 
-        [RelatedEntity(Table = "Cells",
-               RelatedType = typeof(Cell),
-            IsCollection = true)]
+        [NotMapped]
         public Dictionary<Point, Cell> Cells
         {
             get => this.cells;

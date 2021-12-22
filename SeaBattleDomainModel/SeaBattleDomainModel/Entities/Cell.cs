@@ -1,10 +1,7 @@
-﻿using OrmRepositoryUnitOfWork.Attributes;
-using OrmRepositoryUnitOfWork.Enums;
-using System;
+﻿using System;
 
 namespace SeaBattleDomainModel.Entities
 {
-    [Table(tableName: "Cells", IsRelatedTable = true)]
     public class Cell
     {
         #region Fields
@@ -17,13 +14,10 @@ namespace SeaBattleDomainModel.Entities
 
         #endregion Fields
 
-        [Column(columnName: "Id", KeyType = KeyType.Primary, ReadWriteOption = ReadWriteOption.Write, IsUniq = true)]
         public int Id { get; set; }
 
-        [Column(columnName: "BattleFieldID", KeyType = KeyType.Foreign, BaseType = typeof(BattleField))]
         public int BattleFieldId { get; set; }
 
-        [Column(columnName: "ShipID", KeyType = KeyType.Foreign, BaseType = typeof(Ship), AllowNull = true)]
         public int? ShipId
         {
             get
@@ -36,7 +30,6 @@ namespace SeaBattleDomainModel.Entities
             set => this.shipId = value;
         }
 
-        [Column(columnName: "PointID", KeyType = KeyType.Foreign, BaseType = typeof(Point))]
         public int PointId
         {
             get => this.pointId;
@@ -67,7 +60,6 @@ namespace SeaBattleDomainModel.Entities
 
         #region Properties
 
-        [RelatedEntity(Table = "Ships", RelatedType = typeof(Ship))]
         public Ship Ship
         {
             get => this.ship;
@@ -81,7 +73,6 @@ namespace SeaBattleDomainModel.Entities
             }
         }
 
-        [RelatedEntity(Table = "Points", RelatedType = typeof(Point))]
         public Point Point
         {
             get => this.point;

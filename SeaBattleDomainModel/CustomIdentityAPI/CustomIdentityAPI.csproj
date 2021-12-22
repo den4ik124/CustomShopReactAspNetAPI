@@ -6,17 +6,24 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.13" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.13">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.13" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.15.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.15.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ORM_Repos_UoW\OrmRepositoryUnitOfWork.csproj" />
     <ProjectReference Include="..\SeaBattleDomainModel\SeaBattleDomainModel.csproj" />
+    <ProjectReference Include="..\SeaBattlePersistence\SeaBattlePersistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\" />
     <Folder Include="Extensions\" />
   </ItemGroup>
 

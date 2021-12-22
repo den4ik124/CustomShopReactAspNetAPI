@@ -1,5 +1,4 @@
-﻿using CustomIdentity.Data;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SeaBattleDomainModel.Entities;
@@ -13,17 +12,14 @@ namespace CustomIdentityAPI.Controllers
     [ApiController]
     public class ShipsController : ControllerBase
     {
-        private IShipData shipData;
-
-        public ShipsController(IShipData shipData)
+        public ShipsController()
         {
-            this.shipData = shipData;
         }
 
-        [HttpGet]
-        public IEnumerable<Ship> Get()
-        {
-            return this.shipData.GetShips();
-        }
+        //[HttpGet]
+        //public IEnumerable<Ship> Get()
+        //{
+        //    return this.shipData.GetShips();
+        //}
     }
 }
