@@ -5,12 +5,10 @@ namespace ShopDomainModel.Interfaces
 {
     public interface IProduct
     {
-        public Guid Id { get;}
+        public Guid Id { get; }
         decimal Price { get; set; }
         string Title { get; set; }
 
-        public List<Order> Orders { get; set; }
+        public List<OrderProduct> Orders { get; set; }
     }
-
-
 }

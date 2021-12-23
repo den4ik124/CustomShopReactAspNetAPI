@@ -8,12 +8,12 @@ namespace ShopDomainModel.Interfaces
 {
     public interface IOrder
     {
-        public List<Product> ProductsList { get; set; }
+        public List<OrderProduct> Products { get; set; }
+
         void AddProduct(IProduct product);
+
         void RemoveProduct(IProduct product);
 
         IProduct GetProduct(string title);
     }
-
-
 }
