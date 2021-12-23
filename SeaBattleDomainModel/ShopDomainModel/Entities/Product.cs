@@ -1,12 +1,8 @@
 ﻿using ShopDomainModel.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ShopDomainModel
+namespace ShopDomainModel.Entities
 {
     public class Product : IProduct
     {
@@ -21,7 +17,7 @@ namespace ShopDomainModel
             Title = title;
         }
 
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; }
         public decimal Price { get; set; }
 
         public string Title { get; set; }

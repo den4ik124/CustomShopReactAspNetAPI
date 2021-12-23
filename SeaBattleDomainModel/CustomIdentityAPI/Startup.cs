@@ -19,12 +19,12 @@ namespace CustomIdentityAPI
 {
     public class Startup
     {
+        private IConfiguration config;
+
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            this.config = configuration;
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -35,10 +35,15 @@ namespace CustomIdentityAPI
                 opt.Filters.Add(new AuthorizeFilter(policy));
             });
 
-            services.AddDbContext<SeaBattleDbContext>(opt =>
+            services.AddDbContext<ShopDbContext>(opt =>
             {
-                opt.UseSqlServer(Configuration.GetConnectionString("SeaBattleDB"));
+                opt.UseSqlServer(this.config.GetConnectionString("ShopDb"));
             });
+
+            //services.AddDbContext<SeaBattleDbContext>(opt =>
+            //{
+            //    opt.UseSqlServer(Configuration.GetConnectionString("SeaBattleDB"));
+            //});
             //services.AddDBServices();
 
             //services.AddTransient<IUnitOfWork, UnitOfWork>((service) => new UnitOfWork(Configuration.GetConnectionString("CustomConnection"), null));
@@ -54,7 +59,7 @@ namespace CustomIdentityAPI
 
             services.AddScoped<TokenService>();
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["TokenKey"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(this.config["TokenKey"]));
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(opt =>

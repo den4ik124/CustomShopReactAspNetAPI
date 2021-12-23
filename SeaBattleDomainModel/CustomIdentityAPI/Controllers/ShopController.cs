@@ -1,0 +1,29 @@
+﻿using CustomIdentityAPI.DAL;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ShopDomainModel.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CustomIdentityAPI.Controllers
+{
+    [AllowAnonymous]
+    [ApiController]
+    [Route("[controller]")]
+    public class ShopController : Controller
+    {
+        private readonly ShopDbContext shopContext;
+
+        public ShopController(ShopDbContext shopContext)
+        {
+            this.shopContext = shopContext;
+        }
+
+        [HttpGet]
+        public IEnumerable<IProduct> GetProducts()
+        {
+            return this.shopContext.Products.ToList();
+        }
+    }
+}

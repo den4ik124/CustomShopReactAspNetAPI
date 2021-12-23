@@ -1,8 +1,5 @@
-﻿using System;
+﻿using ShopDomainModel.Entities;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShopDomainModel.Interfaces
 {
@@ -10,7 +7,7 @@ namespace ShopDomainModel.Interfaces
     {
         public List<OrderProduct> Products { get; set; }
 
-        void AddProduct(IProduct product);
+        void AddProduct(IProduct product, int count);
 
         void RemoveProduct(IProduct product);
 

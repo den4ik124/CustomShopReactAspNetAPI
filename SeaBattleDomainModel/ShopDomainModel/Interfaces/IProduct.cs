@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ShopDomainModel.Entities;
+using System;
 using System.Collections.Generic;
 
 namespace ShopDomainModel.Interfaces
