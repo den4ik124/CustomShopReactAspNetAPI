@@ -1,19 +1,9 @@
-using CustomIdentityAPI.DAL;
-using CustomIdentityAPI.Models;
-using CustomIdentityAPI.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using CustomIdentityAPI.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using SeaBattlePersistence;
-using System;
-using System.Text;
 
 namespace CustomIdentityAPI
 {
@@ -35,10 +25,8 @@ namespace CustomIdentityAPI
                 opt.Filters.Add(new AuthorizeFilter(policy));
             });
 
-            services.AddDbContext<ShopDbContext>(opt =>
-            {
-                opt.UseSqlServer(this.config.GetConnectionString("ShopDb"));
-            });
+            services.AddShopServices(this.config);
+            services.AddIdentityServices(this.config);
 
             //services.AddDbContext<SeaBattleDbContext>(opt =>
             //{
@@ -56,40 +44,6 @@ namespace CustomIdentityAPI
             //})
             //.AddDefaultTokenProviders()
             //.AddSignInManager<SignInManager<CustomIdentityUser>>();
-
-            services.AddScoped<TokenService>();
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(this.config["TokenKey"]));
-
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(opt =>
-                    {
-                        opt.TokenValidationParameters = new TokenValidationParameters()
-                        {
-                            ValidateIssuerSigningKey = true,
-                            IssuerSigningKey = key,
-                            ValidateIssuer = false,
-                            ValidateAudience = false,
-                        };
-                    }
-                ).AddCookie();
-
-            services.Configure<IdentityOptions>(options =>
-            {
-                options.Password.RequiredLength = 3;
-
-                options.Lockout.MaxFailedAccessAttempts = 10;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(3);
-                options.Lockout.AllowedForNewUsers = true;
-            });
-
-            services.AddCors(opt =>
-            {
-                opt.AddPolicy("CorsPolicy", policy =>
-                {
-                    policy.AllowAnyMethod().AllowAnyHeader().WithOrigins("http://localhost:3000"); //.WithOrigins("http://localhost:3000");
-                });
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

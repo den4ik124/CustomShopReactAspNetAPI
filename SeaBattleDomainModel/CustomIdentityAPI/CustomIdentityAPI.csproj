@@ -19,12 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SeaBattleDomainModel\SeaBattleDomainModel.csproj" />
-    <ProjectReference Include="..\SeaBattlePersistence\SeaBattlePersistence.csproj" />
     <ProjectReference Include="..\ShopDomainModel\ShopDomainModel.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Extensions\" />
   </ItemGroup>
 
 </Project>
