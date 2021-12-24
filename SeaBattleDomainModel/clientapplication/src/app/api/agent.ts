@@ -39,6 +39,9 @@ const requests = {
 const Ships = {
     list: () => requests.get<Ship[]>('/ships')
 }
+const Users = {
+    list: () => requests.get<User[]>('/admin/users')
+}
 
 const Account = {
     current: () => requests.get<User>('/account'),
@@ -48,7 +51,8 @@ const Account = {
 
 const agent ={
     Ships,
-    Account
+    Account,
+    Users,
 }
 
 export default agent;

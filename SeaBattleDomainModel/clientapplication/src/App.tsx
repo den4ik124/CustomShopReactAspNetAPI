@@ -9,6 +9,7 @@ import LoginPage from './app/layout/LoginPage';
 import { useStore } from './app/stores/store';
 import LoadingComponent from './app/layout/LoadingComponents';
 import { observer } from 'mobx-react-lite';
+import UsersPage from './app/layout/UsersPage';
 
 function App() {
 
@@ -35,6 +36,7 @@ function App() {
           <>
             <NavBar/>
             <Container>
+              <Route exact path={'/admin/users'} component={UsersPage}/>    
               <Route exact path={'/ships'} component={ShipsList}/>    
               <Route exact path={'/Register'} component={RegisterPage}/>    
               <Route exact path={'/Login'} component={LoginPage}/>    

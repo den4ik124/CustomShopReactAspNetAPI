@@ -19,14 +19,18 @@ namespace CustomIdentity2.Controllers
     {
         private readonly UserManager<CustomIdentityUser> userManager;
 
+        private readonly RoleManager<CustomRoles> rolemanager;
         private readonly SignInManager<CustomIdentityUser> signInManager;
+
         private readonly TokenService tokenService;
 
         public AccountController(UserManager<CustomIdentityUser> userManager,
+            RoleManager<CustomRoles> rolemanager,
             SignInManager<CustomIdentityUser> signInManager,
             TokenService tokenService)
         {
             this.userManager = userManager;
+            this.rolemanager = rolemanager;
             this.signInManager = signInManager;
             this.tokenService = tokenService;
         }

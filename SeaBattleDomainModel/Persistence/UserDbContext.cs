@@ -7,19 +7,29 @@ namespace Persistence
 {
     public class UserDbContext : IdentityDbContext
     {
-        private readonly IConfiguration config;
-
-        public UserDbContext(DbContextOptions<UserDbContext> options, IConfiguration config) : base(options)
+        public UserDbContext(DbContextOptions<UserDbContext> options) : base(options)
         {
             Database.EnsureCreated();
-            this.config = config;
         }
 
         public DbSet<CustomIdentityUser> CustomUsers { get; set; }
+        public DbSet<CustomRoles> CustomRoles { get; set; }
 
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //protected override void OnModelCreating(ModelBuilder builder)
         //{
-        //    optionsBuilder.UseSqlServer(this.config.GetConnectionString("UsersDb"));
+        //    base.OnModelCreating(builder);
+
+        //    builder.Entity<UserRoles>(item => item.HasKey(ur => new { ur.UserId, ur.RoleId }));
+
+        //    builder.Entity<UserRoles>()
+        //        .HasOne(u => u.User)
+        //        .WithMany(r => r.Roles)
+        //        .HasForeignKey(op => op.UserId);
+
+        //    builder.Entity<UserRoles>()
+        //        .HasOne(o => o.Role)
+        //        .WithMany(p => p.Users)
+        //        .HasForeignKey(op => op.RoleId);
         //}
     }
 }

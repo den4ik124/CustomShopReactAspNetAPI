@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 
 namespace UserDomainModel
 {
-    internal class CustomRoles : IdentityRole
+    public class CustomRoles : IdentityRole
     {
         // This class was created for adding new user features in the future if such appears
+
+        //public List<UserRoles> Users { get; set; }
     }
 }

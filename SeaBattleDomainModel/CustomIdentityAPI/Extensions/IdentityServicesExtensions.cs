@@ -25,7 +25,11 @@ namespace CustomIdentityAPI.Extensions
             services.AddIdentityCore<CustomIdentityUser>(opt =>
             {
                 opt.Password.RequireNonAlphanumeric = false;
+                opt.Password.RequireUppercase = false;
             })
+                .AddRoles<CustomRoles>()
+                //.AddRoleStore<UserDbContext>()
+                .AddRoleManager<RoleManager<CustomRoles>>()
                 .AddEntityFrameworkStores<UserDbContext>()
                 .AddSignInManager<SignInManager<CustomIdentityUser>>();
 
