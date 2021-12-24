@@ -27,23 +27,6 @@ namespace CustomIdentityAPI
 
             services.AddShopServices(this.config);
             services.AddIdentityServices(this.config);
-
-            //services.AddDbContext<SeaBattleDbContext>(opt =>
-            //{
-            //    opt.UseSqlServer(Configuration.GetConnectionString("SeaBattleDB"));
-            //});
-            //services.AddDBServices();
-
-            //services.AddTransient<IUnitOfWork, UnitOfWork>((service) => new UnitOfWork(Configuration.GetConnectionString("CustomConnection"), null));
-            //services.AddTransient<IUserStore<CustomIdentityUser>, CustomUserStore>();
-            //services.AddTransient<IShipData, ShipData>((service) => new ShipData(new UnitOfWork(Configuration.GetConnectionString("ShipsDBConnection"), null)));
-            //services.AddIdentityCore<CustomIdentityUser>(o =>
-            //{
-            //    o.Stores.MaxLengthForKeys = 128;
-            //    o.SignIn.RequireConfirmedAccount = false;
-            //})
-            //.AddDefaultTokenProviders()
-            //.AddSignInManager<SignInManager<CustomIdentityUser>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using ShopDomainModel.Entities;
 
-namespace CustomIdentityAPI.DAL
+namespace Persistence
 {
     public class ShopDbContext : DbContext
     {

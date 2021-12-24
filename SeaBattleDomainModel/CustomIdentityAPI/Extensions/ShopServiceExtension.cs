@@ -1,11 +1,11 @@
-﻿using CustomIdentityAPI.DAL;
-using CustomIdentityAPI.Services;
+﻿using CustomIdentityAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Persistence;
 using System;
 using System.Text;
 
@@ -20,32 +20,7 @@ namespace CustomIdentityAPI.Extensions
                 opt.UseSqlServer(config.GetConnectionString("ShopDb"));
             });
 
-            services.AddScoped<TokenService>();
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"]));
-
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(opt =>
-                {
-                    opt.TokenValidationParameters = new TokenValidationParameters()
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = key,
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                    };
-                }
-                ).AddCookie();
-
-            services.Configure<IdentityOptions>(options =>
-            {
-                options.Password.RequiredLength = 3;
-
-                options.Lockout.MaxFailedAccessAttempts = 10;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(3);
-                options.Lockout.AllowedForNewUsers = true;
-            });
-
+            
             services.AddCors(opt =>
             {
                 opt.AddPolicy("CorsPolicy", policy =>
@@ -54,11 +29,6 @@ namespace CustomIdentityAPI.Extensions
                 });
             });
 
-            return services;
-        }
-
-        public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration config)
-        {
             return services;
         }
     }

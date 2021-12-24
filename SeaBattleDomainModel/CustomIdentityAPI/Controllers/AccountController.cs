@@ -8,6 +8,7 @@ using System.Net.Mail;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using UserDomainModel;
 
 namespace CustomIdentity2.Controllers
 {
@@ -16,13 +17,13 @@ namespace CustomIdentity2.Controllers
     [Route("[controller]")]
     public class AccountController : Controller
     {
-        private readonly UserManager<IdentityUser> userManager;
+        private readonly UserManager<CustomIdentityUser> userManager;
 
-        private readonly SignInManager<IdentityUser> signInManager;
+        private readonly SignInManager<CustomIdentityUser> signInManager;
         private readonly TokenService tokenService;
 
-        public AccountController(UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager,
+        public AccountController(UserManager<CustomIdentityUser> userManager,
+            SignInManager<CustomIdentityUser> signInManager,
             TokenService tokenService)
         {
             this.userManager = userManager;
@@ -47,7 +48,7 @@ namespace CustomIdentity2.Controllers
 
             if (ModelState.IsValid)
             {
-                IdentityUser user = null;
+                CustomIdentityUser user = null;
                 if (model.LoginProp != null && model.LoginProp != string.Empty)
                 {
                     user = await this.userManager.FindByNameAsync(model.LoginProp);
@@ -90,7 +91,7 @@ namespace CustomIdentity2.Controllers
                 return ValidationProblem("Email has incorrect format!");
             }
 
-            var user = new IdentityUser { UserName = model.LoginProp, Email = model.EmailProp };
+            var user = new CustomIdentityUser { UserName = model.LoginProp, Email = model.EmailProp };
             var userEmail = await this.userManager.FindByEmailAsync(user.Email);
 
             if (userEmail != null)
@@ -135,7 +136,7 @@ namespace CustomIdentity2.Controllers
             return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
         }
 
-        private ActionResult<UserDataDto> GetUserDto(IdentityUser user)
+        private ActionResult<UserDataDto> GetUserDto(CustomIdentityUser user)
         {
             return new UserDataDto()
             {

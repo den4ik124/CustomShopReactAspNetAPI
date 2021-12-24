@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Persistence\Persistence.csproj" />
     <ProjectReference Include="..\SeaBattleDomainModel\SeaBattleDomainModel.csproj" />
     <ProjectReference Include="..\ShopDomainModel\ShopDomainModel.csproj" />
   </ItemGroup>
