@@ -6,6 +6,7 @@ import { store } from "./store";
 
 export default class UserStore{
     user: User | null = null;
+    users: User[] | null = null;
 
     constructor(){
         makeAutoObservable(this)
@@ -29,13 +30,8 @@ export default class UserStore{
     login = async (creds: UserFormValues) => {
         try{
             const user = await agent.Account.login(creds);
-            // console.log('User from API');
-            // console.log(user);
             store.commonStore.setToken(user.token)
             runInAction(() => this.user = user);
-            // console.log('User from userStore');
-            // console.log(this.user!.emailProp);
-            // console.log(this.user!.token);
             history.push('/');
         } catch(error){
             throw error;
@@ -53,7 +49,20 @@ export default class UserStore{
         try{
             const user = await agent.Account.current();
             console.log(user);
-            runInAction(()=>this.user = user);
+            runInAction(()=>{
+                this.user = user;
+                //this.user.roles.push('Admin'); //TODO : help code to check roles impact
+            });
+        }catch (error){
+            console.log(error);
+        }
+    }
+
+    getUsers = async () => {
+        try{
+            const users = await agent.Users.list();
+            console.log(users);
+            runInAction(()=>this.users = users);
         }catch (error){
             console.log(error);
         }

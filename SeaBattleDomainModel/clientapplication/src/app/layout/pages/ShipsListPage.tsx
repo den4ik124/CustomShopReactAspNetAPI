@@ -2,10 +2,10 @@ import { observer } from "mobx-react-lite";
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { Button, Container, Table } from "semantic-ui-react";
-import agent from "../api/agent";
-import { Ship } from "../models/ship";
-import { useStore } from "../stores/store";
-import LoadingComponent from "./LoadingComponents";
+import agent from "../../api/agent";
+import { Ship } from "../../models/ship";
+import { useStore } from "../../stores/store";
+import LoadingComponent from "../components/LoadingComponents";
 
 function ShipList(){
     const history = useHistory();
@@ -23,7 +23,7 @@ function ShipList(){
     //TODO: testCode. Should be removed
     const {demoStore} = useStore();
 
-    if(loading) return <LoadingComponent content="Loading app"/>
+    if(loading) return <LoadingComponent content="Loading ships"/>
 
     return(
 

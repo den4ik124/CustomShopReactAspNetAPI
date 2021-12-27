@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace CustomIdentityAPI.Models.DTOs
 {
@@ -10,5 +11,7 @@ namespace CustomIdentityAPI.Models.DTOs
         public string EmailProp { get; set; }
 
         public string Token { get; set; }
+
+        public IList<string> Roles { get; set; }
     }
 }

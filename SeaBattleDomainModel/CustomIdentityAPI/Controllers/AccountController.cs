@@ -4,6 +4,8 @@ using CustomIdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
@@ -12,7 +14,7 @@ using UserDomainModel;
 
 namespace CustomIdentity2.Controllers
 {
-    [AllowAnonymous]
+    
     [ApiController]
     [Route("[controller]")]
     public class AccountController : Controller
@@ -35,6 +37,7 @@ namespace CustomIdentity2.Controllers
             this.tokenService = tokenService;
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<UserDataDto>> Login(UserLoginDto model)
         {
@@ -74,7 +77,7 @@ namespace CustomIdentity2.Controllers
 
                 if (loginResult != null && loginResult.Succeeded)
                 {
-                    return GetUserDto(user);
+                    return await GetUserDto(user);
                 }
                 else
                 {
@@ -87,6 +90,7 @@ namespace CustomIdentity2.Controllers
             return Unauthorized();
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<ActionResult<UserDataDto>> Register(UserRegistrationDto model)
         {
@@ -113,7 +117,7 @@ namespace CustomIdentity2.Controllers
 
             if (createResult.Succeeded)
             {
-                return GetUserDto(user);
+                return await GetUserDto(user);
             }
 
             return BadRequest("Problem with user registration.");
@@ -124,7 +128,21 @@ namespace CustomIdentity2.Controllers
         public async Task<ActionResult<UserDataDto>> GetCurrentUser()
         {
             var user = await this.userManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
-            return GetUserDto(user);
+            return await GetUserDto(user);
+        }
+
+        //[AllowAnonymous]
+        [Authorize(Roles = "Admin")]
+        [HttpGet("users")]
+        public async Task<IEnumerable<UserDataDto>> GetUsers()
+        {
+            var result = new List<UserDataDto>();
+            var users = this.userManager.Users.ToList();
+            foreach (var user in users)
+            {
+                result.Add(await GetUserDto(user));
+            }
+            return result;
         }
 
         [HttpPost, ValidateAntiForgeryToken]
@@ -140,14 +158,31 @@ namespace CustomIdentity2.Controllers
             return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
         }
 
-        private ActionResult<UserDataDto> GetUserDto(CustomIdentityUser user)
+        private async Task<UserDataDto> GetUserDto(CustomIdentityUser user)
         {
+            //IList<string> userRoles = await GetUserRoles(user);
+
             return new UserDataDto()
             {
                 EmailProp = user.Email,
                 LoginProp = user.UserName,
                 Token = this.tokenService.CreateToken(user),
+                Roles = await this.userManager.GetRolesAsync(user),
             };
         }
+
+        //private async Task<IList<string>> GetUserRoles(CustomIdentityUser user)
+        //{
+        //    var roles = this.rolemanager.Roles.ToList();
+        //    var userRoles = await this.userManager.GetRolesAsync(user); //new List<string>();
+        //foreach (var role in roles)
+        //{
+        //    if (await this.userManager.IsInRoleAsync(user, role.Name))
+        //    {
+        //        userRoles.Add(role.Name);
+        //    }
+        //}
+        //    return userRoles;
+        //}
     }
 }

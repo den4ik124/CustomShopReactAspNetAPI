@@ -13,8 +13,8 @@ function HomePage(){
                 <Container>
                     <Header content={'Welcome ' + userStore.user!.loginProp + ' !'}/>
                     {console.log(userStore.isLoggedIn)}
-                    <Button as={Link} to='/Ships' color="blue" size='huge' inverted>
-                        Go to ships page !    
+                    <Button as={Link} to='/Products' color="blue" size='huge' inverted>
+                        Buy some products    
                     </Button>    
                 </Container>
             ) : (

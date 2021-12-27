@@ -1,4 +1,6 @@
 import axios, { AxiosResponse } from "axios";
+import { Product } from "../models/product";
+import { Role } from "../models/role";
 import { Ship } from "../models/ship";
 import { User, UserFormValues } from "../models/user";
 import { store } from "../stores/store";
@@ -40,7 +42,13 @@ const Ships = {
     list: () => requests.get<Ship[]>('/ships')
 }
 const Users = {
-    list: () => requests.get<User[]>('/admin/users')
+    list: () => requests.get<User[]>('/account/users')
+}
+
+const Products ={
+    list: () => requests.get<Product[]>('/shop'),
+    add: (product : Product) => requests.post<void>('/Shop/AddProduct', product),
+    remove: (id : string) => requests.delete<void>(`/Shop/${id}`),
 }
 
 const Account = {
@@ -49,10 +57,18 @@ const Account = {
     register: (user: UserFormValues) => requests.post<User>('/account/register', user)
 }
 
+const Roles ={
+    list: () => requests.get<Role[]>('/roles'),
+    add: (role : Role) => requests.post<void>('/roles/', role),
+    remove: (title : string) => requests.delete<void>(`/roles/${title}`),
+}
+
 const agent ={
     Ships,
     Account,
     Users,
+    Products,
+    Roles,
 }
 
 export default agent;

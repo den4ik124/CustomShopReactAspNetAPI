@@ -2,10 +2,10 @@ import {  ErrorMessage, Formik } from "formik";
 import React from "react";
 import { Button,  Form, ButtonOr, Container, Loader, Label } from "semantic-ui-react";
 import * as Yup from 'yup'
-import { history } from "../..";
-import MyTextInput from "../common/MyTextInput";
-import { UserFormValues } from "../models/user";
-import { useStore } from "../stores/store";
+import { history } from "../../..";
+import MyTextInput from "../../common/MyTextInput";
+import { UserFormValues } from "../../models/user";
+import { useStore } from "../../stores/store";
 
 export default function RegisterPage(){
 
@@ -30,7 +30,6 @@ export default function RegisterPage(){
             userStore.register(values)
                 .catch(error => setErrors({error: 'Invalid email or password'}))
         }
-
     }
 
     function handleCancel(){

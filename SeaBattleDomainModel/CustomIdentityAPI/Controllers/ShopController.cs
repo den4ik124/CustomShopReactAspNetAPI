@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace CustomIdentityAPI.Controllers
 {
-    //[AllowAnonymous]
+    [AllowAnonymous]
     [ApiController]
     [Route("[controller]")]
     public class ShopController : Controller

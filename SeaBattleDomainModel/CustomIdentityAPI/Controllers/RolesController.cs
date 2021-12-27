@@ -8,7 +8,8 @@ using UserDomainModel;
 
 namespace CustomIdentityAPI.Controllers
 {
-    [AllowAnonymous]
+    //[AllowAnonymous]
+    //[Authorize(Roles = "Admin")]
     [ApiController]
     [Route("[controller]")]
     public class RolesController : Controller
@@ -23,9 +24,14 @@ namespace CustomIdentityAPI.Controllers
             this.roleManager = roleManager;
         }
 
+        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet()]
         public IEnumerable<CustomRoles> Roles()
         {
+            var request = base.HttpContext.Request;
+            var response = base.HttpContext.Response;
+
             return this.roleManager.Roles;
         }
 

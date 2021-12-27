@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
 import { Container } from 'semantic-ui-react';
-import NavBar from './app/layout/NavBar';
+import NavBar from './app/layout/components/NavBar';
 import { Route } from 'react-router-dom';
-import HomePage from './app/layout/home/HomePage';
-import ShipsList from './app/layout/ShipsListPage';
-import RegisterPage from './app/layout/RegisterPage';
-import LoginPage from './app/layout/LoginPage';
+import HomePage from './app/layout/pages/HomePage';
+import RegisterPage from './app/layout/pages/RegisterPage';
+import LoginPage from './app/layout/pages/LoginPage';
 import { useStore } from './app/stores/store';
-import LoadingComponent from './app/layout/LoadingComponents';
+import LoadingComponent from './app/layout/components/LoadingComponents';
 import { observer } from 'mobx-react-lite';
-import UsersPage from './app/layout/UsersPage';
+import UsersPage from './app/layout/pages/UsersPage';
+import RolesPage from './app/layout/pages/RolesPage';
+import ProductsPage from './app/layout/pages/ProductsPage';
 
 function App() {
 
@@ -37,7 +38,10 @@ function App() {
             <NavBar/>
             <Container>
               <Route exact path={'/admin/users'} component={UsersPage}/>    
-              <Route exact path={'/ships'} component={ShipsList}/>    
+              {/* <Route exact path={'/ships'} component={ShipsList}/> */}
+
+              <Route exact path={'/admin/roles'} component={RolesPage}/>    
+              <Route exact path={'/Products'} component={ProductsPage}/>    
               <Route exact path={'/Register'} component={RegisterPage}/>    
               <Route exact path={'/Login'} component={LoginPage}/>    
             </Container>

@@ -1,11 +1,11 @@
 import { ErrorMessage, Formik, FormikErrors } from "formik";
 import React from "react";
 import { Button, Form, Label } from "semantic-ui-react";
-import MyTextInput from "../common/MyTextInput";
+import MyTextInput from "../../common/MyTextInput";
 import * as Yup from 'yup';
-import { useStore } from "../stores/store";
+import { useStore } from "../../stores/store";
 import { observer } from "mobx-react-lite";
-import { UserFormValues } from "../models/user";
+import { UserFormValues } from "../../models/user";
 
 function LoginPage(){
     const {userStore} = useStore();
