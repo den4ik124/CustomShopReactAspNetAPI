@@ -2,13 +2,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using UserDomainModel;
 
 namespace CustomIdentityAPI.Controllers
 {
-    //[AllowAnonymous]
+    [AllowAnonymous]
     //[Authorize(Roles = "Admin")]
     [ApiController]
     [Route("[controller]")]
@@ -25,23 +27,41 @@ namespace CustomIdentityAPI.Controllers
         }
 
         //[Authorize(Roles = "Admin")]
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         [HttpGet()]
         public IEnumerable<CustomRoles> Roles()
         {
-            var request = base.HttpContext.Request;
-            var response = base.HttpContext.Response;
-
             return this.roleManager.Roles;
         }
 
-        [HttpPost]
-        public async Task<RoleDto> AddRole(RoleDto role)
+        [HttpPost("AddRole")]
+        public async Task<ActionResult<RoleDto>> AddRole(RoleDto role)
         {
             var newRole = new CustomRoles() { Name = role.RoleName };
             var result = await this.roleManager.CreateAsync(newRole);
+            if (result.Succeeded)
+            {
+                return role;
+            }
+            var sbErrors = new StringBuilder();
+            foreach (var error in result.Errors)
+            {
+                sbErrors.Append(error.Description + Environment.NewLine);
+            }
+            ModelState.AddModelError("", sbErrors.ToString());
+            return ValidationProblem(ModelState);
+        }
 
-            return role;
+        [HttpDelete("delete/{id}")]
+        public async Task<ActionResult> DeleteRole(Guid id)
+        {
+            var role = await this.roleManager.FindByIdAsync(id.ToString());
+            if (role == null)
+            {
+                return ValidationProblem($"Role with {id} was not found");
+            }
+            await this.roleManager.DeleteAsync(role);
+            return Ok("Role has been successfully removed");
         }
 
         [HttpPost("AddUser")]

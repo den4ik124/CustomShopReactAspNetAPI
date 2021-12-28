@@ -3,3 +3,7 @@ export interface Role{
     name: string;
     description: string;
 }
+
+export interface RoleFormValues{
+    roleName: string ;
+}

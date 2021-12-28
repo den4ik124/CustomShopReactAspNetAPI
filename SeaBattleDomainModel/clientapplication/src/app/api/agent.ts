@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { Product } from "../models/product";
-import { Role } from "../models/role";
+import { Role, RoleFormValues } from "../models/role";
 import { Ship } from "../models/ship";
 import { User, UserFormValues } from "../models/user";
 import { store } from "../stores/store";
@@ -15,13 +15,13 @@ axios.defaults.baseURL = "http://localhost:5000"
 
 axios.interceptors.request.use(config =>{
     const token = store.commonStore.token;
-    if(token) config.headers!.Authorization = 'Bearer ' + token;
+    if(token) config.headers!.Authorization = `Bearer ${token}`;
     return config;
 })
 
 axios.interceptors.response.use(async response => {
     try {
-        await sleep(1000);
+        await sleep(500);
         return response;
     } catch (error) {
         console.log(error);
@@ -59,8 +59,8 @@ const Account = {
 
 const Roles ={
     list: () => requests.get<Role[]>('/roles'),
-    add: (role : Role) => requests.post<void>('/roles/', role),
-    remove: (title : string) => requests.delete<void>(`/roles/${title}`),
+    add: (role : RoleFormValues) => requests.post<void>('/roles/AddRole', role),
+    remove: (roleId : string) => requests.delete<void>(`/roles/delete/${roleId}`),
 }
 
 const agent ={

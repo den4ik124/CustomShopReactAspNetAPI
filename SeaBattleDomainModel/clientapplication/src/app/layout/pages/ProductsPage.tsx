@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { Fragment, useEffect, useState } from "react";
-import { Item, Button, Label,  Container} from "semantic-ui-react";
+import { Item, Button, Label,  Container, Header} from "semantic-ui-react";
 import agent from "../../api/agent";
 import { Product } from "../../models/product";
 import { useStore } from "../../stores/store";
@@ -37,11 +37,12 @@ return(
                 <Item.Image style={{marginRight: "50px"}} size='medium' src={`/sources/img/products/${product.title}.png`} />
                 <Item.Content>
                     <Item.Header>
-                        {product.title}
+                        <Header content={product.title}/>
+                    </Item.Header>
+                    <Item.Extra>
                         {user!.roles.includes('Manager') || user!.roles.includes('Admin') ?
                         (
                             <Item.Extra>
-                                <Label ribbon color="red" content="For manages only"/> 
                                 <Button negative floated='right'>Remove</Button>
                                 <Button color="orange" floated='right'>Edit</Button>
                             </Item.Extra>
@@ -49,13 +50,6 @@ return(
                             <></>
                         )
                         }
-                        {/* <Item.Extra>
-                            <Label ribbon color="red" content="For manages only"/> 
-                            <Button negative floated='right'>Remove</Button>
-                            <Button color="orange" floated='right'>Edit</Button>
-                        </Item.Extra> */}
-                    </Item.Header>
-                    <Item.Extra>
                         <Container>{product.description}</Container>
                         <Container>
                             <Label size="massive">{product.price} UAH</Label>

@@ -11,6 +11,7 @@ import { observer } from 'mobx-react-lite';
 import UsersPage from './app/layout/pages/UsersPage';
 import RolesPage from './app/layout/pages/RolesPage';
 import ProductsPage from './app/layout/pages/ProductsPage';
+import {v4 as uuid} from 'uuid';
 
 function App() {
 

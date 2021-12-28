@@ -14,7 +14,6 @@ using UserDomainModel;
 
 namespace CustomIdentity2.Controllers
 {
-    
     [ApiController]
     [Route("[controller]")]
     public class AccountController : Controller
@@ -132,7 +131,7 @@ namespace CustomIdentity2.Controllers
         }
 
         //[AllowAnonymous]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpGet("users")]
         public async Task<IEnumerable<UserDataDto>> GetUsers()
         {
