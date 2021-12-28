@@ -27,8 +27,6 @@ function UsersPage(){
 
     if(loading) return <LoadingComponent content="Loading users..."/>
 
-
-
     return(
         <Fragment>
         <Label ribbon  color="red" size="huge" content="Page is in design progress ..."/>
@@ -40,14 +38,22 @@ function UsersPage(){
                         <Item.Header>
                             {user.loginProp}
                         </Item.Header>
-                            {loggedUser!.roles.includes("Admin") ? (
+                       
+                        <Item.Extra>
+                            <>
+                                <Label content={user.emailProp} />
+                                {user.roles.map((role) => (
+                                    <Label key={role} color="teal" content= {`${role} `}/>
+                                ))}
+                            </>
+                        </Item.Extra>
+                        
+                        {loggedUser!.roles.includes("Admin") ? (
                             <Item.Extra>
                                 <Button negative floated='right'>Remove</Button>
                                 <Button color="orange" floated='right'>Edit</Button>
                             </Item.Extra>
-                            ) : (
-                                <></>
-                            )}
+                            ) : null}
                     </Item.Content>
                 </Item>
             ))}

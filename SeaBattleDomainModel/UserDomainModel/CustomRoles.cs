@@ -11,6 +11,6 @@ namespace UserDomainModel
     {
         // This class was created for adding new user features in the future if such appears
 
-        //public List<UserRoles> Users { get; set; }
+        public string Description { get; set; }
     }
 }

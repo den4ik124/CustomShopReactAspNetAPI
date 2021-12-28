@@ -83,6 +83,8 @@ function RolesPage(){
                     <Item.Content>
                         <Item.Header>
                             {role.name}
+                            {/* <MyTextInput name="roleName" placeholder="Role name" type="text" readonly={true} value={role.name}/> */}
+                            {/* <MyTextInput name="roleName" placeholder="Role name" type="text"/> */}
                             <Item.Extra>
                             <Button negative floated='right' onClick={() => handleRemoveRole(role.id)}>Remove</Button>
                             <Button color="orange" floated='right' >Edit</Button>

@@ -65,10 +65,11 @@ namespace CustomIdentityAPI.Controllers
         }
 
         [HttpPost("AddUser")]
-        public async Task<CustomIdentityUser> AddUserToRole(UserDataDto user)
+        public async Task<ActionResult<CustomIdentityUser>> AddUserToRole(UserDataDto user)
         {
             var addedUser = await userManager.FindByNameAsync(user.LoginProp);
-            var result = await userManager.AddToRoleAsync(addedUser, "test role");
+            var result = await userManager.AddToRoleAsync(addedUser, "Manager");
+            //result = await userManager.AddToRoleAsync(addedUser, "Manager");
 
             return addedUser;
         }
