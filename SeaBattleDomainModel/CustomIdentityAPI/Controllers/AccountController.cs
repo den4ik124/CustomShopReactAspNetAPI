@@ -1,12 +1,10 @@
-﻿using CustomIdentityAPI.Models;
-using CustomIdentityAPI.Models.DTOs;
+﻿using CustomIdentityAPI.Models.DTOs;
 using CustomIdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;

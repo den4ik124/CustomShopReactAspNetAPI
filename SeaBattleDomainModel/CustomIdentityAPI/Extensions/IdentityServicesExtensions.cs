@@ -1,13 +1,12 @@
-﻿using CustomIdentityAPI.Models;
+﻿using CustomIdentityAPI.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Identity;
-using Persistence;
 using Microsoft.IdentityModel.Tokens;
+using Persistence;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using CustomIdentityAPI.Services;
-using Microsoft.EntityFrameworkCore;
 using UserDomainModel;
 
 namespace CustomIdentityAPI.Extensions

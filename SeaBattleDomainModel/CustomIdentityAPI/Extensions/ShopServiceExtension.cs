@@ -1,13 +1,7 @@
-﻿using CustomIdentityAPI.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
 using Persistence;
-using System;
-using System.Text;
 
 namespace CustomIdentityAPI.Extensions
 {
@@ -20,7 +14,6 @@ namespace CustomIdentityAPI.Extensions
                 opt.UseSqlServer(config.GetConnectionString("ShopDb"));
             });
 
-            
             services.AddCors(opt =>
             {
                 opt.AddPolicy("CorsPolicy", policy =>
