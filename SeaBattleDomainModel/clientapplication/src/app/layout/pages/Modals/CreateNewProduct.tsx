@@ -29,12 +29,12 @@ function handleNewProductCreation( values : any,
       <Modal.Header>Add new product</Modal.Header>
       <Modal.Content>
             <Formik 
-            initialValues ={{
-                id: '', 
-                title: '',
-                price: 0,
-                description: '',
-                error: null
+                initialValues ={{
+                    id: '', 
+                    title: '',
+                    price: 0,
+                    description: '',
+                    error: null
             }}
             onSubmit={(initialValues, {setErrors}) => handleNewProductCreation(initialValues, setErrors)}
         >
@@ -42,7 +42,7 @@ function handleNewProductCreation( values : any,
             <Form className="ui form" onSubmit={handleSubmit} autoComplete="off" size="large">
                 <MyTextInput name = 'title' placeholder='Product title' type='text'/>
                 <MyTextInput name = 'price' placeholder='Product price' type='number'/>
-                <TextArea placeholder="Product description"/>
+                <TextArea placeholder="Product description" name = 'description' type='text'/>
                 
                 <Modal.Actions>
                     <Button color='black' onClick={() => setOpen(false)}>
