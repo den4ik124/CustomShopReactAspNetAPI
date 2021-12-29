@@ -1,28 +1,44 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Application.Products;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Persistence;
+using ShopDomainModel.Entities;
 using ShopDomainModel.Interfaces;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace CustomIdentityAPI.Controllers
 {
     [AllowAnonymous]
-    [ApiController]
-    [Route("[controller]")]
-    public class ShopController : Controller
+    public class ShopController : BaseApiController
     {
-        private readonly ShopDbContext shopContext;
+        #region Default implementation
 
-        public ShopController(ShopDbContext shopContext)
-        {
-            this.shopContext = shopContext;
-        }
+        //private readonly ShopDbContext shopContext;
+
+        //public ShopController(ShopDbContext shopContext)
+        //{
+        //    this.shopContext = shopContext;
+        //}
+
+        #endregion Default implementation
 
         [HttpGet]
-        public IEnumerable<IProduct> GetProducts()
+        public async Task<ActionResult<IEnumerable<IProduct>>> GetProducts()
         {
-            return this.shopContext.Products.ToList();
+            return await this.Mediator.Send(new List.Query());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateProduct(Product product)
+        {
+            return Ok(await Mediator.Send(new Create.Command { Product = product }));
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteProduct(Guid id)
+        {
+            return Ok(await Mediator.Send(new Delete.Command { Id = id }));
         }
     }
 }

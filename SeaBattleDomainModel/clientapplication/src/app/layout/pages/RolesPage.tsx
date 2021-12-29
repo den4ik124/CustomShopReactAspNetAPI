@@ -4,9 +4,11 @@ import React, { Fragment, useEffect, useState } from "react";
 import { Item,  Button, Label, Container, Form } from "semantic-ui-react";
 import agent from "../../api/agent";
 import MyTextInput from "../../common/MyTextInput";
+import DeleteButton from "../../common/DeleteButton";
 import { Role, RoleFormValues } from "../../models/role";
 import { useStore } from "../../stores/store";
 import LoadingComponent from "../components/LoadingComponents";
+import EditButton from "../../common/EditButton";
 
 function RolesPage(){
     const {roleStore} = useStore();
@@ -23,22 +25,16 @@ function RolesPage(){
         })
     }, [shouldUpdate])
 
-    //console.log(roles);
-
      function handleRoleCreation (roleForm : RoleFormValues, setErrors: any){
-        //console.log(roleForm) ;
         roleStore.createRole(roleForm)
         console.log('Role has been submitted') ;
         setUpdateList(true);
-        //console.log(shouldUpdate)
 
      }
 
     function handleRemoveRole(roleId : string){
-        //console.log(roleId);
         roleStore.removeRole(roleId);
         setUpdateList(true);
-        //console.log(shouldUpdate)
     }
 
     if(loading) return <LoadingComponent inverted={false} content="Loading roles..."/>
@@ -86,9 +82,9 @@ function RolesPage(){
                             {/* <MyTextInput name="roleName" placeholder="Role name" type="text" readonly={true} value={role.name}/> */}
                             {/* <MyTextInput name="roleName" placeholder="Role name" type="text"/> */}
                             <Item.Extra>
-                            <Button negative floated='right' onClick={() => handleRemoveRole(role.id)}>Remove</Button>
-                            <Button color="orange" floated='right' >Edit</Button>
-                        </Item.Extra>
+                                <DeleteButton floated='right' onClick={() => handleRemoveRole(role.id)}/>
+                                <EditButton floated='right' onClick={() => null}/>
+                            </Item.Extra>
                         </Item.Header>
                         <Item.Meta>Access description here</Item.Meta>
                         <Item.Extra>{role.description}</Item.Extra>

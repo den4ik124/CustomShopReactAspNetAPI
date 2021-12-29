@@ -2,6 +2,8 @@ import { observer } from "mobx-react-lite"
 import React, { Fragment, useEffect, useState } from "react"
 import { Button, Header, Item, Label } from "semantic-ui-react"
 import agent from "../../api/agent";
+import DeleteButton from "../../common/DeleteButton";
+import EditButton from "../../common/EditButton";
 import { User } from "../../models/user";
 import { useStore } from "../../stores/store";
 import LoadingComponent from "../components/LoadingComponents";
@@ -46,14 +48,14 @@ function UsersPage(){
                                     <Label key={role} color="teal" content= {`${role} `}/>
                                 ))}
                             </>
-                        </Item.Extra>
                         
                         {loggedUser!.roles.includes("Admin") ? (
-                            <Item.Extra>
-                                <Button negative floated='right'>Remove</Button>
-                                <Button color="orange" floated='right'>Edit</Button>
-                            </Item.Extra>
+                            <>
+                                <DeleteButton floated="right" onClick={() => null}/>
+                                <EditButton floated='right' onClick={() => null}/>
+                            </>
                             ) : null}
+                        </Item.Extra>
                     </Item.Content>
                 </Item>
             ))}

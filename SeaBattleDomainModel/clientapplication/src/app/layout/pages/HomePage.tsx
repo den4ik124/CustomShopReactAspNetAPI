@@ -3,6 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button, Container, Header, Label } from "semantic-ui-react";
 import { useStore } from "../../stores/store";
+import LoginPage from "./LoginPage";
 
 function HomePage(){
     const {userStore} = useStore();
@@ -21,9 +22,10 @@ function HomePage(){
                 <Container>
                     <Header content='Home page' size="huge"/>
                     {console.log(userStore.isLoggedIn)}
-                    <Button as={Link} to='/Login' color="blue" size='huge' inverted>
-                        Login !    
-                    </Button>    
+                    <LoginPage trigger={
+                        <Button color="blue" size='huge' inverted content= "Login!" />
+                    }/>
+                    
                     <Button as={Link} to='/Register' color="blue" size='huge' inverted>
                         Register !    
                     </Button>    

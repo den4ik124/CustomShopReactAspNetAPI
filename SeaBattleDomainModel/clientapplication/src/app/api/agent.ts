@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { Product } from "../models/product";
+import { Product, ProductCreationForm } from "../models/product";
 import { Role, RoleFormValues } from "../models/role";
 import { Ship } from "../models/ship";
 import { User, UserFormValues } from "../models/user";
@@ -47,7 +47,7 @@ const Users = {
 
 const Products ={
     list: () => requests.get<Product[]>('/shop'),
-    add: (product : Product) => requests.post<void>('/Shop/AddProduct', product),
+    add: (product : ProductCreationForm) => requests.post<void>('/Shop', product),
     remove: (id : string) => requests.delete<void>(`/Shop/${id}`),
 }
 

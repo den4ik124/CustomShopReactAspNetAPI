@@ -10,8 +10,8 @@ using Persistence;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    [Migration("20211228164746_CustomRolesExtended")]
-    partial class CustomRolesExtended
+    [Migration("20211229103618_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

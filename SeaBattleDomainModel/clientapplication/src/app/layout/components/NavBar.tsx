@@ -1,12 +1,26 @@
 import { observer } from "mobx-react-lite";
 import React from "react";
 import {  NavLink } from "react-router-dom";
-import { Container, Dropdown, Label, Menu } from "semantic-ui-react";
+import { Container, Dropdown, Icon, Label, Menu } from "semantic-ui-react";
+import { User } from "../../models/user";
 import { useStore } from "../../stores/store";
 
 function NavBar(){
     const {userStore: {user, logout}} = useStore();
     
+    function renderUserName(){
+        var login = `Welcome back ${user!.loginProp}`;
+        if(user!.roles.includes('Admin')){
+            return <Label content={login} color='green' size='large'/>    
+        }
+        else if(user!.roles.includes('Manager')){
+            return <Label content={login} color='yellow' size='large'/>    
+        }
+        else{
+            return login;
+        }
+    }
+
     return(
         <>
         <Menu inverted pointing >
@@ -30,10 +44,10 @@ function NavBar(){
                     
                 {user != null ? (
                     <>
-                        <Menu.Item  position="right">
-                            <Label content={user.loginProp} color='green' size='large'/>    
-                        </Menu.Item> 
-                        <Menu.Item exact as={NavLink} to='/' onClick={logout} name="Logout" />
+                        <Menu.Item  position="right" content={renderUserName()}/>
+                        <Menu.Item exact as={NavLink} to='/' onClick={logout} content={
+                            <Icon size="large" name="log out"/>
+                        } name="Logout" />
                     </>
                 ) : null}
             </Container>
