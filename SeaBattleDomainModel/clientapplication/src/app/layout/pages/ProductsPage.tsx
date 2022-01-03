@@ -4,6 +4,7 @@ import { Item, Button, Label,  Container, Header, Card, Icon, Image, Grid} from 
 import agent from "../../api/agent";
 import DeleteButton from "../../common/DeleteButton";
 import EditButton from "../../common/EditButton";
+import { OrderItem } from "../../models/orderItem";
 import { Product } from "../../models/product";
 import { useStore } from "../../stores/store";
 import LoadingComponent from "../components/LoadingComponents";
@@ -15,6 +16,7 @@ function ProductsPage(){
     const {userStore} = useStore()
     const {productStore} = useStore()
     const [shouldUpdate, setUpdateList] = useState(false);
+    const {orderItemStore} = useStore();
 
 
     if(userStore.isLoggedIn){
@@ -51,6 +53,10 @@ function renderControllButtons(product : Product){
         setUpdateList(true);
     }
 
+    function handleProductBuying(product: Product){
+        orderItemStore.createOrderItem(product);
+    }
+
 return(
     <Fragment>
         <Label ribbon color="red" size="huge" content="Page is in design progress ..."/>
@@ -61,20 +67,14 @@ return(
             </>
         ) : null}
 
-        <Grid columns={3}>
+        <Grid columns={4} relaxed stackable>
         {products.map((product) => (
-            <Grid.Column>
-                <Card >
+            <Grid.Column key={product.id}>
+                <Card>
                     <Image 
-                    fluid
-                    rounded
-                    wrapped
-                    
-                        // style={{marginRight: "50px", 
-                        //         width: "200px", 
-                        //         height: "200px"}}
+                        rounded
+                        wrapped
                          style={{marginRight: "50px"}} 
-
                         size='medium' 
                         src={`/sources/img/products/${product.title}.png`}
                     />
@@ -95,8 +95,6 @@ return(
                     </Card.Content>
                     <Card.Content extra>
                         <Header 
-                            fluid
-                            text
                             textAlign="center"
                             color="green"
                             content={product.price + ' UAH'}
@@ -106,38 +104,13 @@ return(
                             positive 
                             position="right" 
                             content='Buy now!'
+                            onClick={() => handleProductBuying(product)}
                         />
                     </Card.Content>
                 </Card>
-            </Grid.Column>
+        </Grid.Column>
         ))}
         </Grid>
-        <Item.Group divided unstackable>
-            {products.map((product) => (
-
-            <>
-            </>
-
-                // <Item key={product.title}>
-                //     {/* https://konti.ua/download/superkontik-logo.png */}
-                // {/* <Item.Image style={{marginRight: "50px"}} size='medium' src={`https://konti.ua/download/superkontik-logo.png`} /> */}
-                // <Item.Image style={{marginRight: "50px"}} size='medium' src={`/sources/img/products/${product.title}.png`} />
-                // <Item.Content>
-                //     <Item.Header>
-                //         <Header content={product.title}/>
-                //     </Item.Header>
-                //     <Item.Extra>
-                //         <Container>
-                //             {renderControllButtons(product)}
-                //             <Label size="massive">{product.price} UAH</Label>
-                //             <Button positive> Buy now!</Button>
-                //         </Container>
-                //         <Container>{product.description}</Container>
-                //     </Item.Extra>
-                // </Item.Content>
-                // </Item>
-            ))}
-        </Item.Group>
     </Fragment>
 )
 }

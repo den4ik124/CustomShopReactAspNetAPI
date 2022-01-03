@@ -5,15 +5,21 @@ import {v4 as uuid} from 'uuid';
 
 export default class ProductStore{
     product: Product | null = null;
-    products: Product[] | null = null;
+    products: Product[] = [];
+    productsCount: number = 0;
 
     constructor(){
         makeAutoObservable(this)
     }
 
+    get isProductsInCart(){
+        return this.products.length > 0;
+    }
+
     getProducts = async () => {
         try{
             const products = await agent.Products.list();
+            this.productsCount = products.length;
             console.log(products);
             runInAction(()=>this.products = products);
         }catch (error){

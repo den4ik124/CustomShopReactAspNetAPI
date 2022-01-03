@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React from "react";
+import React, { useEffect } from "react";
 import {  NavLink } from "react-router-dom";
 import { Container, Dropdown, Icon, Label, Menu } from "semantic-ui-react";
 import { User } from "../../models/user";
@@ -7,7 +7,10 @@ import { useStore } from "../../stores/store";
 
 function NavBar(){
     const {userStore: {user, logout}} = useStore();
-    
+    const {orderItemStore} = useStore();
+
+    const orderItemsCount = orderItemStore.orderItems.length;
+
     function renderUserName(){
         var login = `Welcome back ${user!.loginProp}`;
         if(user!.roles.includes('Admin')){
@@ -20,6 +23,10 @@ function NavBar(){
             return login;
         }
     }
+
+    useEffect(()=> {
+        console.log('Product was added into cart')
+    }, [orderItemsCount])
 
     return(
         <>
@@ -45,10 +52,16 @@ function NavBar(){
                 {user != null ? (
                     <>
                         <Menu.Item  position="right" content={renderUserName()}/>
+                        {orderItemsCount > 0 ? (
+                        <>
                         <Menu.Item 
                             name = 'cart'
-                            content={'Cart (products count)'}
-                            as={NavLink} to='/ProductCart' />
+                            as={NavLink} to='/ProductCart'>
+                            <Icon name="shopping cart"/>
+                                {orderItemsCount}
+                        </Menu.Item>
+                        </>) : null}
+      
                         <Menu.Item exact as={NavLink} to='/' onClick={logout} content={
                             <Icon size="large" name="log out"/>
                         } name="Logout" />

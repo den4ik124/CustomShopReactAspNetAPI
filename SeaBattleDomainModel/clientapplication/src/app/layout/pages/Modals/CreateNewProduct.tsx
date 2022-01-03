@@ -33,10 +33,10 @@ function handleNewProductCreation( values : any,
       <Modal.Content>
             <Formik 
                 initialValues ={{
-                    id: '', 
+                    id: 'id', 
                     title: '',
                     price: 0,
-                    description: '',
+                    description: 'description',
                     error: null
             }}
             onSubmit={(initialValues, {setErrors}) => handleNewProductCreation(initialValues, setErrors)}
@@ -45,27 +45,32 @@ function handleNewProductCreation( values : any,
             <Form className="ui form" onSubmit={handleSubmit} autoComplete="off" size="large">
                 <MyTextInput name = 'title' placeholder='Product title' type='text'/>
                 <MyTextInput name = 'price' placeholder='Product price' type='number'/>
-                <TextArea placeholder="Product description" name = 'description' type='text'/>
+                <MyTextInput name = 'description' placeholder='Description' type='text'/>
                 
-                <Modal.Actions>
-                    <Button color='black' onClick={() => setOpen(false)}>
-                    Cancel
-                    </Button>
-                    <Button 
-                        loading={isSubmitting} 
-                        labelPosition='right' 
-                        positive 
-                        type='submit'>
-                        Create
-                        <Icon name='checkmark'/>
-                    </Button>
-                </Modal.Actions>
+                {renderModalButtons(isSubmitting)}
             </Form>
             )}
         </Formik>
       </Modal.Content>
     </Modal>
   )
+
+  function renderModalButtons(isSubmitting: boolean) {
+    return <Modal.Actions style={{ marginTop: '20px' }}>
+      <Button color='black' onClick={() => setOpen(false)}>
+        Cancel
+      </Button>
+      <Button
+        loading={isSubmitting}
+        labelPosition='right'
+        icon
+        positive
+        type='submit'>
+        <Icon name='checkmark' />
+        Create
+      </Button>
+    </Modal.Actions>;
+  }
 }
 
 export default ModalExampleModal
