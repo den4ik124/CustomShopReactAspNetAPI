@@ -12,6 +12,7 @@ import UsersPage from './app/layout/pages/UsersPage';
 import RolesPage from './app/layout/pages/RolesPage';
 import ProductsPage from './app/layout/pages/ProductsPage';
 import {v4 as uuid} from 'uuid';
+import ProductCart from './app/layout/pages/ProductCart';
 
 function App() {
 
@@ -44,6 +45,7 @@ function App() {
               <Route exact path={'/admin/roles'} component={RolesPage}/>    
               <Route exact path={'/Products'} component={ProductsPage}/>    
               <Route exact path={'/Register'} component={RegisterPage}/>    
+              <Route exact path={'/ProductCart'} component={ProductCart}/>    
               <Route exact path={'/Login'} component={LoginPage}/>    
             </Container>
           </>

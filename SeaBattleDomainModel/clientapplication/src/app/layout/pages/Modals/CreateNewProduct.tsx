@@ -1,6 +1,6 @@
 import { Formik } from 'formik';
 import React from 'react'
-import { Button, Form, Modal, TextArea } from 'semantic-ui-react'
+import { Button, Form, Icon, Modal, TextArea } from 'semantic-ui-react'
 import MyTextInput from '../../../common/MyTextInput';
 import { useStore } from '../../../stores/store';
 
@@ -15,13 +15,16 @@ function ModalExampleModal(props : Props) {
 function handleNewProductCreation( values : any,
     setErrors: (errors: import("formik")
                .FormikErrors<{ title: string; price: string; description: string; error: string | null; }>) => void): any {
+
+
+                  console.log(values);
         productStore.createProduct(values);
         setOpen(false);
 }
 
   return (
     <Modal
-      onClose={() => setOpen(false)}
+      onClose={() =>setOpen(false)}
       onOpen={() => setOpen(true)}
       open={open}
       trigger={props.trigger}
@@ -51,10 +54,10 @@ function handleNewProductCreation( values : any,
                     <Button 
                         loading={isSubmitting} 
                         labelPosition='right' 
-                        icon='checkmark' 
                         positive 
                         type='submit'>
                         Create
+                        <Icon name='checkmark'/>
                     </Button>
                 </Modal.Actions>
             </Form>

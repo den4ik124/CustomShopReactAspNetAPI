@@ -11,15 +11,13 @@ Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "ClientApplication", "Client
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShopDomainModel", "ShopDomainModel\ShopDomainModel.csproj", "{EB86EE51-3286-4F0C-8BA8-D919908ED78F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "testShop", "testShop\testShop.csproj", "{5826911F-4B87-48BC-BCD7-8D77331D0297}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence", "Persistence\Persistence.csproj", "{51735D16-39C8-4C73-9854-81FFE647D268}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Domain", "Domain", "{BDC2E729-76C1-4700-A442-8CF0C379A8BC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserDomainModel", "UserDomainModel\UserDomainModel.csproj", "{2CBBB18E-246C-48CA-913B-2181AF05F1A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{4B78B65A-B514-4487-809C-5003310E2CC8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application\Application.csproj", "{4B78B65A-B514-4487-809C-5003310E2CC8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,10 +43,6 @@ Global
 		{EB86EE51-3286-4F0C-8BA8-D919908ED78F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB86EE51-3286-4F0C-8BA8-D919908ED78F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB86EE51-3286-4F0C-8BA8-D919908ED78F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5826911F-4B87-48BC-BCD7-8D77331D0297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5826911F-4B87-48BC-BCD7-8D77331D0297}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5826911F-4B87-48BC-BCD7-8D77331D0297}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5826911F-4B87-48BC-BCD7-8D77331D0297}.Release|Any CPU.Build.0 = Release|Any CPU
 		{51735D16-39C8-4C73-9854-81FFE647D268}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{51735D16-39C8-4C73-9854-81FFE647D268}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{51735D16-39C8-4C73-9854-81FFE647D268}.Release|Any CPU.ActiveCfg = Release|Any CPU

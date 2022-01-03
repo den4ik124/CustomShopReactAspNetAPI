@@ -12,11 +12,15 @@ code {
     monospace;
 } */
 
-body{
-  background-color: #EAEAEA !important;
+body {
+    background-color: #EAEAEA !important;
 }
 
-.ui.inverted.pointing.menu{
-  background-image: linear-gradient(125deg, rgb(16, 17, 22) 0%, rgb(202, 202, 202)50%, rgba(250, 250, 250, 0)100% );
+.ui.inverted.pointing.menu {
+    background-image: linear-gradient(125deg, rgb(16, 17, 22) 0%, rgb(202, 202, 202)50%, rgba(250, 250, 250, 0)100%);
 }
 
+.product-photo {
+    height: 200px;
+    width: 200px;
+}

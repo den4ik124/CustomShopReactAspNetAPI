@@ -1,6 +1,6 @@
 import { ErrorMessage, Formik, FormikErrors } from "formik";
 import React from "react";
-import { Button, Form, Label, Modal } from "semantic-ui-react";
+import { Button, Divider, Form, Grid, Label, Modal, Segment } from "semantic-ui-react";
 import MyTextInput from "../../common/MyTextInput";
 import * as Yup from 'yup';
 import { useStore } from "../../stores/store";
@@ -41,7 +41,7 @@ function LoginPage(props : Props){
             open={open}
             trigger={props.trigger}
         >
-      <Modal.Header className="" content="Login"/>
+      <Modal.Header className="" content="Login" />
       <Modal.Content></Modal.Content>
             <Formik 
                 validationSchema={validationSchema}
@@ -66,11 +66,17 @@ function LoginPage(props : Props){
                             />
                         }
                     />
-                    <Form.Group widths="equal">
-                        <MyTextInput name="loginProp" placeholder="User name"/>
-                        <Label size="big" content="or"/>
-                        <MyTextInput name="emailProp" placeholder="Email"/>
-                    </Form.Group>
+                    <Segment>
+                        <Grid columns={2}>
+                            <Grid.Column>
+                                <MyTextInput name="loginProp" placeholder="User name"/>
+                            </Grid.Column>
+                            <Grid.Column>
+                                <MyTextInput name="emailProp" placeholder="Email"/>
+                            </Grid.Column>
+                        </Grid>
+                        <Divider vertical>Or</Divider>    
+                    </Segment>
                     <MyTextInput name = 'password' placeholder='Password' type='password'/>
                     <Button loading={isSubmitting} fluid positive type='submit'>Login</Button>
                 </Form>

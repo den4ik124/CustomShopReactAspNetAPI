@@ -10,11 +10,12 @@ namespace ShopDomainModel.Entities
         {
         }
 
-        public Product(decimal price, string title)
+        public Product(decimal price, string title, string description = "")
         {
             Id = Guid.NewGuid();
             Price = price;
             Title = title;
+            Description = description;
         }
 
         public Guid Id { get; private set; }

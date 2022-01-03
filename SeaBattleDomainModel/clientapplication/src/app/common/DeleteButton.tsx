@@ -9,16 +9,12 @@ interface Props{
 export default function DeleteButton(props: Props){
     return(
         <>
-            <Popup content='Delete' 
-                mouseEnterDelay={500}
-                mouseLeaveDelay={500}
-                on='hover'
-                trigger={
-                    <Button onClick={props.onClick} color="red" floated={props.floated} >
-                        <Icon name="trash"/>
-                    </Button>
-            } />
-        
+            <Button animated='fade' color="red" floated={props.floated} onClick={props.onClick}>
+                <Button.Content visible>
+                    <Icon name="trash"/>
+                </Button.Content>
+                <Button.Content hidden>Remove</Button.Content>
+            </Button>
         </>
     )
 }

@@ -385,3 +385,5 @@ SeaBattleDomainModel/.vscode/tasks.json
 /SeaBattleDomainModel/testShopProject/testShopProject.csproj
 /SeaBattleDomainModel/testShopProject
 /SeaBattleDomainModel/testShop
+/ShopDb.bacpac
+/IdentityUsers.bacpac

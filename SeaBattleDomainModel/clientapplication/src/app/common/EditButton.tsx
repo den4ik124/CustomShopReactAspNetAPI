@@ -8,14 +8,22 @@ interface Props{
 
 export default function EditButton(props: Props){
     return(
-        <Popup content='Edit' 
-        mouseEnterDelay={500}
-        mouseLeaveDelay={500}
-        on='hover'
-        trigger={
-            <Button onClick={props.onClick} color="orange" floated={props.floated} >
+
+        <Button animated='fade' color="orange" floated={props.floated} onClick={props.onClick}>
+            <Button.Content visible>
                 <Icon name="edit"/>
-            </Button>
-        } />
+            </Button.Content>
+            <Button.Content hidden>Edit</Button.Content>
+        </Button>
+
+        // <Popup content='Edit' 
+        // mouseEnterDelay={500}
+        // mouseLeaveDelay={500}
+        // on='hover'
+        // trigger={
+        //     <Button onClick={props.onClick} color="orange" floated={props.floated} >
+        //         <Icon name="edit"/>
+        //     </Button>
+        // } />
     )
 }

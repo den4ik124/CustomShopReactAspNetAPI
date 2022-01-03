@@ -45,6 +45,10 @@ function NavBar(){
                 {user != null ? (
                     <>
                         <Menu.Item  position="right" content={renderUserName()}/>
+                        <Menu.Item 
+                            name = 'cart'
+                            content={'Cart (products count)'}
+                            as={NavLink} to='/ProductCart' />
                         <Menu.Item exact as={NavLink} to='/' onClick={logout} content={
                             <Icon size="large" name="log out"/>
                         } name="Logout" />
