@@ -1,4 +1,5 @@
 ﻿using Application.Products;
+using Application.Orders;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,7 +25,8 @@ namespace CustomIdentityAPI.Extensions
                 });
             });
 
-            services.AddMediatR(typeof(List.Handler).Assembly);
+            services.AddMediatR(typeof(Application.Orders.List.Handler).Assembly);
+            services.AddMediatR(typeof(Application.Products.List.Handler).Assembly);
 
             return services;
         }

@@ -1,4 +1,5 @@
 import { runInAction } from "mobx";
+import { observer } from "mobx-react-lite";
 import React, { useState } from "react"
 import { Button, Form, Grid, Icon, Input, Item, Label, Segment } from "semantic-ui-react"
 import { OrderItem } from "../../models/orderItem"
@@ -8,7 +9,7 @@ interface Props{
     item : OrderItem
 }
 
-export default function OrderListItem({item} : Props){
+function OrderListItem({item} : Props){
     const {orderItemStore} = useStore()
     const [disabled, setDisable] = useState(false);
     const [target, setTarget] = useState('');
@@ -37,10 +38,12 @@ function handleRemoveItemFromCart(e:  React.MouseEvent<HTMLElement, MouseEvent>,
 }
 
 function handleFinalRemoveItemFromCart(item : OrderItem){
+    runInAction(() => {
     const index = orderItemStore.orderItems.indexOf(item);
     if (index > -1) {
         orderItemStore.orderItems.splice(index, 1);
     }
+    })
 }
 
 function handleRestoreItem(e: React.MouseEvent<HTMLElement, MouseEvent> , item : OrderItem){
@@ -126,3 +129,5 @@ function handleRestoreItem(e: React.MouseEvent<HTMLElement, MouseEvent> , item :
     }
 
 }
+
+export default observer(OrderListItem)

@@ -96,7 +96,7 @@ return(
 
                         </Card.Header>
                         <Card.Meta>
-                            <span className='date'>Joined in 2015</span>
+                            <span className='date'>Some additional information</span>
                         </Card.Meta>
                         <Card.Description>
                             {product.description}

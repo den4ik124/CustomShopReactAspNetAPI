@@ -28,6 +28,11 @@ namespace CustomIdentityAPI.Controllers
         {
             return await this.Mediator.Send(new List.Query());
         }
+        [HttpGet("{id}")]
+        public async Task<ActionResult<IProduct>> GetProduct(Guid id)
+        {
+            return await this.Mediator.Send(new ProductDetails.Query() {Id = id });
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateProduct(Product product)
