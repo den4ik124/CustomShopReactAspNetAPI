@@ -51,7 +51,7 @@ function UsersPage(){
                         
                         {loggedUser!.roles.includes("Admin") ? (
                             <>
-                                <DeleteButton floated="right" onClick={() => null}/>
+                                <DeleteButton name={user.loginProp}  floated="right" onClick={() => null}/>
                                 <EditButton floated='right' onClick={() => null}/>
                             </>
                             ) : null}

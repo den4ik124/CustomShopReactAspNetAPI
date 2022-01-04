@@ -32,8 +32,6 @@ namespace CustomIdentityAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProduct(Product product)
         {
-            //TODO: отловить почему не заполняется Description
-            //TODO: понять почему Guid для ID некорректный
             return Ok(await Mediator.Send(new Create.Command { Product = product }));
         }
 

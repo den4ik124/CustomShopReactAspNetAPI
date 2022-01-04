@@ -1,0 +1,16 @@
+/* .ui.stackable.grid .no-grid-magrin-top {
+    margin-top: 0 !important;
+} */
+
+
+/* Padding on next content after a label */
+
+.ui.top.attached.label:first-child+ :not(.attached),
+.ui.top.attached.label+[class*="right floated"]+* {
+    margin-top: 0 !important;
+}
+
+.ui.bottom.attached.label:first-child~ :last-child:not(.attached) {
+    margin-top: 0em;
+    margin-bottom: 2rem !important;
+}

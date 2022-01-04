@@ -17,6 +17,7 @@ export default class OrderItemStore{
                 id : product.id,
                 product : product,
                 productAmount : 1,
+                isActive: true,
                 totalCost : (product, count) => product.price * count 
             };
             var itemIndex = this.orderItems.findIndex((item) => (this.orderItem!.id === item.id));
@@ -36,7 +37,9 @@ export default class OrderItemStore{
         var totalCost = 0;
         
         for (let index = 0; index < this.orderItems.length; index++) {
-            totalCost += this.orderItems[index].product.price * this.orderItems[index].productAmount;
+            if(this.orderItems[index].isActive){
+                totalCost += this.orderItems[index].product.price * this.orderItems[index].productAmount;
+            }
         }
         return totalCost;
     }

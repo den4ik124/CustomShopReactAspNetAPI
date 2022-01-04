@@ -1,7 +1,8 @@
 import { observer } from "mobx-react-lite";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, SyntheticEvent, useEffect, useState } from "react";
 import { Item, Button, Label,  Container, Header, Card, Icon, Image, Grid} from "semantic-ui-react";
 import agent from "../../api/agent";
+import BuyProductButton from "../../common/BuyProductButton";
 import DeleteButton from "../../common/DeleteButton";
 import EditButton from "../../common/EditButton";
 import { OrderItem } from "../../models/orderItem";
@@ -9,13 +10,17 @@ import { Product } from "../../models/product";
 import { useStore } from "../../stores/store";
 import LoadingComponent from "../components/LoadingComponents";
 import CreateNewProduct from "./Modals/CreateNewProduct";
+import EditProductItem from "./Modals/EditProductItem";
 
 function ProductsPage(){
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [shouldUpdate, setUpdateList] = useState(false);
+    const [disabled, setDisabled] = useState(false);
+    const [target, setTarget] = useState('');
+
     const {userStore} = useStore()
     const {productStore} = useStore()
-    const [shouldUpdate, setUpdateList] = useState(false);
     const {orderItemStore} = useStore();
 
 
@@ -26,8 +31,8 @@ function ProductsPage(){
     useEffect(() => {
         agent.Products.list().then(response => {
             setProducts(response);
-          setLoading(false);
-          setUpdateList(false)
+            setLoading(false);
+            setUpdateList(false)
         })
     }, [shouldUpdate])
 
@@ -36,8 +41,11 @@ function renderControllButtons(product : Product){
     if(user!.roles.includes('Manager') || user!.roles.includes('Admin')){
         return(
             <>
-                <DeleteButton floated="right" onClick={() => handleRemove(product.id)}/>
-                <EditButton floated='right' onClick={() => null}/>
+                <DeleteButton name={product.id} floated="right" onClick={() => handleRemove(product.id)}/>
+                <EditProductItem 
+                    trigger={<EditButton floated='right'/>}
+                    product = {product}/> 
+                {/* <EditButton floated='right' onClick={() => <EditProductItem trigger/>}/> */}
             </>
         )
     }
@@ -53,8 +61,10 @@ function renderControllButtons(product : Product){
         setUpdateList(true);
     }
 
-    function handleProductBuying(product: Product){
+    function handleProductBuying(e: SyntheticEvent<HTMLButtonElement>, product: Product){
+        setTarget(e.currentTarget.name)
         orderItemStore.createOrderItem(product);
+        setDisabled(true);
     }
 
 return(
@@ -99,12 +109,16 @@ return(
                             color="green"
                             content={product.price + ' UAH'}
                         />
+                        {/* <BuyProductButton name={product.id} onClick={() => handleProductBuying(product)}/> */}
                         <Button 
-                        fluid
+                            name={product.id}
+                            //disabled={disabled}
+                            fluid
                             positive 
+                            icon={<Icon name="shop"/>}
                             position="right" 
                             content='Buy now!'
-                            onClick={() => handleProductBuying(product)}
+                            onClick={(e) => handleProductBuying(e, product) }
                         />
                     </Card.Content>
                 </Card>

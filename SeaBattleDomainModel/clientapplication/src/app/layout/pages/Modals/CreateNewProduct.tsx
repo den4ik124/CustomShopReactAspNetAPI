@@ -1,15 +1,15 @@
 import { Formik } from 'formik';
-import React from 'react'
-import { Button, Form, Icon, Modal, TextArea } from 'semantic-ui-react'
-import MyTextInput from '../../../common/MyTextInput';
+import React, { useState } from 'react'
+import { Modal } from 'semantic-ui-react'
 import { useStore } from '../../../stores/store';
+import ProductModalForm from './ProductModalForm';
 
 interface Props{
     trigger: React.ReactNode
 }
 
 function ModalExampleModal(props : Props) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = useState(false)
   const {productStore} = useStore();
     
 function handleNewProductCreation( values : any,
@@ -33,44 +33,27 @@ function handleNewProductCreation( values : any,
       <Modal.Content>
             <Formik 
                 initialValues ={{
-                    id: 'id', 
+                    id: '', 
                     title: '',
                     price: 0,
-                    description: 'description',
+                    description: '',
                     error: null
             }}
             onSubmit={(initialValues, {setErrors}) => handleNewProductCreation(initialValues, setErrors)}
-        >
+            >
             {({handleSubmit, isSubmitting, errors}) => (
-            <Form className="ui form" onSubmit={handleSubmit} autoComplete="off" size="large">
-                <MyTextInput name = 'title' placeholder='Product title' type='text'/>
-                <MyTextInput name = 'price' placeholder='Product price' type='number'/>
-                <MyTextInput name = 'description' placeholder='Description' type='text'/>
-                
-                {renderModalButtons(isSubmitting)}
-            </Form>
+              <ProductModalForm 
+                handleSubmit={handleSubmit} 
+                isSubmitting={isSubmitting}
+                applyButtonContent={'Create'}
+                />
             )}
         </Formik>
+
       </Modal.Content>
     </Modal>
   )
 
-  function renderModalButtons(isSubmitting: boolean) {
-    return <Modal.Actions style={{ marginTop: '20px' }}>
-      <Button color='black' onClick={() => setOpen(false)}>
-        Cancel
-      </Button>
-      <Button
-        loading={isSubmitting}
-        labelPosition='right'
-        icon
-        positive
-        type='submit'>
-        <Icon name='checkmark' />
-        Create
-      </Button>
-    </Modal.Actions>;
-  }
 }
 
 export default ModalExampleModal
