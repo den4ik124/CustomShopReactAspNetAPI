@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UserDomainModel;
@@ -19,14 +20,15 @@ namespace CustomIdentityAPI.Controllers
         {
         }
 
-        //[Authorize(Roles = "Admin")]
-        [Authorize]
+        //[Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpGet()]
         public IEnumerable<CustomRoles> Roles()
         {
             return RoleManager.Roles;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddRole")]
         public async Task<ActionResult<RoleDto>> AddRole(RoleDto role)
         {
@@ -45,6 +47,8 @@ namespace CustomIdentityAPI.Controllers
             return ValidationProblem(ModelState);
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpDelete("delete/{id}")]
         public async Task<ActionResult> DeleteRole(Guid id)
         {
@@ -57,12 +61,26 @@ namespace CustomIdentityAPI.Controllers
             return Ok("Role has been successfully removed");
         }
 
-        [HttpPost("AddUser")]
-        public async Task<ActionResult<CustomIdentityUser>> AddUserToRole(UserDataDto user)
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("addRoles_{userName}")]
+        public async Task<ActionResult<CustomIdentityUser>> AddUserToRole(string userName, IEnumerable<string> roles)
         {
-            var addedUser = await UserManager.FindByNameAsync(user.LoginProp);
-            var result = await UserManager.AddToRoleAsync(addedUser, "Manager");
-            //result = await userManager.AddToRoleAsync(addedUser, "Manager");
+            var addedUser = await UserManager.FindByNameAsync(userName);
+            foreach (var role in roles)
+            {
+                await UserManager.AddToRoleAsync(addedUser, role);
+            }
+            return addedUser;
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("removeRole_{userName}")]
+        public async Task<ActionResult<CustomIdentityUser>> RemoveRoleFromUser(string userName, IEnumerable<string> role)
+        {
+            var addedUser = await UserManager.FindByNameAsync(userName);
+
+            await UserManager.RemoveFromRoleAsync(addedUser, role.First());
 
             return addedUser;
         }

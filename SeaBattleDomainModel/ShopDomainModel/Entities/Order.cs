@@ -22,6 +22,8 @@ namespace ShopDomainModel.Entities
 
         public Guid Id { get; set; }
 
+        public string OwnerId { get; set; }
+
         [Column(TypeName = "DateTime2")]
         public DateTime DateAndTimeOfCreation { get; private set; }
 

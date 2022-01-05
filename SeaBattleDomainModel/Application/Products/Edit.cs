@@ -30,6 +30,7 @@ namespace Application.Products
             {
                 var product = await this.context.Products.FindAsync(request.Product.Id);
 
+                //TODO: can be removed by using AutoMapper
                 product.Title = request.Product.Title;
                 product.Description = request.Product.Description;
                 product.Price = request.Product.Price;

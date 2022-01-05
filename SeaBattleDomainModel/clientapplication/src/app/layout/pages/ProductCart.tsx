@@ -24,6 +24,7 @@ import './gridCustomStyles.css';
         else(
             setDisabled(false)
         )
+        console.log('>> Product Cart Page has been checked')
     }, [totalCost])
 
     if(orderItems.length < 1 ){

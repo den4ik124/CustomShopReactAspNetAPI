@@ -4,7 +4,7 @@ import { Role, RoleFormValues } from "../models/role";
 
 export default class RoleStore{
     role: Role | null = null;
-    roles: Role[] | null = null;
+    roles: Role[] = [];
 
     constructor(){
         makeAutoObservable(this)

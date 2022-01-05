@@ -97,7 +97,7 @@ return(
 
                         </Card.Header>
                         <Card.Meta>
-                            <span className='date'>User ratings can be here</span>
+                            <span className='date'>Product rating can be here</span>
                         </Card.Meta>
                         <Card.Description>
                             {product.description}

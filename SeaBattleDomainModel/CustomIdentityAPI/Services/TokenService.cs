@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using UserDomainModel;
 
 namespace CustomIdentityAPI.Services
 {
@@ -18,7 +19,7 @@ namespace CustomIdentityAPI.Services
             this.config = config;
         }
 
-        public string CreateToken(IdentityUser user)
+        public string CreateToken(CustomIdentityUser user)
         {
             var claims = new List<Claim>()
             {

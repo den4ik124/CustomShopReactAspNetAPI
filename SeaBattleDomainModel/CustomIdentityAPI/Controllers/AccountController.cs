@@ -115,7 +115,7 @@ namespace CustomIdentity2.Controllers
             return BadRequest("Problem with user registration.");
         }
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<ActionResult<UserDataDto>> GetCurrentUser()
         {
@@ -124,7 +124,7 @@ namespace CustomIdentity2.Controllers
         }
 
         //[AllowAnonymous]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("users")]
         public async Task<IEnumerable<UserDataDto>> GetUsers()
         {
