@@ -1,4 +1,5 @@
-﻿using CustomIdentityAPI.Models.DTOs;
+﻿using CustomIdentityAPI.Controllers;
+using CustomIdentityAPI.Models.DTOs;
 using CustomIdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -12,13 +13,9 @@ using UserDomainModel;
 
 namespace CustomIdentity2.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class AccountController : Controller
-    {
-        private readonly UserManager<CustomIdentityUser> userManager;
 
-        private readonly RoleManager<CustomRoles> rolemanager;
+    public class AccountController : BaseIdentityController // Controller
+    {
         private readonly SignInManager<CustomIdentityUser> signInManager;
 
         private readonly TokenService tokenService;
@@ -26,10 +23,8 @@ namespace CustomIdentity2.Controllers
         public AccountController(UserManager<CustomIdentityUser> userManager,
             RoleManager<CustomRoles> rolemanager,
             SignInManager<CustomIdentityUser> signInManager,
-            TokenService tokenService)
+            TokenService tokenService) : base(userManager, rolemanager)
         {
-            this.userManager = userManager;
-            this.rolemanager = rolemanager;
             this.signInManager = signInManager;
             this.tokenService = tokenService;
         }
@@ -55,11 +50,11 @@ namespace CustomIdentity2.Controllers
                 CustomIdentityUser user = null;
                 if (model.LoginProp != null && model.LoginProp != string.Empty)
                 {
-                    user = await this.userManager.FindByNameAsync(model.LoginProp);
+                    user = await UserManager.FindByNameAsync(model.LoginProp);
                 }
                 else if (model.EmailProp != null && model.EmailProp != string.Empty)
                 {
-                    user = await this.userManager.FindByEmailAsync(model.EmailProp);
+                    user = await UserManager.FindByEmailAsync(model.EmailProp);
                 }
 
                 if (user == null)
@@ -97,20 +92,20 @@ namespace CustomIdentity2.Controllers
             }
 
             var user = new CustomIdentityUser { UserName = model.LoginProp, Email = model.EmailProp };
-            var userEmail = await this.userManager.FindByEmailAsync(user.Email);
+            var userEmail = await UserManager.FindByEmailAsync(user.Email);
 
             if (userEmail != null)
             {
                 return BadRequest($"\"{model.EmailProp}\" is already taken. Please check your email.");
             }
 
-            var userLogin = await this.userManager.FindByNameAsync(user.UserName);
+            var userLogin = await UserManager.FindByNameAsync(user.UserName);
             if (userLogin != null)
             {
                 return BadRequest($"\"{model.LoginProp}\" is already taken. Please check your login.");
             }
 
-            var createResult = await this.userManager.CreateAsync(user, model.Password);
+            var createResult = await UserManager.CreateAsync(user, model.Password);
 
             if (createResult.Succeeded)
             {
@@ -124,7 +119,7 @@ namespace CustomIdentity2.Controllers
         [HttpGet]
         public async Task<ActionResult<UserDataDto>> GetCurrentUser()
         {
-            var user = await this.userManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
+            var user = await UserManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
             return await GetUserDto(user);
         }
 
@@ -134,7 +129,7 @@ namespace CustomIdentity2.Controllers
         public async Task<IEnumerable<UserDataDto>> GetUsers()
         {
             var result = new List<UserDataDto>();
-            var users = this.userManager.Users.ToList();
+            var users = UserManager.Users.ToList();
             foreach (var user in users)
             {
                 result.Add(await GetUserDto(user));
@@ -164,7 +159,7 @@ namespace CustomIdentity2.Controllers
                 EmailProp = user.Email,
                 LoginProp = user.UserName,
                 Token = this.tokenService.CreateToken(user),
-                Roles = await this.userManager.GetRolesAsync(user),
+                Roles = await UserManager.GetRolesAsync(user),
             };
         }
 

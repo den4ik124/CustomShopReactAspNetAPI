@@ -36,6 +36,14 @@ export default class ProductStore{
         }
     }
 
+    editProduct = async (product : Product) => {
+        try {
+            await agent.Products.edit(product); 
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     removeProduct = async (id : string) => {
         try{
             await agent.Products.remove(id);

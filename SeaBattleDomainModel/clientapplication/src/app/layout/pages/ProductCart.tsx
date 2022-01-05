@@ -1,6 +1,8 @@
+import axios from "axios";
 import { observer } from "mobx-react-lite";
 import React, { useEffect, useState } from "react";
 import { Button, Divider, Grid, Header, Item, Rail, Segment, Statistic, Sticky } from "semantic-ui-react";
+import agent from "../../api/agent";
 import { useStore } from "../../stores/store";
 import EmptyPage from "../components/EmptyPage";
 import OrderListItem from "../components/OrderListItem";
@@ -30,12 +32,20 @@ import './gridCustomStyles.css';
         )
     }
 
+    
+    function handleOrderCreation(): void {
+        console.log(orderItems);
+        agent.Order.create(orderItems);
+    }
+
     return(
         <Grid columns={2}>
             <Grid.Column>
                 <Header> Your products</Header>
                 <Item.Group>
                     {orderItems.map((item) => (
+                        console.log(`Id: ${item.product.id}`),
+                        console.log(`Title: ${item.product.title}`),
                         <OrderListItem key={item.id} item={item}/>
                     ))}
                     
@@ -50,7 +60,7 @@ import './gridCustomStyles.css';
                             <Statistic.Label content='Total cost'/>
                         </Statistic>
                         <Divider/>
-                        <Button positive disabled={disabled} content='Оформить заказ'/>
+                        <Button positive disabled={disabled} content='Оформить заказ' onClick={() => handleOrderCreation()}/>
                     </Segment>
                     </Sticky>
                 </Rail>
@@ -62,3 +72,5 @@ import './gridCustomStyles.css';
 }
 
 export default observer(ProductCart)
+
+

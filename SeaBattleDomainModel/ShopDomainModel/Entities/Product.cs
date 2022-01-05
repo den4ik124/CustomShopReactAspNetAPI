@@ -18,7 +18,7 @@ namespace ShopDomainModel.Entities
             Description = description;
         }
 
-        public Guid Id { get; private set; }
+        public Guid Id { get; set; }
         public decimal Price { get; set; }
 
         public string Title { get; set; }

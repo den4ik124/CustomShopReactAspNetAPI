@@ -44,8 +44,8 @@ function renderControllButtons(product : Product){
                 <DeleteButton name={product.id} floated="right" onClick={() => handleRemove(product.id)}/>
                 <EditProductItem 
                     trigger={<EditButton floated='right'/>}
-                    product = {product}/> 
-                {/* <EditButton floated='right' onClick={() => <EditProductItem trigger/>}/> */}
+                    product = {product}
+                    onApplyButtonClick={()=> setUpdateList(true)}/> 
             </>
         )
     }
@@ -60,6 +60,7 @@ function renderControllButtons(product : Product){
         productStore.removeProduct(id);
         setUpdateList(true);
     }
+
 
     function handleProductBuying(e: SyntheticEvent<HTMLButtonElement>, product: Product){
         setTarget(e.currentTarget.name)
@@ -96,11 +97,10 @@ return(
 
                         </Card.Header>
                         <Card.Meta>
-                            <span className='date'>Some additional information</span>
+                            <span className='date'>User ratings can be here</span>
                         </Card.Meta>
                         <Card.Description>
                             {product.description}
-                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quam, distinctio sed ipsa rem unde minus enim quasi id ipsam iusto nisi eum sapiente. Sint sapiente rem voluptatibus eos nobis sequi.
                         </Card.Description>
                     </Card.Content>
                     <Card.Content extra>

@@ -15,11 +15,9 @@ namespace ShopDomainModel.Entities
             DateAndTimeOfCreation = DateTime.Now;
         }
 
-        public Order(Guid id)
+        public Order(Guid id) : this()
         {
             Id = id;
-            DateAndTimeOfCreation = DateTime.Now;
-            Products = new List<OrderProduct>();
         }
 
         public Guid Id { get; set; }
@@ -40,7 +38,10 @@ namespace ShopDomainModel.Entities
             this.Products.Add(new OrderProduct()
             {
                 Product = (Product)product,
+                ProductId = product.Id,
                 ProductCount = count,
+                Order = this,
+                OrderId = this.Id
             });
         }
 

@@ -10,20 +10,13 @@ using UserDomainModel;
 
 namespace CustomIdentityAPI.Controllers
 {
-    [AllowAnonymous]
+    //[AllowAnonymous]
     //[Authorize(Roles = "Admin")]
-    [ApiController]
-    [Route("[controller]")]
-    public class RolesController : Controller
+    public class RolesController : BaseIdentityController
     {
-        private readonly UserManager<CustomIdentityUser> userManager;
-        private readonly RoleManager<CustomRoles> roleManager;
-
         public RolesController(UserManager<CustomIdentityUser> userManager,
-            RoleManager<CustomRoles> roleManager)
+            RoleManager<CustomRoles> roleManager) : base(userManager, roleManager)
         {
-            this.userManager = userManager;
-            this.roleManager = roleManager;
         }
 
         //[Authorize(Roles = "Admin")]
@@ -31,14 +24,14 @@ namespace CustomIdentityAPI.Controllers
         [HttpGet()]
         public IEnumerable<CustomRoles> Roles()
         {
-            return this.roleManager.Roles;
+            return RoleManager.Roles;
         }
 
         [HttpPost("AddRole")]
         public async Task<ActionResult<RoleDto>> AddRole(RoleDto role)
         {
             var newRole = new CustomRoles() { Name = role.RoleName };
-            var result = await this.roleManager.CreateAsync(newRole);
+            var result = await RoleManager.CreateAsync(newRole);
             if (result.Succeeded)
             {
                 return role;
@@ -55,20 +48,20 @@ namespace CustomIdentityAPI.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<ActionResult> DeleteRole(Guid id)
         {
-            var role = await this.roleManager.FindByIdAsync(id.ToString());
+            var role = await RoleManager.FindByIdAsync(id.ToString());
             if (role == null)
             {
                 return ValidationProblem($"Role with {id} was not found");
             }
-            await this.roleManager.DeleteAsync(role);
+            await RoleManager.DeleteAsync(role);
             return Ok("Role has been successfully removed");
         }
 
         [HttpPost("AddUser")]
         public async Task<ActionResult<CustomIdentityUser>> AddUserToRole(UserDataDto user)
         {
-            var addedUser = await userManager.FindByNameAsync(user.LoginProp);
-            var result = await userManager.AddToRoleAsync(addedUser, "Manager");
+            var addedUser = await UserManager.FindByNameAsync(user.LoginProp);
+            var result = await UserManager.AddToRoleAsync(addedUser, "Manager");
             //result = await userManager.AddToRoleAsync(addedUser, "Manager");
 
             return addedUser;

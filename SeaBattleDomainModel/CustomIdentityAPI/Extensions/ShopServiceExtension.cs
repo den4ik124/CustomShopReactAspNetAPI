@@ -26,7 +26,7 @@ namespace CustomIdentityAPI.Extensions
             });
 
             services.AddMediatR(typeof(Application.Orders.List.Handler).Assembly);
-            services.AddMediatR(typeof(Application.Products.List.Handler).Assembly);
+            //services.AddMediatR(typeof(Application.Products.List.Handler).Assembly);
 
             return services;
         }

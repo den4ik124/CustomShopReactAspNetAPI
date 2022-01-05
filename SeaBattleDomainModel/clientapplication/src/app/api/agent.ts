@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import { OrderItem } from "../models/orderItem";
 import { Product, ProductCreationForm } from "../models/product";
 import { Role, RoleFormValues } from "../models/role";
 import { Ship } from "../models/ship";
@@ -49,6 +50,11 @@ const Products ={
     list: () => requests.get<Product[]>('/shop'),
     add: (product : ProductCreationForm) => requests.post<void>('/Shop', product),
     remove: (id : string) => requests.delete<void>(`/Shop/${id}`),
+    edit: (product : Product) => requests.put<void>(`/Shop/product_id${product.id}`, product)
+}
+
+const Order = {
+    create: (order : OrderItem[]) => requests.post<void>('/Shop/createOrder', order),
 }
 
 const Account = {
@@ -69,6 +75,7 @@ const agent ={
     Users,
     Products,
     Roles,
+    Order,
 }
 
 export default agent;
