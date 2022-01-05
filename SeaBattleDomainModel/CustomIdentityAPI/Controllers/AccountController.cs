@@ -1,4 +1,5 @@
 ﻿using CustomIdentityAPI.Controllers;
+using CustomIdentityAPI.Models;
 using CustomIdentityAPI.Models.DTOs;
 using CustomIdentityAPI.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -115,16 +116,19 @@ namespace CustomIdentity2.Controllers
             return BadRequest("Problem with user registration.");
         }
 
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
+        //[Authorize(Policy = nameof(Policies.AdminAccess))]
         [HttpGet]
         public async Task<ActionResult<UserDataDto>> GetCurrentUser()
         {
+
+            var test = User.FindFirstValue(ClaimTypes.Email);
             var user = await UserManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
             return await GetUserDto(user);
         }
 
         //[AllowAnonymous]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [HttpGet("users")]
         public async Task<IEnumerable<UserDataDto>> GetUsers()
         {

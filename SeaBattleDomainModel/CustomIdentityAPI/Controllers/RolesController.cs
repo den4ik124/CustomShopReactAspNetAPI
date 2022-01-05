@@ -11,8 +11,7 @@ using UserDomainModel;
 
 namespace CustomIdentityAPI.Controllers
 {
-    //[AllowAnonymous]
-    //[Authorize(Roles = "Admin")]
+
     public class RolesController : BaseIdentityController
     {
         public RolesController(UserManager<CustomIdentityUser> userManager,
@@ -20,15 +19,12 @@ namespace CustomIdentityAPI.Controllers
         {
         }
 
-        //[Authorize]
-        [Authorize(Roles = "Admin")]
         [HttpGet()]
         public IEnumerable<CustomRoles> Roles()
         {
             return RoleManager.Roles;
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpPost("AddRole")]
         public async Task<ActionResult<RoleDto>> AddRole(RoleDto role)
         {
@@ -47,8 +43,6 @@ namespace CustomIdentityAPI.Controllers
             return ValidationProblem(ModelState);
         }
 
-
-        [Authorize(Roles = "Admin")]
         [HttpDelete("delete/{id}")]
         public async Task<ActionResult> DeleteRole(Guid id)
         {
@@ -62,7 +56,6 @@ namespace CustomIdentityAPI.Controllers
         }
 
 
-        [Authorize(Roles = "Admin")]
         [HttpPut("addRoles_{userName}")]
         public async Task<ActionResult<CustomIdentityUser>> AddUserToRole(string userName, IEnumerable<string> roles)
         {
@@ -74,7 +67,6 @@ namespace CustomIdentityAPI.Controllers
             return addedUser;
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpPut("removeRole_{userName}")]
         public async Task<ActionResult<CustomIdentityUser>> RemoveRoleFromUser(string userName, IEnumerable<string> role)
         {

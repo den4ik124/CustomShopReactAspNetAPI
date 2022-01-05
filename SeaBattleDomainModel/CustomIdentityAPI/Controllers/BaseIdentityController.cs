@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using CustomIdentityAPI.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using UserDomainModel;
 
 namespace CustomIdentityAPI.Controllers
 {
+    [AllowAnonymous]
+    //[Authorize(Policy = nameof(Policies.AdminAccess))]
     [ApiController]
     [Route("[controller]")]
     public class BaseIdentityController : Controller

@@ -15,6 +15,7 @@ using UserDomainModel;
 namespace CustomIdentityAPI.Controllers
 {
     [AllowAnonymous]
+    //[Authorize(Policy = "ManagerAccess")]
     public class ShopController : BaseApiController
     {
         private readonly UserManager<CustomIdentityUser> userManager;
@@ -48,14 +49,12 @@ namespace CustomIdentityAPI.Controllers
             return await this.Mediator.Send(new ProductDetails.Query() {Id = id });
         }
 
-        [Authorize(Roles = "Admin, Manager")]
         [HttpPost]
         public async Task<IActionResult> CreateProduct(Product product)
         {
             return Ok(await Mediator.Send(new Create.Command { Product = product }));
         }
 
-        [Authorize(Roles = "Admin, Manager")]
         [HttpPut("product_id{id}")]
         public async Task<ActionResult<Product>> UpdateProduct(Guid id, Product product)
         {
@@ -63,7 +62,6 @@ namespace CustomIdentityAPI.Controllers
             return Ok(await Mediator.Send(new Edit.Command() {Product = product }));
         }
 
-        [Authorize(Roles = "Admin, Manager")]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteProduct(Guid id)
         {
@@ -95,7 +93,8 @@ namespace CustomIdentityAPI.Controllers
         //    return list;
         //}
 
-        [Authorize(Roles = "Admin, Manager, Customer")]
+        //[Authorize(Roles = "Admin, Manager, Customer")]
+        [Authorize(Policy = "CustomerAccess")]
         [HttpPost("createOrder")]
         public async Task<IActionResult> GetOrderFromClient(IEnumerable<OrderItem> orderItems)
         {
