@@ -1,6 +1,6 @@
 This project includes:
 
 Sea Battle domain model
-Custom ORM (using ADO.NET)
+Shop domain model
 
 React UI application
