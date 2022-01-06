@@ -14,8 +14,10 @@ using UserDomainModel;
 
 namespace CustomIdentityAPI.Controllers
 {
-    [AllowAnonymous]
+    //[AllowAnonymous]
     //[Authorize(Policy = "ManagerAccess")]
+    [Authorize(Roles = nameof(Roles.Admin))]
+    [Authorize(Roles = nameof(Roles.Manager))]
     public class ShopController : BaseApiController
     {
         private readonly UserManager<CustomIdentityUser> userManager;
@@ -37,12 +39,15 @@ namespace CustomIdentityAPI.Controllers
             this.context = context;
         }
 
+        [Authorize(Roles = nameof(Roles.Customer))]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<IProduct>>> GetProducts()
         {
             return await this.Mediator.Send(new List.Query());
         }
 
+        //[Authorize(Policy = "CustomerAccess")]
+        [Authorize(Roles = nameof(Roles.Customer))]
         [HttpGet("{id}")]
         public async Task<ActionResult<IProduct>> GetProduct(Guid id)
         {
@@ -94,7 +99,8 @@ namespace CustomIdentityAPI.Controllers
         //}
 
         //[Authorize(Roles = "Admin, Manager, Customer")]
-        [Authorize(Policy = "CustomerAccess")]
+        //[Authorize(Policy = "CustomerAccess")]
+        [Authorize(Roles = nameof(Roles.Customer))]
         [HttpPost("createOrder")]
         public async Task<IActionResult> GetOrderFromClient(IEnumerable<OrderItem> orderItems)
         {

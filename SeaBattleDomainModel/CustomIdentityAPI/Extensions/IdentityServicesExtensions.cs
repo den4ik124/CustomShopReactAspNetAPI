@@ -7,7 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Persistence;
-using System;
 using System.Text;
 using UserDomainModel;
 
@@ -21,21 +20,23 @@ namespace CustomIdentityAPI.Extensions
             services.AddDbContext<UserDbContext>(opt =>
             {
                 opt.UseSqlServer(config.GetConnectionString("UsersDb"));
+
             });
 
-            //services.AddIdentity<CustomIdentityUser, CustomRoles>(opt =>
-            services.AddIdentityCore<CustomIdentityUser>(opt =>
+            //services.AddIdentityCore<CustomIdentityUser>(opt =>
+            services.AddIdentity<CustomIdentityUser, CustomRoles>(opt =>
             {
                 opt.Password.RequireNonAlphanumeric = false;
                 opt.Password.RequireUppercase = false;
+                //opt.ClaimsIdentity.RoleClaimType = "role";
+                //opt.ClaimsIdentity.EmailClaimType = "emailaddress";
             })
                 .AddRoles<CustomRoles>()
-                //.AddRoleStore<UserDbContext>()
                 .AddRoleManager<RoleManager<CustomRoles>>()
                 .AddEntityFrameworkStores<UserDbContext>()
                 .AddSignInManager<SignInManager<CustomIdentityUser>>();
 
-           services.AddAuthentication(opt => { });
+           //services.AddAuthentication(opt => { });
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["TokenKey"]));
 
@@ -47,7 +48,10 @@ namespace CustomIdentityAPI.Extensions
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = key,
                         ValidateIssuer = false,
-                        ValidateAudience = false
+                        ValidateAudience = false,
+                        
+                        //NameClaimType = "name",
+                        //RoleClaimType =  "role",
                     };
                 });
 

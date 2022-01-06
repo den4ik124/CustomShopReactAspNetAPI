@@ -231,8 +231,13 @@ namespace Persistence.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityRole");
 
+                    b.Property<string>("CustomIdentityUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.HasIndex("CustomIdentityUserId");
 
                     b.HasDiscriminator().HasValue("CustomRoles");
                 });
@@ -293,6 +298,18 @@ namespace Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("UserDomainModel.CustomRoles", b =>
+                {
+                    b.HasOne("UserDomainModel.CustomIdentityUser", null)
+                        .WithMany("Roles")
+                        .HasForeignKey("CustomIdentityUserId");
+                });
+
+            modelBuilder.Entity("UserDomainModel.CustomIdentityUser", b =>
+                {
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }

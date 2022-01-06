@@ -28,7 +28,7 @@ namespace CustomIdentityAPI.Controllers
         [HttpPost("AddRole")]
         public async Task<ActionResult<RoleDto>> AddRole(RoleDto role)
         {
-            var newRole = new CustomRoles() { Name = role.RoleName };
+            var newRole = new CustomRoles(role.RoleName);
             var result = await RoleManager.CreateAsync(newRole);
             if (result.Succeeded)
             {

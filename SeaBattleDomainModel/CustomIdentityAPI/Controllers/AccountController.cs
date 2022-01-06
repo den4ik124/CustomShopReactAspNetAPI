@@ -118,6 +118,8 @@ namespace CustomIdentity2.Controllers
 
         //[Authorize(Roles = "Admin")]
         //[Authorize(Policy = nameof(Policies.AdminAccess))]
+        //[Authorize]
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<UserDataDto>> GetCurrentUser()
         {
@@ -129,6 +131,7 @@ namespace CustomIdentity2.Controllers
 
         //[AllowAnonymous]
         //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = nameof(Roles.Admin))]
         [HttpGet("users")]
         public async Task<IEnumerable<UserDataDto>> GetUsers()
         {
@@ -162,7 +165,7 @@ namespace CustomIdentity2.Controllers
             {
                 EmailProp = user.Email,
                 LoginProp = user.UserName,
-                Token = this.tokenService.CreateToken(user),
+                Token = this.tokenService.CreateToken(user).Result,
                 Roles = await UserManager.GetRolesAsync(user),
             };
         }
