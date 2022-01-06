@@ -55,7 +55,7 @@ namespace CustomIdentityAPI
 
         private void CreateRoles(IServiceProvider serviceProvider)
         {
-
+            //TODO : test message
             var roleManager = serviceProvider.GetRequiredService<RoleManager<CustomRoles>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<CustomIdentityUser>>();
             Task<IdentityResult> roleResult;
