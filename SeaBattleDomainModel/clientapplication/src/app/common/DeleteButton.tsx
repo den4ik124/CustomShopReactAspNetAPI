@@ -21,6 +21,7 @@ function handleDelete(e: SyntheticEvent<HTMLButtonElement>){
     return(
         <>
             <Button 
+                compact
                 loading={loading} 
                 name={props.name} 
                 animated='fade' 

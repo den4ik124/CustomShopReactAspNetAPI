@@ -1,6 +1,6 @@
-import { Formik } from 'formik';
+import { ErrorMessage, Formik, FormikErrors } from 'formik';
 import React, { useState } from 'react'
-import { Button, Form, Icon, Modal, TextArea } from 'semantic-ui-react'
+import { Button, Form, Icon, Label, Modal, TextArea } from 'semantic-ui-react'
 import MyTextArea from '../../../common/MyTextArea';
 import MyTextInput from '../../../common/MyTextInput';
 import { useStore } from '../../../stores/store';
@@ -9,9 +9,16 @@ interface Props{
     isSubmitting : boolean;
     handleSubmit : (arg1 : React.FormEvent<HTMLFormElement> | undefined) => void // React.FormEvent<HTMLFormElement> | undefined => void;
     applyButtonContent: any
+    errors: FormikErrors<{
+                          id: string;
+                          title: string;
+                          price: number;
+                          description: string;
+                          error: null;
+                      }>
   }
 
-function ProductModalForm({handleSubmit, isSubmitting, applyButtonContent} : Props) {
+function ProductModalForm({handleSubmit, isSubmitting, applyButtonContent, errors} : Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -19,7 +26,17 @@ function ProductModalForm({handleSubmit, isSubmitting, applyButtonContent} : Pro
         <MyTextInput name = 'title' placeholder='Product title' type='text'/>
         <MyTextInput name = 'price' placeholder='Product price' type='number'/>
         <MyTextArea name = 'description' rows={5} placeholder='Description' type='text'/>
-        
+        <ErrorMessage 
+                        name="error"
+                        render={() => 
+                            <Label 
+                                basic 
+                                color="red"
+                                style ={{marginBottom: 10}}
+                                content={errors.error}
+                            />
+                        }
+                    />
         {renderModalButtons(isSubmitting, applyButtonContent)}
     </Form>
   )

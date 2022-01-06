@@ -33,6 +33,7 @@ export default class ProductStore{
             await agent.Products.add(product);            
         } catch (error) {
             console.log(error);
+            throw error;
         }
     }
 
@@ -41,6 +42,7 @@ export default class ProductStore{
             await agent.Products.edit(product); 
         } catch (error) {
             console.log(error);
+            throw error;
         }
     }
 

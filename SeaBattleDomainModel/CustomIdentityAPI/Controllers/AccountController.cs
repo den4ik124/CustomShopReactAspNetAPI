@@ -14,7 +14,6 @@ using UserDomainModel;
 
 namespace CustomIdentity2.Controllers
 {
-
     public class AccountController : BaseIdentityController // Controller
     {
         private readonly SignInManager<CustomIdentityUser> signInManager;
@@ -93,6 +92,7 @@ namespace CustomIdentity2.Controllers
             }
 
             var user = new CustomIdentityUser { UserName = model.LoginProp, Email = model.EmailProp };
+
             var userEmail = await UserManager.FindByEmailAsync(user.Email);
 
             if (userEmail != null)
@@ -110,28 +110,21 @@ namespace CustomIdentity2.Controllers
 
             if (createResult.Succeeded)
             {
+                await UserManager.AddToRoleAsync(user, nameof(Roles.Customer));
                 return await GetUserDto(user);
             }
 
             return BadRequest("Problem with user registration.");
         }
 
-        //[Authorize(Roles = "Admin")]
-        //[Authorize(Policy = nameof(Policies.AdminAccess))]
-        //[Authorize]
         [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<UserDataDto>> GetCurrentUser()
         {
-
-            var test = User.FindFirstValue(ClaimTypes.Email);
             var user = await UserManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
             return await GetUserDto(user);
         }
 
-        //[AllowAnonymous]
-        //[Authorize(Roles = "Admin")]
-        [Authorize(Roles = nameof(Roles.Admin))]
         [HttpGet("users")]
         public async Task<IEnumerable<UserDataDto>> GetUsers()
         {
@@ -159,8 +152,6 @@ namespace CustomIdentity2.Controllers
 
         private async Task<UserDataDto> GetUserDto(CustomIdentityUser user)
         {
-            //IList<string> userRoles = await GetUserRoles(user);
-
             return new UserDataDto()
             {
                 EmailProp = user.Email,
@@ -170,18 +161,5 @@ namespace CustomIdentity2.Controllers
             };
         }
 
-        //private async Task<IList<string>> GetUserRoles(CustomIdentityUser user)
-        //{
-        //    var roles = this.rolemanager.Roles.ToList();
-        //    var userRoles = await this.userManager.GetRolesAsync(user); //new List<string>();
-        //foreach (var role in roles)
-        //{
-        //    if (await this.userManager.IsInRoleAsync(user, role.Name))
-        //    {
-        //        userRoles.Add(role.Name);
-        //    }
-        //}
-        //    return userRoles;
-        //}
     }
 }

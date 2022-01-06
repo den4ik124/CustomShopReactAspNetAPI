@@ -8,7 +8,7 @@ interface Props{
 
 export default function EditButton(props: Props){
     return(
-        <Button animated='fade' color="orange" floated={props.floated} onClick={props.onClick}>
+        <Button compact animated='fade' color="orange" floated={props.floated} onClick={props.onClick}>
             <Button.Content visible>
                 <Icon name="edit"/>
             </Button.Content>

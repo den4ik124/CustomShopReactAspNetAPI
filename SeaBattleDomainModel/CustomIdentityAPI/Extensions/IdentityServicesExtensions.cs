@@ -23,8 +23,8 @@ namespace CustomIdentityAPI.Extensions
 
             });
 
-            //services.AddIdentityCore<CustomIdentityUser>(opt =>
-            services.AddIdentity<CustomIdentityUser, CustomRoles>(opt =>
+            //services.AddIdentity<CustomIdentityUser, CustomRoles>(opt =>
+            services.AddIdentityCore<CustomIdentityUser>(opt =>
             {
                 opt.Password.RequireNonAlphanumeric = false;
                 opt.Password.RequireUppercase = false;
@@ -55,17 +55,17 @@ namespace CustomIdentityAPI.Extensions
                     };
                 });
 
-            //services.AddAuthorization(opt =>
-            //{
-            //    opt.AddPolicy(nameof(Policies.AdminAccess), policy => policy.RequireRole(nameof(Roles.Admin)));
-            //    opt.AddPolicy(nameof(Policies.ManagerAccess), policy => policy.RequireAssertion(context =>
-            //                            context.User.IsInRole(nameof(Roles.Admin)) ||
-            //                            context.User.IsInRole(nameof(Roles.Manager))));
-            //    opt.AddPolicy(nameof(Policies.CustomerAccess), policy => policy.RequireAssertion(context =>
-            //                            context.User.IsInRole(nameof(Roles.Admin)) ||
-            //                            context.User.IsInRole(nameof(Roles.Manager)) ||
-            //                            context.User.IsInRole(nameof(Roles.Customer))));
-            //});
+            services.AddAuthorization(opt =>
+            {
+                opt.AddPolicy(nameof(Policies.AdminAccess), policy => policy.RequireRole(nameof(Roles.Admin)));
+                opt.AddPolicy(nameof(Policies.ManagerAccess), policy => policy.RequireAssertion(context =>
+                                        context.User.IsInRole(nameof(Roles.Admin)) ||
+                                        context.User.IsInRole(nameof(Roles.Manager))));
+                opt.AddPolicy(nameof(Policies.CustomerAccess), policy => policy.RequireAssertion(context =>
+                                        context.User.IsInRole(nameof(Roles.Admin)) ||
+                                        context.User.IsInRole(nameof(Roles.Manager)) ||
+                                        context.User.IsInRole(nameof(Roles.Customer))));
+            });
 
             services.AddScoped<TokenService>();
             return services;

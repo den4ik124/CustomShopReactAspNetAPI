@@ -2,7 +2,6 @@ import { observer } from "mobx-react-lite";
 import React, { useEffect } from "react";
 import {  NavLink } from "react-router-dom";
 import { Container, Dropdown, Icon, Label, Menu } from "semantic-ui-react";
-import { User } from "../../models/user";
 import { useStore } from "../../stores/store";
 
 function NavBar(){

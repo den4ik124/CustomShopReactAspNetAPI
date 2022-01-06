@@ -14,21 +14,20 @@ namespace CustomIdentityAPI.Services
 {
     public class TokenService
     {
-        private readonly IServiceProvider services;
+        private readonly UserManager<CustomIdentityUser> userManager;
 
         private IConfiguration config { get; }
 
-        public TokenService(IConfiguration config, IServiceProvider services )
+        public TokenService(IConfiguration config, UserManager<CustomIdentityUser> userManager)
         {
             this.config = config;
-            this.services = services;
+            this.userManager = userManager;
         }
 
         public async Task<string> CreateToken(CustomIdentityUser user)
         {
             //new
-            var userManager = this.services.GetService<UserManager<CustomIdentityUser>>();
-            var roles = await userManager.GetRolesAsync(user);
+            var roles = await this.userManager.GetRolesAsync(user);
             //new
 
             var claims = new List<Claim>()
@@ -58,7 +57,8 @@ namespace CustomIdentityAPI.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return await Task.Run(() => tokenHandler.WriteToken(token));
+            return tokenHandler.WriteToken(token);
+            //return await Task.Run(() => tokenHandler.WriteToken(token));
         }
     }
 }

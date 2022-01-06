@@ -11,14 +11,17 @@ interface Props{
 function ModalExampleModal(props : Props) {
   const [open, setOpen] = useState(false)
   const {productStore} = useStore();
+  const [disable, setDisable] = useState(false);
     
 function handleNewProductCreation( values : any,
     setErrors: (errors: import("formik")
                .FormikErrors<{ title: string; price: string; description: string; error: string | null; }>) => void): any {
-
-
-                  console.log(values);
-        productStore.createProduct(values);
+        if(values.price <= 0){
+          var message = "Price has incorrect value";
+          console.log(message)
+        }
+        productStore.createProduct(values)
+          .catch(error => setErrors({error: message}));
         setOpen(false);
 }
 
@@ -46,6 +49,7 @@ function handleNewProductCreation( values : any,
                 handleSubmit={handleSubmit} 
                 isSubmitting={isSubmitting}
                 applyButtonContent={'Create'}
+                errors = {errors}
                 />
             )}
         </Formik>

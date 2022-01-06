@@ -32,15 +32,17 @@ function handleProductEditing({ values, setErrors }: {
         price: values.price,
         description: values.description
       } 
+      if(values.price <= 0){
+        var message = "Price has incorrect value";
+      }
       productStore.editProduct(product)
+      .catch(error => setErrors({error: `${message}`}));
       setOpen(false);
 }
 
   return (
     <Modal
-      onClose={() => {
-        setOpen(false)
-      }}
+      onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
       open={open}
       trigger={trigger}
@@ -63,7 +65,9 @@ function handleProductEditing({ values, setErrors }: {
               <ProductModalForm 
                 handleSubmit={handleSubmit} 
                 isSubmitting={isSubmitting}
-                applyButtonContent={'Confirm editing'}/>
+                applyButtonContent={'Confirm editing'}
+                errors = {errors}
+                />
             )}
         </Formik>
 

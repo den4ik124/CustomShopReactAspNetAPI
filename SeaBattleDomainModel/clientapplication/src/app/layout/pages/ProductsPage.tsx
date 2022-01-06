@@ -82,20 +82,26 @@ return(
         {products.map((product) => (
             <Grid.Column key={product.id}>
                 <Card>
-                    <Image 
+                    {/* <Image 
                         rounded
                         wrapped
                          style={{marginRight: "50px"}} 
                         size='medium' 
                         src={`/sources/img/products/${product.title}.png`}
-                    />
-                    
-                    <Card.Content textAlign="left">
-                        <Card.Header>
-                            {product.title}
-                            {renderControllButtons(product)}
-
-                        </Card.Header>
+                    /> */}
+                   <Card.Content textAlign="left">
+                    <Card.Header style={{marginBottom: "50px"}}>
+                        <Header as={'h1'} content={product.title}/>
+                        {renderControllButtons(product)}
+                    </Card.Header>
+                        <Container
+                        style={{
+                            height: "150px",
+                            // backgroundImage: `url(/sources/img/products/${product.title}.png)`,
+                            backgroundImage: `url(/sources/img/products/${product.title.replace(' ', '')}.png)`,
+                            backgroundSize: "contain",
+                            backgroundRepeat : "no-repeat"
+                        }}/>
                         <Card.Meta>
                             <span className='date'>Product rating can be here</span>
                         </Card.Meta>

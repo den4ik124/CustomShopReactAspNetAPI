@@ -69,7 +69,7 @@ function handleRestoreItem(e: React.MouseEvent<HTMLElement, MouseEvent> , item :
             <Grid.Column width={4}>
                 <Item.Image 
                     size='tiny' 
-                    src={`/sources/img/products/${item.product.title}.png`}
+                    src={`/sources/img/products/${item.product.title.replace(' ','')}.png`}
                 />
             </Grid.Column>
             <Grid.Column width={5}>

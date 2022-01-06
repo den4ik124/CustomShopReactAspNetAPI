@@ -6,9 +6,7 @@ using UserDomainModel;
 
 namespace CustomIdentityAPI.Controllers
 {
-    //[AllowAnonymous]
-    //[Authorize(Policy = nameof(Policies.AdminAccess))]
-    [Authorize(Roles = nameof(Roles.Admin))]
+    [Authorize(Policy = nameof(Policies.AdminAccess))]
     [ApiController]
     [Route("[controller]")]
     public class BaseIdentityController : Controller

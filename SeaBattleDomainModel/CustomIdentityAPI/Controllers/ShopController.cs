@@ -14,10 +14,8 @@ using UserDomainModel;
 
 namespace CustomIdentityAPI.Controllers
 {
-    //[AllowAnonymous]
-    //[Authorize(Policy = "ManagerAccess")]
-    [Authorize(Roles = nameof(Roles.Admin))]
-    [Authorize(Roles = nameof(Roles.Manager))]
+    //[Authorize(Roles = nameof(Roles.Customer))]
+    [Authorize(Policy = nameof(Policies.CustomerAccess))]
     public class ShopController : BaseApiController
     {
         private readonly UserManager<CustomIdentityUser> userManager;
@@ -39,34 +37,44 @@ namespace CustomIdentityAPI.Controllers
             this.context = context;
         }
 
-        [Authorize(Roles = nameof(Roles.Customer))]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<IProduct>>> GetProducts()
         {
+            Console.WriteLine(User.IsInRole(nameof(Roles.Customer)));
             return await this.Mediator.Send(new List.Query());
         }
 
-        //[Authorize(Policy = "CustomerAccess")]
-        [Authorize(Roles = nameof(Roles.Customer))]
+
         [HttpGet("{id}")]
         public async Task<ActionResult<IProduct>> GetProduct(Guid id)
         {
             return await this.Mediator.Send(new ProductDetails.Query() {Id = id });
         }
 
+        [Authorize(Policy = nameof(Policies.ManagerAccess))]
         [HttpPost]
         public async Task<IActionResult> CreateProduct(Product product)
         {
+            if (product.Price <= 0)
+            {
+                return BadRequest($"Incorrect price value. Price shoudl be greater than 0 (was: {product.Price} )");
+            }
             return Ok(await Mediator.Send(new Create.Command { Product = product }));
         }
 
+        [Authorize(Policy = nameof(Policies.ManagerAccess))]
         [HttpPut("product_id{id}")]
         public async Task<ActionResult<Product>> UpdateProduct(Guid id, Product product)
         {
+            if (product.Price <= 0)
+            {
+                return BadRequest($"Incorrect price value. Price shoudl be greater than 0 (was: {product.Price} )");
+            }
             product.Id = id;
             return Ok(await Mediator.Send(new Edit.Command() {Product = product }));
         }
 
+        [Authorize(Policy = nameof(Policies.ManagerAccess))]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteProduct(Guid id)
         {
@@ -98,9 +106,6 @@ namespace CustomIdentityAPI.Controllers
         //    return list;
         //}
 
-        //[Authorize(Roles = "Admin, Manager, Customer")]
-        //[Authorize(Policy = "CustomerAccess")]
-        [Authorize(Roles = nameof(Roles.Customer))]
         [HttpPost("createOrder")]
         public async Task<IActionResult> GetOrderFromClient(IEnumerable<OrderItem> orderItems)
         {
